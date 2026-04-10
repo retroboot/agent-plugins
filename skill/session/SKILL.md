@@ -64,12 +64,6 @@ If a probe tool is not available in this session or returns an auth/capability e
 
 ## Phase 3 — Load Reference
 
-**Guard:** If `$CLAUDE_SKILL_DIR` is not set in the environment, stop immediately and emit:
-```
-SESSION ERROR: $CLAUDE_SKILL_DIR is not set — cannot load provider reference.
-Set CLAUDE_SKILL_DIR to the plugin root directory and retry.
-```
-
 ```
 Read $CLAUDE_SKILL_DIR/references/{REPO_PROVIDER}.md
 ```
