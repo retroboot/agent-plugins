@@ -30,17 +30,22 @@ Which provider tracks your issues?           (github | gitlab | linear)
 Org / group slug:
 ```
 
-Then merge the answers into `~/.claude/settings.json`, preserving all existing keys:
+Then merge the answers into `~/.claude/settings.json`, preserving all existing keys.
+
+Serialize the collected config as a JSON string and pass it via an environment variable to avoid shell injection:
 
 ```bash
+NEW_CONFIG='{"repoProvider":"...","issueTracker":"...","repoTarget":"..."}' \
 python3 -c "
-import json, os, sys
+import json, os
 path = os.path.expanduser('~/.claude/settings.json')
 s = json.loads(open(path).read()) if os.path.exists(path) else {}
-s['providerConfig'] = $NEW_CONFIG
-print(json.dumps(s, indent=2))
-" > /tmp/.settings_tmp.json && mv /tmp/.settings_tmp.json ~/.claude/settings.json
+s['providerConfig'] = json.loads(os.environ['NEW_CONFIG'])
+open(path, 'w').write(json.dumps(s, indent=2))
+"
 ```
+
+Substitute the actual collected values into `NEW_CONFIG` as a valid JSON string before running this command.
 
 Store: `REPO_PROVIDER`, `ISSUE_TRACKER`, `REPO_TARGET`, provider slugs.
 
@@ -58,6 +63,12 @@ If a probe tool is not available in this session or returns an auth/capability e
 ---
 
 ## Phase 3 — Load Reference
+
+**Guard:** If `$CLAUDE_SKILL_DIR` is not set in the environment, stop immediately and emit:
+```
+SESSION ERROR: $CLAUDE_SKILL_DIR is not set — cannot load provider reference.
+Set CLAUDE_SKILL_DIR to the plugin root directory and retry.
+```
 
 ```
 Read $CLAUDE_SKILL_DIR/references/{REPO_PROVIDER}.md
