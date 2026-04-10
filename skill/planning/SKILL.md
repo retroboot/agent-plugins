@@ -13,9 +13,9 @@ Keep moving through phases. Only stop at the marked checkpoint.
 
 ---
 
-## Phase 1 — Load Core Philosophy
+## Phase 1 — Load Session and Core
 
-Load the `core` skill to internalize quality standards and git safety rules.
+Load the `session` skill to initialize provider context and load the active reference. Then load the `core` skill to internalize quality standards and git safety rules.
 
 ---
 
@@ -82,12 +82,7 @@ Extract:
 - `scope_hint` — any explicit size or priority signal in the input
 - `plan_only` — true if `--plan-only` flag is present (skip issue triage and creation; only write the plan doc)
 
-If the input contains one or more issue references, fetch each one:
-```bash
-# For each number found in the input:
-gh issue view {number} --json title,body,labels
-```
-Aggregate the results — all fetched issues inform the topic, scope, and acceptance criteria.
+If the input contains one or more issue references, fetch each one using the **Get issue** command from the loaded reference. Aggregate the results — all fetched issues inform the topic, scope, and acceptance criteria.
 
 If `--plan-only` is set, display: `Mode: plan-only — will write plan doc without creating issues`
 
@@ -98,7 +93,7 @@ If `--plan-only` is set, display: `Mode: plan-only — will write plan doc witho
 Before proposing anything, understand what already exists.
 
 - Read the relevant areas of the codebase related to the topic
-- Check for existing open issues that overlap: `gh issue list --state open --limit 50 --json number,title,labels`
+- Check for existing open issues that overlap using the **List issues** command from the loaded reference
 - Look for existing patterns, conventions, APIs, and test structures in the codebase
 
 Build an **Allowed APIs list**: note the actual functions, types, test helpers, and conventions found, citing exact file paths. This prevents inventing APIs that don't exist when writing the plan later.
@@ -429,34 +424,27 @@ Wait for the answer before proceeding. If "adjust", revise and re-post. If "canc
 
 ---
 
-## Phase 11 — Create GitHub Issues
+## Phase 11 — Create Issues in Tracker
 
 Skip if `--plan-only` mode.
 
-For each approved issue, create it with `gh issue create`:
+For each approved issue, use the **Create issue** command from the loaded reference.
 
-```bash
-gh issue create \
-  --title "{title}" \
-  --body "{body with acceptance criteria}" \
-  --label "{labels}"
-```
-
-Collect the created issue numbers and URLs.
+Collect the created issue numbers/identifiers and URLs.
 
 Display each as it's created: `Created: #{number} — {title}`
 
 ---
 
-## Phase 12 — Create Linear Issues (if configured)
+## Phase 12 — Create Linear Issues (if ISSUE_TRACKER=linear)
 
-Skip if `--plan-only` mode.
+Skip if `--plan-only` mode or `ISSUE_TRACKER != linear`.
 
-Check for Linear configuration by looking for `LINEAR_API_KEY` in the environment or a `.linear.yaml` file in the project root.
+If `ISSUE_TRACKER=linear` and issues were created in a separate repo provider in Phase 11, also create matching Linear issues using the **Create issue** command from the linear reference. Otherwise, if Linear was the primary tracker in Phase 11, skip this phase.
 
-If Linear is not configured, skip this phase silently.
+**Legacy fallback:** If `ISSUE_TRACKER` is not set but `LINEAR_API_KEY` is in the environment or a `.linear.yaml` file exists in the project root, treat as `ISSUE_TRACKER=linear` and create issues here.
 
-If configured, read `.linear.yaml` for team ID and project defaults:
+If configured via `.linear.yaml`, read team ID and project defaults:
 
 ```yaml
 teamId: ENG
@@ -464,19 +452,9 @@ projectId: proj_abc123
 defaultLabels: [feature]
 ```
 
-For each issue, create a matching Linear issue using the `linear` CLI or API:
-
-```bash
-linear issue create \
-  --title "{title}" \
-  --description "{body}" \
-  --team "{teamId}" \
-  --estimate {size_points}
-```
-
 Size → story points: XS=1, S=2, M=3, L=5
 
-Link the GitHub issue number in the Linear issue description.
+Link the repo issue number/identifier in the Linear issue description.
 
 Display each: `Linear: {identifier} — {title}`
 

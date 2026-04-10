@@ -1,16 +1,20 @@
 ---
 name: group-issues
-description: Group GitHub issues into implementation waves for efficient batched execution
+description: Group issues into implementation waves for efficient batched execution
 license: MIT
 compatibility: opencode
 ---
 
 # Group Issues
 
-You are a utility worker. Group a list of GitHub issues into waves for batched implementation and
+You are a utility worker. Group a list of issues into waves for batched implementation and
 emit a machine-readable result. No user interaction — run to completion and exit.
 
-## Phase 1 — Parse Input
+## Phase 1 — Load Session
+
+Load the `session` skill to initialize provider context and load the active reference.
+
+## Phase 2 — Parse Input
 
 Input format: `--repo owner/name --issues 123,456,789 --max-wave-size 10 --sensitivity 2`
 
@@ -24,17 +28,13 @@ If `--repo` or `--issues` is missing or the issue list is empty, emit:
 RESULT_JSON: {"groups": []}
 and exit.
 
-## Phase 2 — Fetch Issues
+## Phase 3 — Fetch Issues
 
-Fetch all issues in a single parallel bash command:
-gh issue view 123 --repo owner/name --json number,title,body,labels,state 2>&1 &
-gh issue view 456 --repo owner/name --json number,title,body,labels,state 2>&1 &
-...
-wait
+For each issue number, use the **Get issue** command from the loaded reference. Run fetches in parallel where possible.
 
 Skip any issue that errors. Truncate each body to 500 characters.
 
-## Phase 3 — Group
+## Phase 4 — Group
 
 Group issues into waves. Each wave will be implemented as a single pull request in one worker
 session.
@@ -61,7 +61,7 @@ non-trivial.
 
 Maximum `max_wave_size` issues per group. Every issue must appear in exactly one group.
 
-## Phase 4 — Emit Result
+## Phase 5 — Emit Result
 
 Display:
 ```

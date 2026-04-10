@@ -1,16 +1,20 @@
 ---
 name: score-issues
-description: Score a list of GitHub issues by urgency (0-99) for work allocation prioritization
+description: Score a list of issues by urgency (0-99) for work allocation prioritization
 license: MIT
 compatibility: opencode
 ---
 
 # Score Issues
 
-You are a utility worker. Score a list of GitHub issues by urgency and emit a machine-readable
+You are a utility worker. Score a list of issues by urgency and emit a machine-readable
 result. No user interaction — run to completion and exit.
 
-## Phase 1 — Parse Input
+## Phase 1 — Load Session
+
+Load the `session` skill to initialize provider context and load the active reference.
+
+## Phase 2 — Parse Input
 
 Input format: `--repo owner/name --issues 123,456,789`
 
@@ -22,16 +26,15 @@ If either `--repo` or `--issues` is missing or the issue list is empty, emit:
 RESULT_JSON: {"scores": {}}
 and exit.
 
-## Phase 2 — Fetch Issues
+## Phase 3 — Fetch Issues
 
-For each issue number, run:
-gh issue view {number} --repo {repo} --json number,title,body,labels,state
+For each issue number, use the **Get issue** command from the loaded reference.
 
 Skip any issue that returns an error (closed, not found) — do not stop.
 
 Truncate each body to 500 characters before scoring.
 
-## Phase 3 — Score
+## Phase 4 — Score
 
 Score each fetched issue on a 0–99 urgency scale using these criteria:
 
@@ -43,7 +46,7 @@ Score each fetched issue on a 0–99 urgency scale using these criteria:
 
 Assign one integer per issue. Issues that errored during fetch receive score 0.
 
-## Phase 4 — Emit Result
+## Phase 5 — Emit Result
 
 Display:
 ```

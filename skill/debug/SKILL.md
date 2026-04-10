@@ -13,17 +13,17 @@ Before starting: read this entire skill, then create a focused todo list, then e
 
 ---
 
-## Phase 1 — Load Core Philosophy
+## Phase 1 — Load Session and Core
 
-Load the `core` skill to internalize project values. These principles guide how you investigate and what you consider worth flagging.
+Load the `session` skill to initialize provider context and load the active reference. Then load the `core` skill.
 
 ---
 
 ## Phase 2 — Parse the Input
 
 The input will be one of these forms:
-- A GitHub issue number: `456`
-- A GitHub issue URL: `https://github.com/owner/repo/issues/456`
+- An issue number: `456`
+- An issue URL (GitHub: `https://github.com/owner/repo/issues/456`, GitLab: `https://gitlab.com/group/project/-/issues/456`)
 - A quoted problem description: `"tests failing intermittently in CI"`
 - Any of the above followed by `: some context` for inline hints
 
@@ -40,7 +40,7 @@ Display: `Debug: {problem_description || 'fetching issue...'}`
 
 If the input was an issue number or URL:
 - Get the repo from `git remote get-url origin`
-- Fetch issue details: `gh issue view {number} --json title,body,labels,comments`
+- Use the **Get issue** command from the loaded reference to fetch title, body, labels, and comments
 - Extract the full problem description, any error messages quoted in the issue body, and any relevant comments
 - Note any labels (they often classify the problem type — `bug`, `flaky-test`, `performance`, etc.)
 
@@ -161,7 +161,7 @@ Produce a structured diagnostic report:
 ## Phase 8 — Done
 
 Display the report. Then offer:
-- "Create a GitHub issue from this diagnosis" — runs `gh issue create` with the report as the body
+- "Create an issue from this diagnosis" — use the **Create issue** command from the loaded reference, with the report as the body
 - "Done" — stop here
 
 If they choose to create an issue: use the problem description as the title, the full report as the body, label it with `bug` and the classification.

@@ -7,25 +7,24 @@ compatibility: opencode
 
 # Work PR Workflow
 
-You are a workflow driver. Your job is to take a pull request from open feedback to pushed resolution without stopping unless you genuinely need the user's input. Work with momentum — keep moving through the phases, communicate progress clearly, and only pause at marked checkpoints.
-
-This workflow is GitHub-only. For Linear issues, use the `work-issue` skill instead.
+You are a workflow driver. Your job is to take a pull request or merge request from open feedback to pushed resolution without stopping unless you genuinely need the user's input. Work with momentum — keep moving through the phases, communicate progress clearly, and only pause at marked checkpoints.
 
 Before starting: read this entire skill, then create a focused todo list, then execute.
 
 ---
 
-## Phase 1 — Load Core Philosophy
+## Phase 1 — Load Session and Core
 
-Load the `core` skill to internalize project values: quality gates, git safety, and task completion standards. These principles govern every decision you make throughout this workflow.
+Load the `session` skill to initialize provider context and load the active reference. Then load the `core` skill to internalize project values: quality gates, git safety, and task completion standards. These principles govern every decision you make throughout this workflow.
 
 ---
 
 ## Phase 2 — Parse the Input
 
 The input will be one of these forms:
-- A PR number: `456`
+- A PR/MR number: `456`
 - A GitHub PR URL: `https://github.com/owner/repo/pull/456`
+- A GitLab MR URL: `https://gitlab.com/group/project/-/merge_requests/456`
 - Either of the above followed by `: some context` for inline hints
 - An optional `--auto` flag to skip the user approval checkpoint
 
@@ -38,25 +37,23 @@ Display: `Input: PR #{pr_number} | auto: {auto_mode}`
 
 ---
 
-## Phase 3 — Get Repo and PR Context
+## Phase 3 — Get Repo and PR/MR Context
 
 Do these together:
 
 **Repo info:** Run `git remote get-url origin` and parse the owner and repo name. Store `repo_owner`, `repo_name`.
 
-**PR details:** Fetch the PR using `gh pr view {pr_number} --json title,body,headRefName,state,reviews,comments`. Get the title, body, branch name (`headRefName`), current state, and any reviews or comments. If the PR is already merged or closed, warn the user and stop.
+**PR/MR details:** Use the **View PR** command from the loaded reference. Get the title, body, branch name, current state, and any reviews or comments. If the PR/MR is already merged or closed, warn the user and stop.
 
-**PR feedback:** Fetch issue-style comments (the main conversation thread) using `gh api repos/{repo_owner}/{repo_name}/issues/{pr_number}/comments`. This is the correct endpoint for comments posted in the PR conversation — not `pulls/{pr_number}/comments`, which only returns inline diff comments and will miss most feedback.
+**PR/MR feedback:** Use the **PR conversation thread** command from the loaded reference to fetch the main discussion. This captures comments posted in the conversation — not inline diff comments.
 
-Get the timestamp of the latest commit on the branch: `gh pr view {pr_number} --json commits --jq '.commits[-1].committedDate'`. Only consider comments whose `created_at` is after that timestamp — these are the comments posted since the last push.
+Get the timestamp of the latest commit on the branch using the **Latest commit timestamp** command from the reference. Only consider comments whose `created_at` is after that timestamp — these are the comments posted since the last push.
 
 Separate the filtered comments into:
 - `blocking_feedback` — comments containing "must fix", "please change", "needs to be", "blocking", or any explicit change request
 - `recommended_feedback` — suggestions, nits, optional improvements, questions
 
-Also fetch formal review decisions: `gh api repos/{repo_owner}/{repo_name}/pulls/{pr_number}/reviews` to capture any "CHANGES_REQUESTED" reviews.
-
-**CI status:** Check `gh pr checks {pr_number}` for any failing checks. Note them for the implement phase.
+**CI status:** Use the **Check CI** command from the loaded reference for any failing checks. Note them for the implement phase.
 
 Store: `pr_title`, `branch_name` (from headRefName), `blocking_feedback`, `recommended_feedback`, `ci_failures`.
 
@@ -185,9 +182,9 @@ Display: `Commit: {message}`
 
 ---
 
-## Phase 11 — Post PR Comment
+## Phase 11 — Post PR/MR Comment
 
-Post a summary comment on the PR using `gh pr comment {pr_number} --body "{message}"`.
+Use the **Post comment** command from the loaded reference to post a summary comment on the PR/MR.
 
 The comment should cover:
 - What feedback was addressed
