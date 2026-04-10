@@ -2,11 +2,12 @@
 set -euo pipefail
 
 # hivrr-merge.sh — mechanical phases of the merge-pr workflow
-# Handles: PR validation, CI check, confirm, squash merge, issue close, branch cleanup
+# Handles: PR/MR validation, CI check, confirm, squash merge, issue close, branch cleanup
 # Outputs a structured summary line for the skill to consume.
+# Supports GitHub (gh CLI) and GitLab (glab CLI) via --provider flag.
 
 usage() {
-  echo "Usage: hivrr-merge.sh --pr <number> --repo <owner/repo> [--auto]" >&2
+  echo "Usage: hivrr-merge.sh --pr <number> --repo <owner/repo> [--auto] [--provider github|gitlab] [--issue-tracker github|gitlab|linear]" >&2
   exit 1
 }
 
@@ -16,6 +17,8 @@ usage() {
 PR_NUMBER=""
 REPO=""
 AUTO=false
+PROVIDER="${REPO_PROVIDER:-github}"
+ISSUE_TRACKER_FLAG="${ISSUE_TRACKER:-github}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -33,6 +36,16 @@ while [[ $# -gt 0 ]]; do
       AUTO=true
       shift
       ;;
+    --provider)
+      PROVIDER="${2:-}"
+      [[ -z "$PROVIDER" ]] && { echo "ERROR: --provider requires a value" >&2; usage; }
+      shift 2
+      ;;
+    --issue-tracker)
+      ISSUE_TRACKER_FLAG="${2:-}"
+      [[ -z "$ISSUE_TRACKER_FLAG" ]] && { echo "ERROR: --issue-tracker requires a value" >&2; usage; }
+      shift 2
+      ;;
     *)
       echo "ERROR: Unknown flag: $1" >&2
       usage
@@ -49,35 +62,55 @@ if ! [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Script Phase 1 — Fetch PR details
+# Script Phase 1 — Fetch PR/MR details
 # ---------------------------------------------------------------------------
-echo "Fetching PR #${PR_NUMBER} from ${REPO}..."
+echo "Fetching ${PROVIDER} PR/MR #${PR_NUMBER} from ${REPO}..."
 
-PR_JSON=$(gh pr view "$PR_NUMBER" --repo "$REPO" \
-  --json title,body,headRefName,state,baseRefName,reviews 2>&1) || {
-  echo "ERROR: Failed to fetch PR #${PR_NUMBER}: ${PR_JSON}" >&2
-  exit 1
-}
+if [[ "$PROVIDER" == "gitlab" ]]; then
+  PR_JSON=$(glab mr view "$PR_NUMBER" --repo "$REPO" --output json 2>&1) || {
+    echo "ERROR: Failed to fetch MR !${PR_NUMBER}: ${PR_JSON}" >&2
+    exit 1
+  }
+  PR_TITLE=$(echo "$PR_JSON"  | jq -r '.title')
+  PR_BODY=$(echo "$PR_JSON"   | jq -r '.description')
+  BRANCH_NAME=$(echo "$PR_JSON"  | jq -r '.sourceBranch')
+  PR_STATE_RAW=$(echo "$PR_JSON" | jq -r '.state')
+  BASE_BRANCH=$(echo "$PR_JSON"  | jq -r '.targetBranch')
+  # Normalize state to GitHub-style for shared logic below
+  case "$PR_STATE_RAW" in
+    merged)  PR_STATE="MERGED" ;;
+    closed)  PR_STATE="CLOSED" ;;
+    opened)  PR_STATE="OPEN" ;;
+    *)       PR_STATE="$PR_STATE_RAW" ;;
+  esac
+  CHANGES_REQUESTED_RAW=$(echo "$PR_JSON" | jq '[.reviewers[]? | select(.state == "requested_changes")] | length' 2>/dev/null || echo "0")
+else
+  PR_JSON=$(gh pr view "$PR_NUMBER" --repo "$REPO" \
+    --json title,body,headRefName,state,baseRefName,reviews 2>&1) || {
+    echo "ERROR: Failed to fetch PR #${PR_NUMBER}: ${PR_JSON}" >&2
+    exit 1
+  }
+  PR_TITLE=$(echo "$PR_JSON" | jq -r '.title')
+  PR_BODY=$(echo "$PR_JSON"  | jq -r '.body')
+  BRANCH_NAME=$(echo "$PR_JSON"  | jq -r '.headRefName')
+  PR_STATE=$(echo "$PR_JSON"  | jq -r '.state')
+  BASE_BRANCH=$(echo "$PR_JSON"  | jq -r '.baseRefName')
+  CHANGES_REQUESTED_RAW=$(echo "$PR_JSON" | jq '[.reviews[] | select(.state == "CHANGES_REQUESTED")] | length')
+fi
 
-PR_TITLE=$(echo "$PR_JSON" | jq -r '.title')
-PR_BODY=$(echo "$PR_JSON"  | jq -r '.body')
-BRANCH_NAME=$(echo "$PR_JSON"  | jq -r '.headRefName')
-PR_STATE=$(echo "$PR_JSON"  | jq -r '.state')
-BASE_BRANCH=$(echo "$PR_JSON"  | jq -r '.baseRefName')
-
-echo "PR #${PR_NUMBER}: \"${PR_TITLE}\" | state: ${PR_STATE}"
+echo "PR/MR #${PR_NUMBER}: \"${PR_TITLE}\" | state: ${PR_STATE}"
 
 if [[ "$PR_STATE" == "MERGED" ]]; then
-  echo "PR #${PR_NUMBER} is already merged — skipping to cleanup"
+  echo "PR/MR #${PR_NUMBER} is already merged — skipping to cleanup"
   ALREADY_MERGED=true
 elif [[ "$PR_STATE" == "CLOSED" ]]; then
-  echo "ERROR: PR #${PR_NUMBER} is closed but not merged. Cannot merge a closed PR." >&2
+  echo "ERROR: PR/MR #${PR_NUMBER} is closed but not merged. Cannot merge a closed PR/MR." >&2
   exit 1
 else
   ALREADY_MERGED=false
 fi
 
-CHANGES_REQUESTED=$(echo "$PR_JSON" | jq '[.reviews[] | select(.state == "CHANGES_REQUESTED")] | length')
+CHANGES_REQUESTED="${CHANGES_REQUESTED_RAW:-0}"
 if [[ "$CHANGES_REQUESTED" -gt 0 ]]; then
   echo "WARNING: ${CHANGES_REQUESTED} review(s) requesting changes — consider addressing before merge" >&2
 fi
@@ -86,9 +119,10 @@ fi
 # Script Phase 2 — Extract linked issues
 # ---------------------------------------------------------------------------
 LINKED_ISSUES=()
+# Match GitHub-style "#N" and Linear-style "ENG-123" issue references
 while IFS= read -r num; do
   [[ -n "$num" ]] && LINKED_ISSUES+=("$num")
-done < <(echo "$PR_BODY" | grep -oiE '(closes?|fixes?|resolves?)[[:space:]]+#[0-9]+' | grep -oE '[0-9]+' | sort -un)
+done < <(echo "$PR_BODY" | grep -oiE '(closes?|fixes?|resolves?)[[:space:]]+(#[0-9]+|[A-Z]+-[0-9]+)' | grep -oE '(#[0-9]+|[A-Z]+-[0-9]+)' | sort -u)
 
 if [[ ${#LINKED_ISSUES[@]} -gt 0 ]]; then
   echo "Linked issues: ${LINKED_ISSUES[*]}"
@@ -101,19 +135,33 @@ fi
 # ---------------------------------------------------------------------------
 if [[ "$ALREADY_MERGED" == "false" ]]; then
   echo "Checking CI..."
-  # gh pr checks has no --json flag; output is tab-separated: name, state, duration, url
-  CI_OUTPUT=$(gh pr checks "$PR_NUMBER" --repo "$REPO" 2>&1) || {
-    # gh exits non-zero when no checks are configured — treat that as "no checks"
-    if echo "$CI_OUTPUT" | grep -qiE 'no checks|no check runs'; then
-      echo "CI: no checks configured — continuing"
-      CI_OUTPUT=""
-    else
-      echo "ERROR: Failed to fetch CI checks: ${CI_OUTPUT}" >&2
-      exit 1
-    fi
-  }
 
-  FAILING=$(echo "$CI_OUTPUT" | awk -F'\t' 'NF>=2 && $2 ~ /^(fail|failure|timed_out|cancelled|startup_failure|action_required)$/ && $1 !~ /claude.review|claude-review/ {print "  " $1 ": " $2}')
+  if [[ "$PROVIDER" == "gitlab" ]]; then
+    CI_OUTPUT=$(glab ci status --repo "$REPO" --branch "$BRANCH_NAME" 2>&1) || {
+      if echo "$CI_OUTPUT" | grep -qiE 'no pipeline|not found'; then
+        echo "CI: no pipeline found — continuing"
+        CI_OUTPUT=""
+      else
+        echo "ERROR: Failed to fetch CI status: ${CI_OUTPUT}" >&2
+        exit 1
+      fi
+    }
+    FAILING=$(echo "$CI_OUTPUT" | grep -iE 'failed|cancelled' || true)
+  else
+    # gh pr checks has no --json flag; output is tab-separated: name, state, duration, url
+    CI_OUTPUT=$(gh pr checks "$PR_NUMBER" --repo "$REPO" 2>&1) || {
+      # gh exits non-zero when no checks are configured — treat that as "no checks"
+      if echo "$CI_OUTPUT" | grep -qiE 'no checks|no check runs'; then
+        echo "CI: no checks configured — continuing"
+        CI_OUTPUT=""
+      else
+        echo "ERROR: Failed to fetch CI checks: ${CI_OUTPUT}" >&2
+        exit 1
+      fi
+    }
+    FAILING=$(echo "$CI_OUTPUT" | awk -F'\t' 'NF>=2 && $2 ~ /^(fail|failure|timed_out|cancelled|startup_failure|action_required)$/ && $1 !~ /claude.review|claude-review/ {print "  " $1 ": " $2}')
+  fi
+
   if [[ -n "$FAILING" ]]; then
     echo "ERROR: CI checks are failing — cannot merge:" >&2
     echo "$FAILING" >&2
@@ -155,22 +203,32 @@ fi
 # ---------------------------------------------------------------------------
 REMOTE_DELETED=false
 if [[ "$ALREADY_MERGED" == "false" ]]; then
-  echo "Merging PR #${PR_NUMBER} (squash)..."
-  if gh pr merge "$PR_NUMBER" --repo "$REPO" --squash --delete-branch 2>&1; then
-    REMOTE_DELETED=true
-  else
-    # --delete-branch may fail if branch was already deleted; re-check state before retrying
-    RETRY_STATE=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json state --jq '.state' 2>/dev/null || echo "UNKNOWN")
-    if [[ "$RETRY_STATE" == "MERGED" ]]; then
-      echo "PR #${PR_NUMBER} was merged (branch deletion may have failed — will clean up below)"
-    elif gh pr merge "$PR_NUMBER" --repo "$REPO" --squash 2>&1; then
-      REMOTE_DELETED=false
+  echo "Merging PR/MR #${PR_NUMBER} (squash)..."
+
+  if [[ "$PROVIDER" == "gitlab" ]]; then
+    if glab mr merge "$PR_NUMBER" --repo "$REPO" --squash --remove-source-branch 2>&1; then
+      REMOTE_DELETED=true
     else
       echo "ERROR: Merge failed" >&2
       exit 1
     fi
+  else
+    if gh pr merge "$PR_NUMBER" --repo "$REPO" --squash --delete-branch 2>&1; then
+      REMOTE_DELETED=true
+    else
+      # --delete-branch may fail if branch was already deleted; re-check state before retrying
+      RETRY_STATE=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json state --jq '.state' 2>/dev/null || echo "UNKNOWN")
+      if [[ "$RETRY_STATE" == "MERGED" ]]; then
+        echo "PR #${PR_NUMBER} was merged (branch deletion may have failed — will clean up below)"
+      elif gh pr merge "$PR_NUMBER" --repo "$REPO" --squash 2>&1; then
+        REMOTE_DELETED=false
+      else
+        echo "ERROR: Merge failed" >&2
+        exit 1
+      fi
+    fi
   fi
-  echo "Merged: PR #${PR_NUMBER} → ${BASE_BRANCH} (squash)"
+  echo "Merged: PR/MR #${PR_NUMBER} → ${BASE_BRANCH} (squash)"
 fi
 
 # ---------------------------------------------------------------------------
@@ -178,25 +236,53 @@ fi
 # ---------------------------------------------------------------------------
 MANUALLY_CLOSED=0
 if [[ ${#LINKED_ISSUES[@]} -gt 0 ]]; then
-  for ISSUE_NUM in "${LINKED_ISSUES[@]}"; do
-    # Poll for auto-close — up to 5 attempts with 2s back-off
-    ISSUE_STATE="UNKNOWN"
-    for (( i=1; i<=5; i++ )); do
-      ISSUE_STATE=$(gh issue view "$ISSUE_NUM" --repo "$REPO" --json state --jq '.state' 2>/dev/null || echo "UNKNOWN")
-      [[ "$ISSUE_STATE" == "CLOSED" ]] && break
-      if (( i < 5 )); then sleep 2; fi
-    done
-    if [[ "$ISSUE_STATE" == "CLOSED" ]]; then
-      echo "Issue #${ISSUE_NUM}: already closed"
-    elif [[ "$ISSUE_STATE" == "OPEN" ]]; then
-      if gh issue close "$ISSUE_NUM" --repo "$REPO" 2>/dev/null; then
-        echo "Issue #${ISSUE_NUM}: closed"
+  for ISSUE_REF in "${LINKED_ISSUES[@]}"; do
+    # Strip leading # for numeric references
+    ISSUE_NUM="${ISSUE_REF#\#}"
+
+    # Determine if this is a Linear identifier (e.g. ENG-123) or a numeric issue
+    if [[ "$ISSUE_NUM" =~ ^[A-Z]+-[0-9]+$ ]]; then
+      # Linear issue — close via linear CLI
+      if linear issue update "$ISSUE_NUM" --state Done 2>/dev/null; then
+        echo "Issue ${ISSUE_NUM}: closed (Linear)"
         MANUALLY_CLOSED=$(( MANUALLY_CLOSED + 1 ))
       else
-        echo "WARNING: Failed to close issue #${ISSUE_NUM}" >&2
+        echo "WARNING: Failed to close Linear issue ${ISSUE_NUM}" >&2
+      fi
+    elif [[ "$ISSUE_TRACKER_FLAG" == "gitlab" ]]; then
+      ISSUE_STATE=$(glab issue view "$ISSUE_NUM" --repo "$REPO" --output json 2>/dev/null | jq -r '.state' || echo "UNKNOWN")
+      if [[ "$ISSUE_STATE" == "closed" ]]; then
+        echo "Issue #${ISSUE_NUM}: already closed"
+      elif [[ "$ISSUE_STATE" == "opened" ]]; then
+        if glab issue close "$ISSUE_NUM" --repo "$REPO" 2>/dev/null; then
+          echo "Issue #${ISSUE_NUM}: closed"
+          MANUALLY_CLOSED=$(( MANUALLY_CLOSED + 1 ))
+        else
+          echo "WARNING: Failed to close issue #${ISSUE_NUM}" >&2
+        fi
+      else
+        echo "WARNING: Could not determine state of issue #${ISSUE_NUM}" >&2
       fi
     else
-      echo "WARNING: Could not determine state of issue #${ISSUE_NUM}" >&2
+      # GitHub issue — poll for auto-close then close manually if needed
+      ISSUE_STATE="UNKNOWN"
+      for (( i=1; i<=5; i++ )); do
+        ISSUE_STATE=$(gh issue view "$ISSUE_NUM" --repo "$REPO" --json state --jq '.state' 2>/dev/null || echo "UNKNOWN")
+        [[ "$ISSUE_STATE" == "CLOSED" ]] && break
+        if (( i < 5 )); then sleep 2; fi
+      done
+      if [[ "$ISSUE_STATE" == "CLOSED" ]]; then
+        echo "Issue #${ISSUE_NUM}: already closed"
+      elif [[ "$ISSUE_STATE" == "OPEN" ]]; then
+        if gh issue close "$ISSUE_NUM" --repo "$REPO" 2>/dev/null; then
+          echo "Issue #${ISSUE_NUM}: closed"
+          MANUALLY_CLOSED=$(( MANUALLY_CLOSED + 1 ))
+        else
+          echo "WARNING: Failed to close issue #${ISSUE_NUM}" >&2
+        fi
+      else
+        echo "WARNING: Could not determine state of issue #${ISSUE_NUM}" >&2
+      fi
     fi
   done
   echo "Linked issues: ${#LINKED_ISSUES[@]} verified, ${MANUALLY_CLOSED} manually closed"

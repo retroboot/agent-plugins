@@ -1,41 +1,48 @@
 ---
 name: review-pr
-description: Review a pull request — fetches the diff, analyzes it, and posts a structured comment
+description: Review a pull request or merge request — fetches the diff, analyzes it, and posts a structured comment
 license: MIT
 compatibility: opencode
 ---
 
-# Review PR Workflow
+# Review PR/MR Workflow
 
-You are a code reviewer. Your job is to fetch a PR's diff, analyze it thoroughly, and post a structured review comment. Work with precision — every finding must include a file:line reference and a concrete fix.
+You are a code reviewer. Your job is to fetch a PR or MR's diff, analyze it thoroughly, and post a structured review comment. Work with precision — every finding must include a file:line reference and a concrete fix.
 
 Before starting: read this entire skill, then execute.
 
 ---
 
-## Phase 1 — Parse the Input
+## Phase 1 — Load Session
 
-The input will be one of these forms:
-- A PR number: `99`
-- A GitHub PR URL: `https://github.com/owner/repo/pull/99`
-- Either of the above followed by `: some context` for inline hints
-
-Extract:
-- `pr_number` — the PR number
-- `repo_owner` / `repo_name` — from the URL if provided, otherwise from `git remote get-url origin`
-- `inline_context` — any text after `:` in the input
-
-Display: `Review: PR #{pr_number} in {repo_owner}/{repo_name}`
+Load the `session` skill to initialize provider context and load the active reference.
 
 ---
 
-## Phase 2 — Fetch PR Context
+## Phase 2 — Parse the Input
 
-Run these in parallel:
+The input will be one of these forms:
+- A PR/MR number: `99`
+- A GitHub PR URL: `https://github.com/owner/repo/pull/99`
+- A GitLab MR URL: `https://gitlab.com/group/project/-/merge_requests/99`
+- Either of the above followed by `: some context` for inline hints
 
-1. **Diff:** `gh pr diff {pr_number} --repo {repo_owner}/{repo_name}`
-2. **PR metadata:** `gh pr view {pr_number} --repo {repo_owner}/{repo_name} --json title,body,author,additions,deletions`
-3. **Review history:** `gh api repos/{repo_owner}/{repo_name}/issues/{pr_number}/comments --jq '[.[] | {user: .user.login, created_at, body}]'`
+Extract:
+- `pr_number` — the PR/MR number
+- `repo_owner` / `repo_name` — from the URL if provided, otherwise from `git remote get-url origin`
+- `inline_context` — any text after `:` in the input
+
+Display: `Review: PR/MR #{pr_number} in {repo_owner}/{repo_name}`
+
+---
+
+## Phase 3 — Fetch PR/MR Context
+
+Run these in parallel using commands from the loaded reference:
+
+1. **Diff:** use **Get diff** command
+2. **PR/MR metadata:** use **View PR** command (extract title, body, author, additions, deletions)
+3. **Review history:** use **PR conversation thread** command
 
 If `additions + deletions > 3000`, emit a warning: `⚠️ Large diff ({additions + deletions} lines) — consider narrowing scope with inline context, e.g. /review-pr {pr_number} : focus on auth/`. Continue regardless.
 
@@ -49,13 +56,13 @@ Display: `Type: {first review | follow-up} | +{additions}/-{deletions} lines`
 
 ---
 
-## Phase 3 — Read Repository Conventions
+## Phase 4 — Read Repository Conventions
 
 If a `CLAUDE.md` exists at the repo root, read it for project conventions. These conventions take precedence over generic best practices when there is a conflict.
 
 ---
 
-## Phase 4 — Analyze the Diff
+## Phase 5 — Analyze the Diff
 
 Read the diff carefully. For every finding, require:
 - ≥80% confidence before including it
@@ -94,7 +101,7 @@ Classify each finding:
 
 ---
 
-## Phase 5 — Compose the Review
+## Phase 6 — Compose the Review
 
 Build the review body using this structure:
 
@@ -145,23 +152,14 @@ Store: `review_body`.
 
 ---
 
-## Phase 6 — Post the Review
+## Phase 7 — Post the Review
 
-Write the review body to a temp file and post it as a PR comment:
+Use the **Post comment** command from the loaded reference to post `review_body` as a comment on the PR/MR.
 
-```bash
-TMPFILE=$(mktemp)
-cat > "$TMPFILE" <<'END_REVIEW_BODY'
-{review_body}
-END_REVIEW_BODY
-gh pr comment {pr_number} --repo {repo_owner}/{repo_name} --body-file "$TMPFILE"
-rm -f "$TMPFILE"
-```
-
-Display: `Posted: review comment on PR #{pr_number}`
+Display: `Posted: review comment on PR/MR #{pr_number}`
 
 ---
 
-## Phase 7 — Done
+## Phase 8 — Done
 
 Emit the completion JSON as defined in the command's Output section.

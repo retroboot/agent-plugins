@@ -13,9 +13,9 @@ Before starting: read this entire skill, then create a focused todo list, then e
 
 ---
 
-## Phase 1 — Load Core Philosophy
+## Phase 1 — Load Session and Core
 
-Load the `core` skill to internalize project values: quality gates, git safety, and task completion standards. These principles govern every decision you make throughout this workflow.
+Load the `session` skill to initialize provider context and load the active reference. Then load the `core` skill to internalize project values: quality gates, git safety, and task completion standards. These principles govern every decision you make throughout this workflow.
 
 ---
 
@@ -69,7 +69,7 @@ Do these together:
 
 **Repo info:** Run `git remote get-url origin` and parse the owner and repo name. Check the current branch with `git branch --show-current`. Store `repo_owner`, `repo_name`, `current_branch`.
 
-**Issue details:** Fetch each issue using the GitHub MCP tool (or Linear MCP if the provider is Linear). Get the title, body, labels, and any linked issues. If fetching fails, continue with whatever you have — don't stop.
+**Issue details:** Use the **Get issue** command from the loaded reference (or the linear reference if `ISSUE_TRACKER=linear`). Get the title, body, labels, and any linked issues. If fetching fails, continue with whatever you have — don't stop.
 
 Store everything you learn about the issues as `issue_data`.
 
@@ -202,7 +202,7 @@ Stage all changes: `git add -A`
 Write a conventional commit message:
 - Format: `{type}({scope}): {description}`
 - Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
-- Include issue references in the body: `Closes #{number}` for each issue (GitHub) or the Linear identifier
+- Include issue references in the body: `Closes #{number}` for each issue (GitHub/GitLab) or the Linear identifier (e.g. `ENG-123`) if `ISSUE_TRACKER=linear`
 
 Commit with: `git commit -m "{message}"`
 
@@ -210,13 +210,13 @@ Display: `Commit: {message}`
 
 ---
 
-## Phase 12 — Create PR
+## Phase 12 — Create PR/MR
 
 Push the branch: `git push -u origin {branch_name}`
 
-Create the PR using `gh pr create` with:
+Use the **Create PR** command from the loaded reference with:
 - Title: the issue title for a single issue, or a clear group summary for wave
-- Body: what was done, why, how to test it, and a `Closes #N` line for every issue in the group
+- Body: what was done, why, how to test it, and a `Closes #N` line for every issue in the group (use Linear identifiers like `ENG-123` if `ISSUE_TRACKER=linear`)
 - Link it to all relevant issues
 
 Display: `PR: {url}`
