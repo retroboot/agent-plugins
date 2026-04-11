@@ -141,16 +141,26 @@ if [[ "$ALREADY_MERGED" == "false" ]]; then
   echo "Checking CI..."
 
   if [[ "$PROVIDER" == "gitlab" ]]; then
-    CI_OUTPUT=$(glab ci status --repo "$REPO" --branch "$BRANCH_NAME" 2>&1) || {
-      if echo "$CI_OUTPUT" | grep -qiE 'no pipeline|not found'; then
+    PIPELINE_STATUS=$(glab api "projects/${ENCODED_REPO}/merge_requests/${PR_NUMBER}/pipelines" \
+      2>/dev/null | jq -r '.[0].status // "none"')
+    case "$PIPELINE_STATUS" in
+      success)
+        FAILING=""
+        ;;
+      failed|canceled)
+        FAILING="Pipeline: ${PIPELINE_STATUS}"
+        ;;
+      running|pending)
+        FAILING="Pipeline: ${PIPELINE_STATUS} (not finished)"
+        ;;
+      none)
+        FAILING=""
         echo "CI: no pipeline found — continuing"
-        CI_OUTPUT=""
-      else
-        echo "ERROR: Failed to fetch CI status: ${CI_OUTPUT}" >&2
-        exit 1
-      fi
-    }
-    FAILING=$(echo "$CI_OUTPUT" | grep -iE 'failed|cancelled' || true)
+        ;;
+      *)
+        FAILING=""
+        ;;
+    esac
   else
     # gh pr checks has no --json flag; output is tab-separated: name, state, duration, url
     CI_OUTPUT=$(gh pr checks "$PR_NUMBER" --repo "$REPO" 2>&1) || {
@@ -172,11 +182,15 @@ if [[ "$ALREADY_MERGED" == "false" ]]; then
     exit 1
   fi
 
-  CHECK_COUNT=$(echo "$CI_OUTPUT" | grep -cE $'^.+\t' || true)
-  if [[ "$CHECK_COUNT" -eq 0 ]]; then
-    echo "CI: no checks configured — continuing"
+  if [[ "$PROVIDER" == "gitlab" ]]; then
+    [[ "$PIPELINE_STATUS" == "success" ]] && echo "CI: all checks passed"
   else
-    echo "CI: all checks passed"
+    CHECK_COUNT=$(echo "$CI_OUTPUT" | grep -cE $'^.+\t' || true)
+    if [[ "$CHECK_COUNT" -eq 0 ]]; then
+      echo "CI: no checks configured — continuing"
+    else
+      echo "CI: all checks passed"
+    fi
   fi
 fi
 

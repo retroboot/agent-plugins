@@ -84,9 +84,10 @@ MCP: mcp__nexus__hub__list_prs  repo={OWNER}/{REPO} state=open [provider={provid
 
 **Check CI**
 ```
-CLI: use **Check CI** from the provider reference
+MCP: mcp__nexus__hub__get_pr_ci_status  id={OWNER}/{REPO}!{N} [provider={provider}]
+Returns: {"status": "passed|failed|running|pending|none", "url": "<pipeline url or ''>", "jobs": [{"name": str, "status": "passed|failed|running|pending", "url": str}]}
+Fallback (tool unavailable): use **Check CI** CLI from the provider reference
 ```
-CI status is not available via hub — use the provider reference for the correct CLI command.
 
 **Latest commit timestamp**
 ```
