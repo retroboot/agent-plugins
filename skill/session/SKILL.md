@@ -47,7 +47,7 @@ If `hub_mcp=true`:
 Read $CLAUDE_SKILL_DIR/references/hub.md
 Read $CLAUDE_SKILL_DIR/references/{REPO_PROVIDER}.md
 ```
-hub.md provides MCP tool calls; the provider reference provides CLI syntax for operations hub does not cover (diff, CI checks, comment reads). Both are active — for any given operation, use hub.md's MCP form when available, and the provider reference's CLI form otherwise.
+hub.md provides MCP tool calls; the provider reference provides CLI syntax for operations hub does not cover (CI checks). Both are active — for any given operation, use hub.md's MCP form when available, and the provider reference's CLI form otherwise.
 
 If `hub_mcp=false`:
 ```

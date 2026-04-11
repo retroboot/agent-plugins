@@ -1,6 +1,6 @@
 # Hub Reference
 
-Use hub MCP tools when `hub_mcp=true`. For operations hub does not cover (diff text, CI checks, comment reads), use the **provider reference** loaded alongside this file — it has the correct CLI syntax for both GitHub and GitLab.
+Use hub MCP tools when `hub_mcp=true`. For operations hub does not cover (CI checks), use the **provider reference** loaded alongside this file — it has the correct CLI syntax for both GitHub and GitLab.
 
 > **Multi-provider:** Hub initializes every provider that has credentials in secrets (`GITHUB_TOKEN`, `GITLAB_TOKEN`, etc.). Pass `provider="github"` or `provider="gitlab"` to any tool to route explicitly — hub ignores `REPO_PROVIDER` when `provider` is set. Omit `provider` to use the default (`REPO_PROVIDER`).
 
@@ -45,9 +45,10 @@ MCP: mcp__nexus__hub__comment_issue  id={OWNER}/{REPO}#{N} body={B} [provider={p
 
 **Get diff**
 ```
-CLI: use **Get diff** from the provider reference
+MCP: mcp__nexus__hub__get_pr_diff  id={OWNER}/{REPO}!{N} [provider={provider}]
+Returns: {"diff": "<unified diff text>"}
+Fallback (tool unavailable): use **Get diff** CLI from the provider reference
 ```
-Raw diff text is not available via hub — use the provider reference for the correct CLI command.
 
 **View PR**
 ```
@@ -56,9 +57,10 @@ MCP: mcp__nexus__hub__get_pr  id={OWNER}/{REPO}!{N} [provider={provider}]
 
 **PR conversation thread**
 ```
-CLI: use **PR conversation thread** from the provider reference
+MCP: mcp__nexus__hub__list_pr_comments  id={OWNER}/{REPO}!{N} [provider={provider}]
+Returns: [{id, body, url, created_at}, ...]  # all comments, not paginated
+Fallback (tool unavailable): use **PR conversation thread** CLI from the provider reference
 ```
-Hub does not expose a read-comments endpoint — use the provider reference for the correct CLI command.
 
 **Post comment**
 ```
@@ -88,7 +90,9 @@ CI status is not available via hub — use the provider reference for the correc
 
 **Latest commit timestamp**
 ```
-CLI: use **Latest commit timestamp** from the provider reference
+MCP: mcp__nexus__hub__get_pr_latest_commit  id={OWNER}/{REPO}!{N} [provider={provider}]
+Returns: {"sha": "abc123", "committed_at": "2026-04-11T12:00:00Z"}  # committed_at is always UTC ISO-8601
+Fallback (tool unavailable): use **Latest commit timestamp** CLI from the provider reference
 ```
 
 ---
