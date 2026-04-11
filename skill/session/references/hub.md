@@ -47,6 +47,7 @@ MCP: mcp__nexus__hub__comment_issue  id={OWNER}/{REPO}#{N} body={B} [provider={p
 ```
 MCP: mcp__nexus__hub__get_pr_diff  id={OWNER}/{REPO}!{N} [provider={provider}]
 Returns: {"diff": "<unified diff text>"}
+Fallback (tool unavailable): use **Get diff** CLI from the provider reference
 ```
 
 **View PR**
@@ -57,7 +58,8 @@ MCP: mcp__nexus__hub__get_pr  id={OWNER}/{REPO}!{N} [provider={provider}]
 **PR conversation thread**
 ```
 MCP: mcp__nexus__hub__list_pr_comments  id={OWNER}/{REPO}!{N} [provider={provider}]
-Returns: [{id, body, url, created_at}, ...]
+Returns: [{id, body, url, created_at}, ...]  # all comments, not paginated
+Fallback (tool unavailable): use **PR conversation thread** CLI from the provider reference
 ```
 
 **Post comment**
@@ -89,7 +91,8 @@ CI status is not available via hub — use the provider reference for the correc
 **Latest commit timestamp**
 ```
 MCP: mcp__nexus__hub__get_pr_latest_commit  id={OWNER}/{REPO}!{N} [provider={provider}]
-Returns: {"sha": "abc123", "committed_at": "2026-04-11T12:00:00Z"}
+Returns: {"sha": "abc123", "committed_at": "2026-04-11T12:00:00Z"}  # committed_at is always UTC ISO-8601
+Fallback (tool unavailable): use **Latest commit timestamp** CLI from the provider reference
 ```
 
 ---
