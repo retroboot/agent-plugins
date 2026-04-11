@@ -1,6 +1,6 @@
 # Hub Reference
 
-Use hub MCP tools when `hub_mcp=true`. For operations hub does not cover (diff text, CI checks, comment reads), use the **provider reference** loaded alongside this file — it has the correct CLI syntax for both GitHub and GitLab.
+Use hub MCP tools when `hub_mcp=true`. For operations hub does not cover (CI checks), use the **provider reference** loaded alongside this file — it has the correct CLI syntax for both GitHub and GitLab.
 
 > **Multi-provider:** Hub initializes every provider that has credentials in secrets (`GITHUB_TOKEN`, `GITLAB_TOKEN`, etc.). Pass `provider="github"` or `provider="gitlab"` to any tool to route explicitly — hub ignores `REPO_PROVIDER` when `provider` is set. Omit `provider` to use the default (`REPO_PROVIDER`).
 
