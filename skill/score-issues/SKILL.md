@@ -22,7 +22,19 @@ If either `--repo` or `--issues` is missing or the issue list is empty, emit:
 RESULT_JSON: {"scores": {}}
 and exit.
 
-## Phase 2 — Fetch Issues
+## Phase 2 — Hub Fast-Path
+
+If `hub_mcp=true`:
+
+Call `mcp__nexus__hub__score_issues` with `issues=[{issue_numbers}]`.
+
+If the response does not contain `degraded: true`: emit the result directly as `RESULT_JSON` (mapping hub scores to the output format) and skip to Phase 5.
+
+If the response contains `degraded: true`: continue to Phase 3.
+
+If `hub_mcp=false`: continue to Phase 3.
+
+## Phase 3 — Fetch Issues
 
 For each issue number, use the **Get issue** command from the loaded reference.
 
@@ -30,7 +42,7 @@ Skip any issue that returns an error (closed, not found) — do not stop.
 
 Truncate each body to 500 characters before scoring.
 
-## Phase 3 — Score
+## Phase 4 — Score
 
 Score each fetched issue on a 0–99 urgency scale using these criteria:
 
@@ -42,7 +54,7 @@ Score each fetched issue on a 0–99 urgency scale using these criteria:
 
 Assign one integer per issue. Issues that errored during fetch receive score 0.
 
-## Phase 4 — Emit Result
+## Phase 5 — Emit Result
 
 Display:
 ```
