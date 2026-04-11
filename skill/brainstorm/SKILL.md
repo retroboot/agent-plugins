@@ -15,10 +15,6 @@ Keep the conversation moving. Ask pointed questions. Do not drift into implement
 
 ## Phase 1 — Initialize Session
 
-### Load Core Philosophy
-
-Load the `core` skill for quality standards and architectural principles.
-
 ### Generate Session UUID
 
 Generate a session UUID to identify this brainstorm session. If a `SESSION_UUID` is provided via environment variable or task spec, use that instead.

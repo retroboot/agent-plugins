@@ -10,11 +10,7 @@ compatibility: opencode
 You are a utility worker. Score a list of issues by urgency and emit a machine-readable
 result. No user interaction — run to completion and exit.
 
-## Phase 1 — Load Session
-
-Load the `session` skill to initialize provider context and load the active reference.
-
-## Phase 2 — Parse Input
+## Phase 1 — Parse Input
 
 Input format: `--repo owner/name --issues 123,456,789`
 
@@ -26,7 +22,7 @@ If either `--repo` or `--issues` is missing or the issue list is empty, emit:
 RESULT_JSON: {"scores": {}}
 and exit.
 
-## Phase 3 — Fetch Issues
+## Phase 2 — Fetch Issues
 
 For each issue number, use the **Get issue** command from the loaded reference.
 
@@ -34,7 +30,7 @@ Skip any issue that returns an error (closed, not found) — do not stop.
 
 Truncate each body to 500 characters before scoring.
 
-## Phase 4 — Score
+## Phase 3 — Score
 
 Score each fetched issue on a 0–99 urgency scale using these criteria:
 
@@ -46,7 +42,7 @@ Score each fetched issue on a 0–99 urgency scale using these criteria:
 
 Assign one integer per issue. Issues that errored during fetch receive score 0.
 
-## Phase 5 — Emit Result
+## Phase 4 — Emit Result
 
 Display:
 ```

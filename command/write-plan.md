@@ -2,7 +2,10 @@
 description: Create a detailed implementation plan document for a spec or set of existing issues — without creating new GitHub/Linear issues
 ---
 
-Load the `planning` skill and execute in plan-only mode (`--plan-only`).
+Bootstrap — run before the main skill:
+1. Load the `core` skill — internalizes quality standards and architectural principles
+
+Then load the `planning` skill and execute in plan-only mode (`--plan-only`).
 
 Use this when issues already exist (pass their numbers as input) or when you have a spec and want the implementation plan document before triaging into issues.
 

@@ -1,51 +1,24 @@
 ---
 name: session
-description: Bootstrap provider config and MCP availability for the current session — loads the active cheat sheet into context
+description: Load provider context for the current session — reads config, probes MCP availability, and loads the active provider reference. Requires init to have run first.
 license: MIT
 compatibility: opencode
 ---
 
-# Session Bootstrap
+# Session
 
-Initialize provider context for the current session. Called by any skill that needs to interact with a repo host or issue tracker.
+Load provider context for the current workflow. Reads the validated config written by `init`, probes MCP tool availability, and loads the active provider reference into context.
 
 ---
 
 ## Phase 1 — Read Config
 
-Read `~/.claude/settings.json` using the Read tool. Extract `providerConfig`. Required fields:
+Read `~/.claude/settings.json` using the Read tool. Extract `providerConfig`:
 
 - `repoProvider` — `github` | `gitlab`
 - `issueTracker` — `github` | `gitlab` | `linear`
 
 Optional fields: `repoTarget`, `gitlabGroup`, `githubOrg`, `linearTeam`.
-
-**If any required field is missing:** Ask the user once for all missing values together:
-
-```
-Provider setup — answer once, saved to ~/.claude/settings.json
-
-Which provider hosts your repos and PRs/MRs? (github | gitlab)
-Which provider tracks your issues?           (github | gitlab | linear)
-Org / group slug:
-```
-
-Then merge the answers into `~/.claude/settings.json`, preserving all existing keys.
-
-Serialize the collected config as a JSON string and pass it via an environment variable to avoid shell injection:
-
-```bash
-NEW_CONFIG='{"repoProvider":"...","issueTracker":"...","repoTarget":"..."}' \
-python3 -c "
-import json, os
-path = os.path.expanduser('~/.claude/settings.json')
-s = json.loads(open(path).read()) if os.path.exists(path) else {}
-s['providerConfig'] = json.loads(os.environ['NEW_CONFIG'])
-open(path, 'w').write(json.dumps(s, indent=2))
-"
-```
-
-Substitute the actual collected values into `NEW_CONFIG` as a valid JSON string before running this command.
 
 Store: `REPO_PROVIDER`, `ISSUE_TRACKER`, `REPO_TARGET`, provider slugs.
 

@@ -3,7 +3,7 @@
   "owner": { "name": "hivrr" },
   "metadata": {
     "description": "Hivrr Agent Plugin — Skills and commands for implementation, brainstorming, planning, and code review",
-    "version": "1.0.7"
+    "version": "1.0.8"
   },
   "plugins": [
     {
@@ -13,6 +13,7 @@
       "strict": true,
       "skills": [
         "./skill/core",
+        "./skill/init",
         "./skill/session",
         "./skill/debug",
         "./skill/merge-pr",
@@ -51,6 +52,7 @@
       "source": "./",
       "strict": true,
       "skills": [
+        "./skill/init",
         "./skill/session",
         "./skill/brainstorm",
         "./skill/planning"
@@ -67,6 +69,7 @@
       "source": "./",
       "strict": true,
       "skills": [
+        "./skill/init",
         "./skill/session",
         "./skill/score-issues",
         "./skill/group-issues",

@@ -4,7 +4,10 @@ description: Scan the codebase for issues across security, accessibility, tech-d
 
 # /audit $ARGUMENTS
 
-Load the `audit` skill and run a codebase audit.
+Bootstrap — run before the main skill:
+1. Load the `core` skill — internalizes quality gates and severity prioritization standards
+
+Then load the `audit` skill and run a codebase audit.
 
 **Arguments:** $ARGUMENTS
 

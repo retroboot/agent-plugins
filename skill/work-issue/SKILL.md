@@ -13,13 +13,7 @@ Before starting: read this entire skill, then create a focused todo list, then e
 
 ---
 
-## Phase 1 — Load Session and Core
-
-Load the `session` skill to initialize provider context and load the active reference. Then load the `core` skill to internalize project values: quality gates, git safety, and task completion standards. These principles govern every decision you make throughout this workflow.
-
----
-
-## Phase 2 — Parse the Input
+## Phase 1 — Parse the Input
 
 The input will be one of these forms:
 - A single issue number: `123`
@@ -38,7 +32,7 @@ Display: `Input: {issue_numbers} | auto: {auto_mode}`
 
 ---
 
-## Phase 3 — Route Multiple Issues
+## Phase 2 — Route Multiple Issues
 
 **Skip this phase if there is only one issue.**
 
@@ -63,7 +57,7 @@ Display: `Route: {count} issues | strategy: {wave_strategy} | groups: {group_cou
 
 ---
 
-## Phase 4 — Get Repo and Issue Context
+## Phase 3 — Get Repo and Issue Context
 
 Do these together:
 
@@ -77,7 +71,7 @@ Display: `Fetched: {count} issue(s) from {repo_owner}/{repo_name}`
 
 ---
 
-## Phase 5 — Assess Complexity
+## Phase 4 — Assess Complexity
 
 Look at what you know about the issue(s) and classify:
 
@@ -94,7 +88,7 @@ Display: `Complexity: {simple|medium|complex}`
 
 ---
 
-## Phase 6 — Create a Working Branch
+## Phase 5 — Create a Working Branch
 
 **Unified wave strategy:**
 Skip this phase — the `wave` skill creates and manages its own branch in Phase 8.
@@ -116,7 +110,7 @@ Display: `Branch: issue/{number}`
 
 ---
 
-## Phase 7 — Plan (medium and complex only)
+## Phase 6 — Plan (medium and complex only)
 
 For **simple** tasks: skip this phase, go straight to implementing.
 
@@ -132,10 +126,10 @@ Display: `Plan: ready`
 
 ---
 
-## Phase 8 — Implement
+## Phase 7 — Implement
 
 **Unified wave strategy (multiple related issues):**
-Load the `wave` skill. Pass it the ordered issue list, the fetched issue data, and `auto_mode`. The wave skill creates the shared branch, implements each issue in sequence, handles resume if the branch already exists, and returns a per-issue summary. When it returns, continue to Phase 9 with the combined results.
+Load the `wave` skill. Pass it the ordered issue list, the fetched issue data, and `auto_mode`. The wave skill creates the shared branch, implements each issue in sequence, handles resume if the branch already exists, and returns a per-issue summary. When it returns, continue to Phase 8 with the combined results.
 
 **Single issue or sequential strategy:**
 Write the code directly. Follow these principles:
@@ -149,13 +143,13 @@ If you hit a blocker that cannot be resolved by reading the codebase:
 - Style, naming, missing tests → decide autonomously using existing conventions
 - Contradictory acceptance criteria or missing external credentials → surface the blocker clearly and stop; leave the branch intact
 
-For sequential multi-issue, process each issue fully through Phase 12 (Create PR) before starting the next one.
+For sequential multi-issue, process each issue fully through Phase 11 (Create PR) before starting the next one.
 
 When done, display: `Implement: complete | files changed: {count}`
 
 ---
 
-## Phase 9 — Verify
+## Phase 8 — Verify
 
 Run:
 ```bash
@@ -176,7 +170,7 @@ Display: `Verify: tests {pass|fail|skipped} | lint {pass|fail|skipped}`
 
 ---
 
-## Phase 10 — Review Checkpoint
+## Phase 9 — Review Checkpoint
 
 **Skip this phase if `--auto` is set.**
 
@@ -195,7 +189,7 @@ Wait for their response before continuing.
 
 ---
 
-## Phase 11 — Commit
+## Phase 10 — Commit
 
 Stage all changes: `git add -A`
 
@@ -210,7 +204,7 @@ Display: `Commit: {message}`
 
 ---
 
-## Phase 12 — Create PR/MR
+## Phase 11 — Create PR/MR
 
 Push the branch: `git push -u origin {branch_name}`
 
@@ -223,7 +217,7 @@ Display: `PR: {url}`
 
 ---
 
-## Phase 13 — Done
+## Phase 12 — Done
 
 Emit the completion JSON as defined in the command's Output section.
 

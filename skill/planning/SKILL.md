@@ -13,13 +13,7 @@ Keep moving through phases. Only stop at the marked checkpoint.
 
 ---
 
-## Phase 1 — Load Session and Core
-
-Load the `session` skill to initialize provider context and load the active reference. Then load the `core` skill to internalize quality standards and git safety rules.
-
----
-
-## Phase 2 — Initialize Session
+## Phase 1 — Initialize Session
 
 ### Accept or Generate Session UUID
 
@@ -67,7 +61,7 @@ Log a warning if falling back: `WARNING: Memory unavailable, using local file fa
 
 ---
 
-## Phase 3 — Parse the Input
+## Phase 2 — Parse the Input
 
 The input can be:
 - A freeform description: "add email verification to signup"
@@ -88,7 +82,7 @@ If `--plan-only` is set, display: `Mode: plan-only — will write plan doc witho
 
 ---
 
-## Phase 4 — Research the Codebase
+## Phase 3 — Research the Codebase
 
 Before proposing anything, understand what already exists.
 
@@ -111,7 +105,7 @@ You are not planning yet — you are building enough understanding to plan well.
 
 ---
 
-## Phase 5 — Clarify
+## Phase 4 — Clarify
 
 Skip this phase if `--plan-only` is set (the work is already scoped).
 
@@ -157,7 +151,7 @@ Wait for answers before continuing.
 
 ---
 
-## Phase 6 — Complexity Assessment
+## Phase 5 — Complexity Assessment
 
 Classify the work as one of three tiers. This controls the depth of the plan document.
 
@@ -173,7 +167,7 @@ Display: `Complexity: {tier} — {one-line rationale}`
 
 ---
 
-## Phase 7 — Draft the Breakdown
+## Phase 6 — Draft the Breakdown
 
 **If `--plan-only` mode:** Skip the issue proposal. Only produce the file structure map (used in Phase 8). Jump directly to that section below.
 
@@ -204,7 +198,7 @@ Each file has one clear responsibility. Lock in decomposition decisions here —
 
 ---
 
-## Phase 8 — Write the Plan Document
+## Phase 7 — Write the Plan Document
 
 Save to: `docs/plans/YYYY-MM-DD-<feature-name>.md`
 (If `docs/plans/` does not exist, create it.)
@@ -353,7 +347,7 @@ Append a **UX section** to the plan document (see [references/ux-checklist.md](r
 
 ---
 
-## Phase 9 — Plan Review
+## Phase 8 — Plan Review
 
 Dispatch a subagent using the reviewer template from [references/plan-review.md](references/plan-review.md).
 
@@ -375,7 +369,7 @@ Display: `Plan Review: {status} | {n} issues found and fixed`
 
 ---
 
-## Phase 10 — Checkpoint: User Approval
+## Phase 9 — Checkpoint: User Approval
 
 **Stop here.** Present the proposed breakdown to the user:
 
@@ -424,7 +418,7 @@ Wait for the answer before proceeding. If "adjust", revise and re-post. If "canc
 
 ---
 
-## Phase 11 — Create Issues in Tracker
+## Phase 10 — Create Issues in Tracker
 
 Skip if `--plan-only` mode.
 
@@ -436,11 +430,11 @@ Display each as it's created: `Created: #{number} — {title}`
 
 ---
 
-## Phase 12 — Create Linear Issues (if ISSUE_TRACKER=linear)
+## Phase 11 — Create Linear Issues (if ISSUE_TRACKER=linear)
 
 Skip if `--plan-only` mode or `ISSUE_TRACKER != linear`.
 
-If `ISSUE_TRACKER=linear` and issues were created in a separate repo provider in Phase 11, also create matching Linear issues using the **Create issue** command from the linear reference. Otherwise, if Linear was the primary tracker in Phase 11, skip this phase.
+If `ISSUE_TRACKER=linear` and issues were created in a separate repo provider in Phase 10, also create matching Linear issues using the **Create issue** command from the linear reference. Otherwise, if Linear was the primary tracker in Phase 10, skip this phase.
 
 **Legacy fallback:** If `ISSUE_TRACKER` is not set but `LINEAR_API_KEY` is in the environment or a `.linear.yaml` file exists in the project root, treat as `ISSUE_TRACKER=linear` and create issues here.
 
@@ -460,7 +454,7 @@ Display each: `Linear: {identifier} — {title}`
 
 ---
 
-## Phase 13 — Write to Memory
+## Phase 12 — Write to Memory
 
 After issue creation, persist the planning output to memory before exiting.
 
@@ -483,7 +477,7 @@ Do not fail if memory write fails — log the warning and continue.
 
 ---
 
-## Phase 14 — Done
+## Phase 13 — Done
 
 Display:
 

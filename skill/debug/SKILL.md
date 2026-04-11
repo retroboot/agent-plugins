@@ -13,13 +13,7 @@ Before starting: read this entire skill, then create a focused todo list, then e
 
 ---
 
-## Phase 1 — Load Session and Core
-
-Load the `session` skill to initialize provider context and load the active reference. Then load the `core` skill.
-
----
-
-## Phase 2 — Parse the Input
+## Phase 1 — Parse the Input
 
 The input will be one of these forms:
 - An issue number: `456`
@@ -36,7 +30,7 @@ Display: `Debug: {problem_description || 'fetching issue...'}`
 
 ---
 
-## Phase 3 — Fetch Issue Details (if applicable)
+## Phase 2 — Fetch Issue Details (if applicable)
 
 If the input was an issue number or URL:
 - Get the repo from `git remote get-url origin`
@@ -50,7 +44,7 @@ Store: `problem_description`, `error_messages` (any stack traces or error text f
 
 ---
 
-## Phase 4 — Classify the Problem
+## Phase 3 — Classify the Problem
 
 Look at the problem description and any error messages and classify what type of problem this is:
 
@@ -67,7 +61,7 @@ Display: `Classification: {classification}`
 
 ---
 
-## Phase 5 — Explore the Codebase
+## Phase 4 — Explore the Codebase
 
 Before investigating, get oriented:
 - Look at the directory structure to understand the project layout
@@ -90,7 +84,7 @@ Collect: `relevant_files`, `code_paths`, `observations` as you go.
 
 ---
 
-## Phase 6 — Form Hypotheses
+## Phase 5 — Form Hypotheses
 
 Based on what you found in the codebase, form hypotheses about the root cause. For each hypothesis:
 
@@ -115,7 +109,7 @@ For **ci-cd** problems, also consider:
 
 ---
 
-## Phase 7 — Generate Diagnostic Report
+## Phase 6 — Generate Diagnostic Report
 
 Produce a structured diagnostic report:
 
@@ -158,7 +152,7 @@ Produce a structured diagnostic report:
 
 ---
 
-## Phase 8 — Done
+## Phase 7 — Done
 
 Display the report. Then offer:
 - "Create an issue from this diagnosis" — use the **Create issue** command from the loaded reference, with the report as the body
