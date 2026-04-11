@@ -61,21 +61,25 @@ if ! [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
   exit 1
 fi
 
+# URL-encode repo path for GitLab API calls (e.g. "group/repo" → "group%2Frepo")
+ENCODED_REPO=$(echo "$REPO" | sed 's|/|%2F|g')
+
 # ---------------------------------------------------------------------------
 # Script Phase 1 — Fetch PR/MR details
 # ---------------------------------------------------------------------------
 echo "Fetching ${PROVIDER} PR/MR #${PR_NUMBER} from ${REPO}..."
 
 if [[ "$PROVIDER" == "gitlab" ]]; then
-  PR_JSON=$(glab mr view "$PR_NUMBER" --repo "$REPO" --output json 2>&1) || {
+  # glab mr view lacks --output json in older versions; use the REST API directly
+  PR_JSON=$(glab api "projects/${ENCODED_REPO}/merge_requests/${PR_NUMBER}" 2>&1) || {
     echo "ERROR: Failed to fetch MR !${PR_NUMBER}: ${PR_JSON}" >&2
     exit 1
   }
-  PR_TITLE=$(echo "$PR_JSON"  | jq -r '.title')
-  PR_BODY=$(echo "$PR_JSON"   | jq -r '.description')
-  BRANCH_NAME=$(echo "$PR_JSON"  | jq -r '.sourceBranch')
+  PR_TITLE=$(echo "$PR_JSON"    | jq -r '.title')
+  PR_BODY=$(echo "$PR_JSON"     | jq -r '.description')
+  BRANCH_NAME=$(echo "$PR_JSON" | jq -r '.source_branch')
   PR_STATE_RAW=$(echo "$PR_JSON" | jq -r '.state')
-  BASE_BRANCH=$(echo "$PR_JSON"  | jq -r '.targetBranch')
+  BASE_BRANCH=$(echo "$PR_JSON"  | jq -r '.target_branch')
   # Normalize state to GitHub-style for shared logic below
   case "$PR_STATE_RAW" in
     merged)  PR_STATE="MERGED" ;;
@@ -250,7 +254,7 @@ if [[ ${#LINKED_ISSUES[@]} -gt 0 ]]; then
         echo "WARNING: Failed to close Linear issue ${ISSUE_NUM}" >&2
       fi
     elif [[ "$ISSUE_TRACKER_FLAG" == "gitlab" ]]; then
-      ISSUE_STATE=$(glab issue view "$ISSUE_NUM" --repo "$REPO" --output json 2>/dev/null | jq -r '.state' || echo "UNKNOWN")
+      ISSUE_STATE=$(glab api "projects/${ENCODED_REPO}/issues/${ISSUE_NUM}" 2>/dev/null | jq -r '.state' || echo "UNKNOWN")
       if [[ "$ISSUE_STATE" == "closed" ]]; then
         echo "Issue #${ISSUE_NUM}: already closed"
       elif [[ "$ISSUE_STATE" == "opened" ]]; then
