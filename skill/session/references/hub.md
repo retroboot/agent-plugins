@@ -45,9 +45,9 @@ MCP: mcp__nexus__hub__comment_issue  id={OWNER}/{REPO}#{N} body={B} [provider={p
 
 **Get diff**
 ```
-CLI: use **Get diff** from the provider reference
+MCP: mcp__nexus__hub__get_pr_diff  id={OWNER}/{REPO}!{N} [provider={provider}]
+Returns: {"diff": "<unified diff text>"}
 ```
-Raw diff text is not available via hub — use the provider reference for the correct CLI command.
 
 **View PR**
 ```
@@ -56,9 +56,9 @@ MCP: mcp__nexus__hub__get_pr  id={OWNER}/{REPO}!{N} [provider={provider}]
 
 **PR conversation thread**
 ```
-CLI: use **PR conversation thread** from the provider reference
+MCP: mcp__nexus__hub__list_pr_comments  id={OWNER}/{REPO}!{N} [provider={provider}]
+Returns: [{id, body, url, created_at}, ...]
 ```
-Hub does not expose a read-comments endpoint — use the provider reference for the correct CLI command.
 
 **Post comment**
 ```
@@ -88,7 +88,8 @@ CI status is not available via hub — use the provider reference for the correc
 
 **Latest commit timestamp**
 ```
-CLI: use **Latest commit timestamp** from the provider reference
+MCP: mcp__nexus__hub__get_pr_latest_commit  id={OWNER}/{REPO}!{N} [provider={provider}]
+Returns: {"sha": "abc123", "committed_at": "2026-04-11T12:00:00Z"}
 ```
 
 ---
