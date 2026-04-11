@@ -2,7 +2,7 @@
 
 Use hub MCP tools when `hub_mcp=true`. For operations hub does not cover (diff text, CI checks, comment reads), use the **provider reference** loaded alongside this file — it has the correct CLI syntax for both GitHub and GitLab.
 
-> **Single-provider limitation:** Hub routes all calls to one pre-configured provider (`REPO_PROVIDER` env). If your session repo lives on a different provider than hub's configured one, hub MCP calls will return errors — use the provider reference CLI commands in that case.
+> **Multi-provider:** Hub initializes every provider that has credentials in secrets (`GITHUB_TOKEN`, `GITLAB_TOKEN`, etc.). Pass `provider="github"` or `provider="gitlab"` to any tool to route explicitly — hub ignores `REPO_PROVIDER` when `provider` is set. Omit `provider` to use the default (`REPO_PROVIDER`).
 
 Variables: `{OWNER}` = owner/org slug, `{REPO}` = repo name, `{N}` = issue or PR number, `{B}` = body text, `{T}` = title.
 
@@ -14,29 +14,29 @@ ID encoding: `{OWNER}/{REPO}#{N}` for issues · `{OWNER}/{REPO}!{N}` for PRs/MRs
 
 **List**
 ```
-MCP: mcp__nexus__hub__list_issues  repo={OWNER}/{REPO} state=open
+MCP: mcp__nexus__hub__list_issues  repo={OWNER}/{REPO} state=open [provider={provider}]
 ```
 
 **Get**
 ```
-MCP: mcp__nexus__hub__get_issue  id={OWNER}/{REPO}#{N}
+MCP: mcp__nexus__hub__get_issue  id={OWNER}/{REPO}#{N} [provider={provider}]
 ```
 
 **Create**
 ```
-MCP: mcp__nexus__hub__create_issue  repo={OWNER}/{REPO} title={T} body={B} labels=[{labels}]
+MCP: mcp__nexus__hub__create_issue  repo={OWNER}/{REPO} title={T} body={B} labels=[{labels}] [provider={provider}]
 ```
 
 Use labels from the label reference loaded by init. Pick one or more that fit the issue type and priority.
 
 **Close**
 ```
-MCP: mcp__nexus__hub__update_issue  id={OWNER}/{REPO}#{N} state=closed
+MCP: mcp__nexus__hub__update_issue  id={OWNER}/{REPO}#{N} state=closed [provider={provider}]
 ```
 
 **Comment**
 ```
-MCP: mcp__nexus__hub__comment_issue  id={OWNER}/{REPO}#{N} body={B}
+MCP: mcp__nexus__hub__comment_issue  id={OWNER}/{REPO}#{N} body={B} [provider={provider}]
 ```
 
 ---
@@ -51,7 +51,7 @@ Raw diff text is not available via hub — use the provider reference for the co
 
 **View PR**
 ```
-MCP: mcp__nexus__hub__get_pr  id={OWNER}/{REPO}!{N}
+MCP: mcp__nexus__hub__get_pr  id={OWNER}/{REPO}!{N} [provider={provider}]
 ```
 
 **PR conversation thread**
@@ -62,22 +62,22 @@ Hub does not expose a read-comments endpoint — use the provider reference for 
 
 **Post comment**
 ```
-MCP: mcp__nexus__hub__comment_pr  id={OWNER}/{REPO}!{N} body={B}
+MCP: mcp__nexus__hub__comment_pr  id={OWNER}/{REPO}!{N} body={B} [provider={provider}]
 ```
 
 **Create PR**
 ```
-MCP: mcp__nexus__hub__create_pr  repo={OWNER}/{REPO} title={T} body={B} source_branch={branch} target_branch={base}
+MCP: mcp__nexus__hub__create_pr  repo={OWNER}/{REPO} title={T} body={B} source_branch={branch} target_branch={base} [provider={provider}]
 ```
 
 **Merge PR** (squash)
 ```
-MCP: mcp__nexus__hub__merge_pr  id={OWNER}/{REPO}!{N} strategy=squash
+MCP: mcp__nexus__hub__merge_pr  id={OWNER}/{REPO}!{N} strategy=squash [provider={provider}]
 ```
 
 **List PRs**
 ```
-MCP: mcp__nexus__hub__list_prs  repo={OWNER}/{REPO} state=open
+MCP: mcp__nexus__hub__list_prs  repo={OWNER}/{REPO} state=open [provider={provider}]
 ```
 
 **Check CI**
@@ -97,12 +97,12 @@ CLI: use **Latest commit timestamp** from the provider reference
 
 **List repos**
 ```
-MCP: mcp__nexus__hub__list_repos
+MCP: mcp__nexus__hub__list_repos  [provider={provider}]
 ```
 
 **Create branch**
 ```
-MCP: mcp__nexus__hub__create_branch  repo={OWNER}/{REPO} branch={branch} ref={base}
+MCP: mcp__nexus__hub__create_branch  repo={OWNER}/{REPO} branch={branch} ref={base} [provider={provider}]
 ```
 
 ---
