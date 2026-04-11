@@ -175,7 +175,7 @@ Propose a set of issues. For each issue:
 - **Title**: concise, action-oriented ("Add email verification token generation")
 - **Body**: why this is needed, what done looks like, acceptance criteria
 - **Size**: XS (< 1 hour) / S (half day) / M (1 day) / L (2-3 days) / XL (needs splitting)
-- **Labels**: bug / feature / refactor / docs / test / chore
+- **Labels**: choose from the label reference loaded by init (`$CLAUDE_SKILL_DIR/../init/references/labels.md`). Common picks: `bug`, `feature`, `enhancement`, `refactor`, `documentation`, `chore`, `security`. Add a priority label (`P0`–`P3`) and a size label (`size:xs`–`size:xl`) to each issue.
 - **Dependencies**: which issues must be completed first
 
 Rules:

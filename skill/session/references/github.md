@@ -22,15 +22,11 @@ CLI: gh issue view {N} --repo {OWNER}/{REPO} --json number,title,body,labels,sta
 
 **Create**
 ```
-MCP: mcp__github__issue_write  owner={OWNER} repo={REPO} title={T} body={B}
+MCP: mcp__github__issue_write  owner={OWNER} repo={REPO} title={T} body={B} labels=[{labels}]
 CLI: gh issue create --repo {OWNER}/{REPO} --title "{T}" --body "{B}" --label "{labels}"
 ```
 
-**Label**
-```
-MCP: mcp__github__issue_write  owner={OWNER} repo={REPO} issue_number={N} labels=[...]
-CLI: gh issue edit {N} --repo {OWNER}/{REPO} --add-label "{label}"
-```
+Use labels from the label reference loaded by init. Pick one or more that fit the issue type and priority.
 
 **Close**
 ```

@@ -76,7 +76,7 @@ Look for:
 - TODO or FIXME comments added during the review
 - Any feedback that doesn't have a clear resolution in the thread
 
-**If `--auto` is set:** Create an issue for every unaddressed suggestion automatically using the **Create issue** command from the loaded reference. Label critical ones `priority:high` and optional ones `priority:medium`. The philosophy: capture everything now, triage during implementation.
+**If `--auto` is set:** Create an issue for every unaddressed suggestion automatically using the **Create issue** command from the loaded reference. Load the label reference from `$CLAUDE_SKILL_DIR/../init/references/labels.md` and use it to select appropriate labels — label critical ones `P1` and optional ones `P2`. The philosophy: capture everything now, triage during implementation.
 
 **If `--auto` is not set:** List the unaddressed suggestions and ask which ones to create issues for.
 
