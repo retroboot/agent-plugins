@@ -98,10 +98,6 @@ Display: `Branch: wave skill will create`
 **Single issue or sequential strategy:**
 Run:
 ```bash
-if [[ -z "$CLAUDE_SKILL_DIR" ]]; then
-  echo "ERROR: CLAUDE_SKILL_DIR is not set — cannot locate hivrr-branch-setup.sh" >&2
-  exit 1
-fi
 bash "${CLAUDE_SKILL_DIR}/scripts/hivrr-branch-setup.sh" --issue {number}
 ```
 If the script exits non-zero, surface the error and stop.

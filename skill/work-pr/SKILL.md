@@ -74,10 +74,6 @@ Display: `Complexity: {simple|medium|complex}`
 
 Run:
 ```bash
-if [[ -z "$CLAUDE_SKILL_DIR" ]]; then
-  echo "ERROR: CLAUDE_SKILL_DIR is not set — cannot locate hivrr-pr-checkout.sh" >&2
-  exit 1
-fi
 bash "${CLAUDE_SKILL_DIR}/scripts/hivrr-pr-checkout.sh" --branch {branch_name}
 ```
 If the script exits non-zero, surface the error and stop.
