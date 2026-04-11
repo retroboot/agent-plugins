@@ -1,8 +1,8 @@
 # Hub Reference
 
-Use hub MCP tools when `hub_mcp=true`. Hub routes to the configured provider internally — no provider-specific MCP tools or CLI needed for most operations.
+Use hub MCP tools when `hub_mcp=true`. For operations hub does not cover (diff text, CI checks, comment reads), use the **provider reference** loaded alongside this file — it has the correct CLI syntax for both GitHub and GitLab.
 
-> **Single-provider limitation:** Hub routes all calls to one pre-configured provider (`REPO_PROVIDER` env). If your session repo lives on a different provider than hub's configured one, hub MCP calls will return errors — fall back to provider-specific MCP or CLI in that case.
+> **Single-provider limitation:** Hub routes all calls to one pre-configured provider (`REPO_PROVIDER` env). If your session repo lives on a different provider than hub's configured one, hub MCP calls will return errors — use the provider reference CLI commands in that case.
 
 Variables: `{OWNER}` = owner/org slug, `{REPO}` = repo name, `{N}` = issue or PR number, `{B}` = body text, `{T}` = title.
 
@@ -45,9 +45,9 @@ MCP: mcp__nexus__hub__comment_issue  id={OWNER}/{REPO}#{N} body={B}
 
 **Get diff**
 ```
-CLI: gh pr diff {N} --repo {OWNER}/{REPO}
+CLI: use **Get diff** from the provider reference
 ```
-Raw diff text is not available via hub — always use CLI for this operation.
+Raw diff text is not available via hub — use the provider reference for the correct CLI command.
 
 **View PR**
 ```
@@ -56,9 +56,9 @@ MCP: mcp__nexus__hub__get_pr  id={OWNER}/{REPO}!{N}
 
 **PR conversation thread**
 ```
-CLI: gh api repos/{OWNER}/{REPO}/issues/{N}/comments
+CLI: use **PR conversation thread** from the provider reference
 ```
-Hub does not expose a read-comments endpoint — always use CLI for this operation.
+Hub does not expose a read-comments endpoint — use the provider reference for the correct CLI command.
 
 **Post comment**
 ```
@@ -82,13 +82,13 @@ MCP: mcp__nexus__hub__list_prs  repo={OWNER}/{REPO} state=open
 
 **Check CI**
 ```
-CLI: gh pr checks {N} --repo {OWNER}/{REPO}
+CLI: use **Check CI** from the provider reference
 ```
-CI status is not available via hub — always use CLI for this operation.
+CI status is not available via hub — use the provider reference for the correct CLI command.
 
 **Latest commit timestamp**
 ```
-CLI: gh pr view {N} --repo {OWNER}/{REPO} --json commits --jq '.commits[-1].committedDate'
+CLI: use **Latest commit timestamp** from the provider reference
 ```
 
 ---

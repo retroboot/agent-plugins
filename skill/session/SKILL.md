@@ -45,8 +45,9 @@ If a probe tool is not available in this session or returns an auth/capability e
 If `hub_mcp=true`:
 ```
 Read $CLAUDE_SKILL_DIR/references/hub.md
+Read $CLAUDE_SKILL_DIR/references/{REPO_PROVIDER}.md
 ```
-Hub handles provider routing internally — no additional provider references needed.
+hub.md provides MCP tool calls; the provider reference provides CLI syntax for operations hub does not cover (diff, CI checks, comment reads). Both are active — for any given operation, use hub.md's MCP form when available, and the provider reference's CLI form otherwise.
 
 If `hub_mcp=false`:
 ```
