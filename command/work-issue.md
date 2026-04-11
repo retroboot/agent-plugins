@@ -4,7 +4,12 @@ description: Work an issue end-to-end — fetch, implement, test, commit, PR
 
 # /work-issue $ARGUMENTS
 
-Load the `work-issue` skill and drive the full issue implementation workflow.
+Bootstrap — run in order before the main skill:
+1. Load the `init` skill — validates provider config (skips immediately if already configured)
+2. Load the `session` skill — probes MCP availability and loads the active provider reference
+3. Load the `core` skill — internalizes quality gates, git safety, and task completion standards
+
+Then load the `work-issue` skill and drive the full issue implementation workflow.
 
 **Arguments:** $ARGUMENTS
 

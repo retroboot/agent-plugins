@@ -13,6 +13,7 @@
       "strict": true,
       "skills": [
         "./skill/core",
+        "./skill/init",
         "./skill/session",
         "./skill/debug",
         "./skill/merge-pr",
@@ -51,6 +52,7 @@
       "source": "./",
       "strict": true,
       "skills": [
+        "./skill/init",
         "./skill/session",
         "./skill/brainstorm",
         "./skill/planning"
@@ -67,6 +69,7 @@
       "source": "./",
       "strict": true,
       "skills": [
+        "./skill/init",
         "./skill/session",
         "./skill/score-issues",
         "./skill/group-issues",

@@ -4,7 +4,12 @@ description: Diagnose a bug or problem — produces a root cause analysis report
 
 # /debug $ARGUMENTS
 
-Load the `debug` skill and run a diagnostic investigation.
+Bootstrap — run in order before the main skill:
+1. Load the `init` skill — validates provider config (skips immediately if already configured)
+2. Load the `session` skill — probes MCP availability and loads the active provider reference
+3. Load the `core` skill — internalizes quality gates and code review standards
+
+Then load the `debug` skill and run a diagnostic investigation.
 
 **Arguments:** $ARGUMENTS
 

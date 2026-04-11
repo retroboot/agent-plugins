@@ -13,13 +13,7 @@ Before starting: read this entire skill, then execute.
 
 ---
 
-## Phase 1 — Load Session
-
-Load the `session` skill to initialize provider context and load the active reference.
-
----
-
-## Phase 2 — Parse the Input
+## Phase 1 — Parse the Input
 
 The input will be one of these forms:
 - A PR/MR number: `99`
@@ -36,7 +30,7 @@ Display: `Review: PR/MR #{pr_number} in {repo_owner}/{repo_name}`
 
 ---
 
-## Phase 3 — Fetch PR/MR Context
+## Phase 2 — Fetch PR/MR Context
 
 Run these in parallel using commands from the loaded reference:
 
@@ -56,13 +50,13 @@ Display: `Type: {first review | follow-up} | +{additions}/-{deletions} lines`
 
 ---
 
-## Phase 4 — Read Repository Conventions
+## Phase 3 — Read Repository Conventions
 
 If a `CLAUDE.md` exists at the repo root, read it for project conventions. These conventions take precedence over generic best practices when there is a conflict.
 
 ---
 
-## Phase 5 — Analyze the Diff
+## Phase 4 — Analyze the Diff
 
 Read the diff carefully. For every finding, require:
 - ≥80% confidence before including it
@@ -101,7 +95,7 @@ Classify each finding:
 
 ---
 
-## Phase 6 — Compose the Review
+## Phase 5 — Compose the Review
 
 Build the review body using this structure:
 
@@ -152,7 +146,7 @@ Store: `review_body`.
 
 ---
 
-## Phase 7 — Post the Review
+## Phase 6 — Post the Review
 
 Use the **Post comment** command from the loaded reference to post `review_body` as a comment on the PR/MR.
 
@@ -160,6 +154,6 @@ Display: `Posted: review comment on PR/MR #{pr_number}`
 
 ---
 
-## Phase 8 — Done
+## Phase 7 — Done
 
 Emit the completion JSON as defined in the command's Output section.

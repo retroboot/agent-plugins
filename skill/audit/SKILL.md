@@ -13,13 +13,7 @@ Before starting: read this entire skill, then create a focused todo list, then e
 
 ---
 
-## Phase 1 — Load Core Philosophy
-
-Load the `core` skill to internalize project values. These principles guide how you assess severity and prioritize findings.
-
----
-
-## Phase 2 — Parse the Input
+## Phase 1 — Parse the Input
 
 The input will be one of these forms:
 - No arguments → audit all domains in quick mode
@@ -36,7 +30,7 @@ Display: `Audit: {domains.join(', ')} | mode: {mode}`
 
 ---
 
-## Phase 3 — Explore the Codebase
+## Phase 2 — Explore the Codebase
 
 Before scanning, get oriented:
 - Run `git remote get-url origin` to get repo owner and name
@@ -50,7 +44,7 @@ Display: `Codebase: {language/framework} | {file_count} source files`
 
 ---
 
-## Phase 4 — Run Domain Scans
+## Phase 3 — Run Domain Scans
 
 For each domain in your list, load the corresponding skill and run the scan:
 
@@ -67,7 +61,7 @@ If a domain scan fails or produces an error, note it and continue with the other
 
 ---
 
-## Phase 5 — Aggregate and Prioritize
+## Phase 4 — Aggregate and Prioritize
 
 Collect all findings from all domain scans. Then:
 
@@ -89,7 +83,7 @@ Total           |    3     | 10   |  13    |  7  |  33
 
 ---
 
-## Phase 6 — Present Findings
+## Phase 5 — Present Findings
 
 Display all findings grouped by severity (critical first), then by domain. For each finding show:
 - File and line
@@ -101,7 +95,7 @@ If there are no findings at all: display a clean bill of health and stop.
 
 ---
 
-## Phase 7 — Offer GitHub Issue Creation
+## Phase 6 — Offer GitHub Issue Creation
 
 Ask the user what they'd like to do with the findings:
 - **Create GitHub issues now** — create one issue per finding
@@ -112,7 +106,7 @@ If the user skips: display the findings summary and stop.
 
 ---
 
-## Phase 8 — Create GitHub Issues
+## Phase 7 — Create GitHub Issues
 
 For each finding, create a GitHub issue using `gh issue create`:
 
@@ -156,7 +150,7 @@ After each successful creation, note the issue number so you can display the ful
 
 ---
 
-## Phase 9 — Done
+## Phase 8 — Done
 
 Display:
 ```

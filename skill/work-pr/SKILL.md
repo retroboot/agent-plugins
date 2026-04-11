@@ -13,13 +13,7 @@ Before starting: read this entire skill, then create a focused todo list, then e
 
 ---
 
-## Phase 1 — Load Session and Core
-
-Load the `session` skill to initialize provider context and load the active reference. Then load the `core` skill to internalize project values: quality gates, git safety, and task completion standards. These principles govern every decision you make throughout this workflow.
-
----
-
-## Phase 2 — Parse the Input
+## Phase 1 — Parse the Input
 
 The input will be one of these forms:
 - A PR/MR number: `456`
@@ -37,7 +31,7 @@ Display: `Input: PR #{pr_number} | auto: {auto_mode}`
 
 ---
 
-## Phase 3 — Get Repo and PR/MR Context
+## Phase 2 — Get Repo and PR/MR Context
 
 Do these together:
 
@@ -61,7 +55,7 @@ Display: `Fetched: PR #{pr_number} "{pr_title}" | blocking: {count} | recommende
 
 ---
 
-## Phase 4 — Assess Complexity
+## Phase 3 — Assess Complexity
 
 Look at the volume and nature of feedback and classify the work:
 
@@ -76,7 +70,7 @@ Display: `Complexity: {simple|medium|complex}`
 
 ---
 
-## Phase 5 — Checkout PR Branch
+## Phase 4 — Checkout PR Branch
 
 Run:
 ```bash
@@ -92,7 +86,7 @@ Display: `Branch: {branch_name}`
 
 ---
 
-## Phase 6 — Plan (medium and complex only)
+## Phase 5 — Plan (medium and complex only)
 
 For **simple** tasks: skip this phase, go straight to implementing.
 
@@ -108,7 +102,7 @@ Display: `Plan: ready`
 
 ---
 
-## Phase 7 — Implement
+## Phase 6 — Implement
 
 Address the feedback in priority order:
 
@@ -126,7 +120,7 @@ When done, display: `Implement: complete | feedback addressed: {blocking_count} 
 
 ---
 
-## Phase 8 — Verify
+## Phase 7 — Verify
 
 Run:
 ```bash
@@ -147,7 +141,7 @@ Display: `Verify: tests {pass|fail|skipped} | lint {pass|fail|skipped}`
 
 ---
 
-## Phase 9 — Review Checkpoint
+## Phase 8 — Review Checkpoint
 
 **Skip this phase if `--auto` is set.**
 
@@ -167,7 +161,7 @@ Wait for their response before continuing.
 
 ---
 
-## Phase 10 — Commit
+## Phase 9 — Commit
 
 Stage all changes: `git add -A`
 
@@ -182,7 +176,7 @@ Display: `Commit: {message}`
 
 ---
 
-## Phase 11 — Post PR/MR Comment
+## Phase 10 — Post PR/MR Comment
 
 Use the **Post comment** command from the loaded reference to post a summary comment on the PR/MR.
 
@@ -198,7 +192,7 @@ If posting fails, log a warning and continue — don't let a comment failure blo
 
 ---
 
-## Phase 12 — Push
+## Phase 11 — Push
 
 Push the branch: `git push origin {branch_name}`
 
@@ -206,7 +200,7 @@ Display: `Push: {branch_name} → origin`
 
 ---
 
-## Phase 13 — Done
+## Phase 12 — Done
 
 Emit the completion JSON as defined in the command's Output section.
 

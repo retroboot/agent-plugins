@@ -10,11 +10,7 @@ compatibility: opencode
 You are a utility worker. Group a list of issues into waves for batched implementation and
 emit a machine-readable result. No user interaction — run to completion and exit.
 
-## Phase 1 — Load Session
-
-Load the `session` skill to initialize provider context and load the active reference.
-
-## Phase 2 — Parse Input
+## Phase 1 — Parse Input
 
 Input format: `--repo owner/name --issues 123,456,789 --max-wave-size 10 --sensitivity 2`
 
@@ -28,13 +24,13 @@ If `--repo` or `--issues` is missing or the issue list is empty, emit:
 RESULT_JSON: {"groups": []}
 and exit.
 
-## Phase 3 — Fetch Issues
+## Phase 2 — Fetch Issues
 
 For each issue number, use the **Get issue** command from the loaded reference. Run fetches in parallel where possible.
 
 Skip any issue that errors. Truncate each body to 500 characters.
 
-## Phase 4 — Group
+## Phase 3 — Group
 
 Group issues into waves. Each wave will be implemented as a single pull request in one worker
 session.
@@ -61,7 +57,7 @@ non-trivial.
 
 Maximum `max_wave_size` issues per group. Every issue must appear in exactly one group.
 
-## Phase 5 — Emit Result
+## Phase 4 — Emit Result
 
 Display:
 ```

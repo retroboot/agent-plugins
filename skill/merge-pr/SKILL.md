@@ -13,13 +13,7 @@ Before starting: read this entire skill, then create a focused todo list, then e
 
 ---
 
-## Phase 1 — Load Session and Core
-
-Load the `session` skill to initialize provider context and load the active reference. Then load the `core` skill to internalize project values: quality gates, git safety, and task completion standards. These principles govern every decision you make throughout this workflow.
-
----
-
-## Phase 2 — Parse the Input
+## Phase 1 — Parse the Input
 
 The input will be one of these forms:
 - A PR/MR number: `99`
@@ -37,7 +31,7 @@ Display: `Input: PR/MR #{pr_number} | auto: {auto_mode}`
 
 ---
 
-## Phase 3 — Run hivrr-merge.sh
+## Phase 2 — Run hivrr-merge.sh
 
 Invoke the merge script, passing the values extracted in Phase 2:
 
@@ -68,7 +62,7 @@ Parse this line to extract `merged_pr`, `issues_closed` (list of numbers, may be
 
 ---
 
-## Phase 4 — Capture Follow-up Work
+## Phase 3 — Capture Follow-up Work
 
 After merge, collect any unaddressed PR/MR feedback that should become future issues. This prevents good suggestions from being lost.
 
@@ -96,7 +90,7 @@ Display: `Follow-up: {count} issues created {issue_numbers.join(', ') || ''}`
 
 ---
 
-## Phase 5 — Done
+## Phase 4 — Done
 
 Emit the completion JSON as defined in the command's Output section.
 
