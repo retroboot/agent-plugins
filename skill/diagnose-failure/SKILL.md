@@ -43,7 +43,10 @@ If `hub_mcp=true`:
 Call `mcp__nexus__hub__diagnose_failure` with `job_id={job_id}` and `logs={logs_text}`.
 
 If the response does not contain `degraded: true`:
-- Map `root_cause` → `diagnosis`, and `recoverable` → recommendation (`RETRY` if true, `SKIP` if false)
+- Map `root_cause` → `diagnosis`
+- If `recoverable=true` → `RETRY`
+- If `recoverable=false` and `suggestion` contains "skip", "invalid", or "not found" → `SKIP`
+- Otherwise → `HUMAN_REVIEW`
 - Emit result and skip to Phase 5.
 
 If the response contains `degraded: true`: continue to Phase 4.

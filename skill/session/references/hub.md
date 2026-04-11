@@ -2,6 +2,8 @@
 
 Use hub MCP tools when `hub_mcp=true`. Hub routes to the configured provider internally — no provider-specific MCP tools or CLI needed for most operations.
 
+> **Single-provider limitation:** Hub routes all calls to one pre-configured provider (`REPO_PROVIDER` env). If your session repo lives on a different provider than hub's configured one, hub MCP calls will return errors — fall back to provider-specific MCP or CLI in that case.
+
 Variables: `{OWNER}` = owner/org slug, `{REPO}` = repo name, `{N}` = issue or PR number, `{B}` = body text, `{T}` = title.
 
 ID encoding: `{OWNER}/{REPO}#{N}` for issues · `{OWNER}/{REPO}!{N}` for PRs/MRs
@@ -52,10 +54,11 @@ Raw diff text is not available via hub — always use CLI for this operation.
 MCP: mcp__nexus__hub__get_pr  id={OWNER}/{REPO}!{N}
 ```
 
-**PR conversation thread** (comments embedded in the get_pr response)
+**PR conversation thread**
 ```
-MCP: mcp__nexus__hub__get_pr  id={OWNER}/{REPO}!{N}
+CLI: gh api repos/{OWNER}/{REPO}/issues/{N}/comments
 ```
+Hub does not expose a read-comments endpoint — always use CLI for this operation.
 
 **Post comment**
 ```

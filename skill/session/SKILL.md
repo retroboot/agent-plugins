@@ -29,7 +29,8 @@ Store: `REPO_PROVIDER`, `ISSUE_TRACKER`, `REPO_TARGET`, provider slugs.
 Silently attempt each relevant probe. Record `true`/`false` — do not stop on failure.
 
 1. **hub_mcp**: attempt `mcp__nexus__hub__list_repos`
-   - If available → set `hub_mcp=true` and skip probes 2 and 3
+   - If available → set `hub_mcp=true`, `repo_mcp=false`, `issues_mcp=false`, and skip probes 2 and 3
+   - Note: a failed probe may mean hub is down OR hub is running but its provider credentials are misconfigured
 
 2. **repo_mcp** (only when `hub_mcp=false`): attempt `mcp__github__get_me` if `REPO_PROVIDER=github`; attempt `mcp__gitlab__get_me` if `REPO_PROVIDER=gitlab`
 
