@@ -52,3 +52,65 @@ open(path, 'w').write(json.dumps(s, indent=2))
 Substitute the actual collected values into `NEW_CONFIG` as a valid JSON string before running this command.
 
 Emit: `INIT: config written`
+
+---
+
+## Phase 2 — Bootstrap Labels
+
+Ensure the core label set exists in the current repository. Skips if already done.
+
+**Step 1 — Detect repo**
+
+```bash
+gh repo view --json owner,name --jq '"\(.owner.login)/\(.name)"'
+```
+
+If this fails (not in a git repo, no remote, or `repoProvider` is not `github`):
+
+Emit: `INIT: no repo detected — skipping label bootstrap`
+
+Stop — no further action needed.
+
+**Step 2 — Check bootstrap record**
+
+Read `~/.claude/settings.json`. Check `providerConfig.bootstrappedRepos` (default: `[]`).
+
+If the detected `{OWNER}/{REPO}` is already in the list:
+
+Emit: `INIT: labels ok`
+
+Stop — no further action needed.
+
+**Step 3 — Load label reference**
+
+```
+Read $CLAUDE_SKILL_DIR/references/labels.md
+```
+
+**Step 4 — Create labels**
+
+For each label in the reference, run:
+
+```bash
+gh label create "{name}" --repo {OWNER}/{REPO} --color "{color}" --description "{description}" --force
+```
+
+The `--force` flag updates any label that already exists — safe to run repeatedly.
+
+**Step 5 — Record completion**
+
+```bash
+REPO="{OWNER}/{REPO}" python3 -c "
+import json, os
+path = os.path.expanduser('~/.claude/settings.json')
+s = json.loads(open(path).read()) if os.path.exists(path) else {}
+s.setdefault('providerConfig', {}).setdefault('bootstrappedRepos', [])
+if os.environ['REPO'] not in s['providerConfig']['bootstrappedRepos']:
+    s['providerConfig']['bootstrappedRepos'].append(os.environ['REPO'])
+open(path, 'w').write(json.dumps(s, indent=2))
+"
+```
+
+Substitute the actual `{OWNER}/{REPO}` value into `REPO` before running.
+
+Emit: `INIT: labels bootstrapped for {OWNER}/{REPO}`

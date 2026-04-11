@@ -24,15 +24,11 @@ CLI: glab issue view {N} --repo {PROJECT}
 
 **Create**
 ```
-MCP: mcp__gitlab__create_issue  project_id={PROJECT} title={T} description={B}
-CLI: glab issue create --repo {PROJECT} --title "{T}" --description "{B}"
+MCP: mcp__gitlab__create_issue  project_id={PROJECT} title={T} description={B} labels=[{labels}]
+CLI: glab issue create --repo {PROJECT} --title "{T}" --description "{B}" --label "{labels}"
 ```
 
-**Label**
-```
-MCP: mcp__gitlab__update_issue  project_id={PROJECT} issue_iid={N} add_labels=[...]
-CLI: glab issue update {N} --repo {PROJECT} --label "{label}"
-```
+Use labels from the label reference loaded by init. Pick one or more that fit the issue type and priority.
 
 **Close**
 ```
