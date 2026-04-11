@@ -2,7 +2,7 @@
 
 Use MCP tools when `repo_mcp=true` / `issues_mcp=true`. Fall back to `glab` CLI otherwise.
 
-**Terminology:** MR (Merge Request) = PR. Issues and MRs use `iid` (project-scoped internal ID), not a global number. Branch fields are `sourceBranch` / `targetBranch`.
+**Terminology:** MR (Merge Request) = PR. Issues and MRs use `iid` (project-scoped internal ID), not a global number. Branch fields are `source_branch` / `target_branch` (snake_case from the raw API).
 
 Variables: `{PROJECT}` = `group/project` path, `{N}` = issue iid or MR iid, `{B}` = body/description, `{T}` = title.
 
@@ -49,7 +49,8 @@ CLI: glab mr diff {N} --repo {PROJECT}
 **View MR**
 ```
 MCP: mcp__gitlab__get_merge_request  project_id={PROJECT} merge_request_iid={N}
-CLI: glab mr view {N} --repo {PROJECT} --output json
+CLI: glab api projects/{PROJECT_ENCODED}/merge_requests/{N}
+     (PROJECT_ENCODED = group%2Fproject — glab mr view lacks --output json in older versions)
 ```
 
 **MR discussion notes** (conversation thread)
