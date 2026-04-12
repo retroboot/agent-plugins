@@ -85,6 +85,7 @@ MCP: mcp__nexus__hub__list_prs  repo={OWNER}/{REPO} state=open [provider={provid
 **Check CI**
 ```
 MCP: mcp__nexus__hub__get_pr_ci_status  id={OWNER}/{REPO}!{N} [provider={provider}]
+     # NOT YET AVAILABLE — pre-wired for Issue 2; use CLI fallback until shipped
 Returns: {"status": "passed|failed|running|pending|none", "url": "<pipeline url or ''>", "jobs": [{"name": str, "status": "passed|failed|running|pending", "url": str}]}
 Fallback (tool unavailable): use **Check CI** CLI from the provider reference
 ```

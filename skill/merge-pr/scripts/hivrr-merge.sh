@@ -141,8 +141,11 @@ if [[ "$ALREADY_MERGED" == "false" ]]; then
   echo "Checking CI..."
 
   if [[ "$PROVIDER" == "gitlab" ]]; then
-    PIPELINE_STATUS=$(glab api "projects/${ENCODED_REPO}/merge_requests/${PR_NUMBER}/pipelines" \
-      2>/dev/null | jq -r '.[0].status // "none"')
+    PIPELINE_RAW=$(glab api "projects/${ENCODED_REPO}/merge_requests/${PR_NUMBER}/pipelines" 2>&1) || {
+      echo "ERROR: Failed to fetch pipeline status: ${PIPELINE_RAW}" >&2
+      exit 1
+    }
+    PIPELINE_STATUS=$(echo "$PIPELINE_RAW" | jq -r '.[0].status // "none"')
     case "$PIPELINE_STATUS" in
       success)
         FAILING=""
@@ -159,6 +162,7 @@ if [[ "$ALREADY_MERGED" == "false" ]]; then
         ;;
       *)
         FAILING=""
+        echo "WARNING: Unrecognized pipeline status '${PIPELINE_STATUS}' — continuing" >&2
         ;;
     esac
   else
