@@ -76,7 +76,7 @@ CLI: gh pr merge {N} --repo {OWNER}/{REPO} --squash --delete-branch
 
 **Check CI**
 ```
-MCP: mcp__nexus__hub__get_pr_ci_status  id={OWNER}/{REPO}!{N}
+MCP: mcp__hub__hub__get_pr_ci_status  id={OWNER}/{REPO}!{N}
 CLI: gh pr checks {N} --repo {OWNER}/{REPO}
 ```
 

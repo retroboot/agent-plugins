@@ -40,7 +40,7 @@ Store: `logs_text`.
 
 If `hub_mcp=true`:
 
-Call `mcp__nexus__hub__diagnose_failure` with `job_id={job_id}` and `logs={logs_text}`.
+Call `mcp__hub__hub__diagnose_failure` with `job_id={job_id}` and `logs={logs_text}`.
 
 If the response does not contain `degraded: true`:
 - Map `root_cause` → `diagnosis`

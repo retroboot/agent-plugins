@@ -28,7 +28,7 @@ and exit.
 
 If `hub_mcp=true`:
 
-Call `mcp__nexus__hub__group_issues` with `issues=[{issue_numbers}]`.
+Call `mcp__hub__hub__group_issues` with `issues=[{issue_numbers}]`.
 
 If the response does not contain `degraded: true`: emit the result directly as `RESULT_JSON` (using the returned `groups` array) and skip to Phase 5.
 
