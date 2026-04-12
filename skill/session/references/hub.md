@@ -14,29 +14,29 @@ ID encoding: `{OWNER}/{REPO}#{N}` for issues · `{OWNER}/{REPO}!{N}` for PRs/MRs
 
 **List**
 ```
-MCP: mcp__nexus__hub__list_issues  repo={OWNER}/{REPO} state=open [provider={provider}]
+MCP: mcp__hub__hub__list_issues  repo={OWNER}/{REPO} state=open [provider={provider}]
 ```
 
 **Get**
 ```
-MCP: mcp__nexus__hub__get_issue  id={OWNER}/{REPO}#{N} [provider={provider}]
+MCP: mcp__hub__hub__get_issue  id={OWNER}/{REPO}#{N} [provider={provider}]
 ```
 
 **Create**
 ```
-MCP: mcp__nexus__hub__create_issue  repo={OWNER}/{REPO} title={T} body={B} labels=[{labels}] [provider={provider}]
+MCP: mcp__hub__hub__create_issue  repo={OWNER}/{REPO} title={T} body={B} labels=[{labels}] [provider={provider}]
 ```
 
 Use labels from the label reference loaded by init. Pick one or more that fit the issue type and priority.
 
 **Close**
 ```
-MCP: mcp__nexus__hub__update_issue  id={OWNER}/{REPO}#{N} state=closed [provider={provider}]
+MCP: mcp__hub__hub__update_issue  id={OWNER}/{REPO}#{N} state=closed [provider={provider}]
 ```
 
 **Comment**
 ```
-MCP: mcp__nexus__hub__comment_issue  id={OWNER}/{REPO}#{N} body={B} [provider={provider}]
+MCP: mcp__hub__hub__comment_issue  id={OWNER}/{REPO}#{N} body={B} [provider={provider}]
 ```
 
 ---
@@ -45,46 +45,46 @@ MCP: mcp__nexus__hub__comment_issue  id={OWNER}/{REPO}#{N} body={B} [provider={p
 
 **Get diff**
 ```
-MCP: mcp__nexus__hub__get_pr_diff  id={OWNER}/{REPO}!{N} [provider={provider}]
+MCP: mcp__hub__hub__get_pr_diff  id={OWNER}/{REPO}!{N} [provider={provider}]
 Returns: {"diff": "<unified diff text>"}
 Fallback (tool unavailable): use **Get diff** CLI from the provider reference
 ```
 
 **View PR**
 ```
-MCP: mcp__nexus__hub__get_pr  id={OWNER}/{REPO}!{N} [provider={provider}]
+MCP: mcp__hub__hub__get_pr  id={OWNER}/{REPO}!{N} [provider={provider}]
 ```
 
 **PR conversation thread**
 ```
-MCP: mcp__nexus__hub__list_pr_comments  id={OWNER}/{REPO}!{N} [provider={provider}]
+MCP: mcp__hub__hub__list_pr_comments  id={OWNER}/{REPO}!{N} [provider={provider}]
 Returns: [{id, body, url, created_at}, ...]  # all comments, not paginated
 Fallback (tool unavailable): use **PR conversation thread** CLI from the provider reference
 ```
 
 **Post comment**
 ```
-MCP: mcp__nexus__hub__comment_pr  id={OWNER}/{REPO}!{N} body={B} [provider={provider}]
+MCP: mcp__hub__hub__comment_pr  id={OWNER}/{REPO}!{N} body={B} [provider={provider}]
 ```
 
 **Create PR**
 ```
-MCP: mcp__nexus__hub__create_pr  repo={OWNER}/{REPO} title={T} body={B} source_branch={branch} target_branch={base} [provider={provider}]
+MCP: mcp__hub__hub__create_pr  repo={OWNER}/{REPO} title={T} body={B} source_branch={branch} target_branch={base} [provider={provider}]
 ```
 
 **Merge PR** (squash)
 ```
-MCP: mcp__nexus__hub__merge_pr  id={OWNER}/{REPO}!{N} strategy=squash [provider={provider}]
+MCP: mcp__hub__hub__merge_pr  id={OWNER}/{REPO}!{N} strategy=squash [provider={provider}]
 ```
 
 **List PRs**
 ```
-MCP: mcp__nexus__hub__list_prs  repo={OWNER}/{REPO} state=open [provider={provider}]
+MCP: mcp__hub__hub__list_prs  repo={OWNER}/{REPO} state=open [provider={provider}]
 ```
 
 **Check CI**
 ```
-MCP: mcp__nexus__hub__get_pr_ci_status  id={OWNER}/{REPO}!{N} [provider={provider}]
+MCP: mcp__hub__hub__get_pr_ci_status  id={OWNER}/{REPO}!{N} [provider={provider}]
      # NOT YET AVAILABLE — pre-wired for Issue 2; use CLI fallback until shipped
 Returns: {"status": "passed|failed|running|pending|none", "url": "<pipeline url or ''>", "jobs": [{"name": str, "status": "passed|failed|running|pending", "url": str}]}
 Fallback (tool unavailable): use **Check CI** CLI from the provider reference
@@ -92,7 +92,7 @@ Fallback (tool unavailable): use **Check CI** CLI from the provider reference
 
 **Latest commit timestamp**
 ```
-MCP: mcp__nexus__hub__get_pr_latest_commit  id={OWNER}/{REPO}!{N} [provider={provider}]
+MCP: mcp__hub__hub__get_pr_latest_commit  id={OWNER}/{REPO}!{N} [provider={provider}]
 Returns: {"sha": "abc123", "committed_at": "2026-04-11T12:00:00Z"}  # committed_at is always UTC ISO-8601
 Fallback (tool unavailable): use **Latest commit timestamp** CLI from the provider reference
 ```
@@ -103,12 +103,12 @@ Fallback (tool unavailable): use **Latest commit timestamp** CLI from the provid
 
 **List repos**
 ```
-MCP: mcp__nexus__hub__list_repos  [provider={provider}]
+MCP: mcp__hub__hub__list_repos  [provider={provider}]
 ```
 
 **Create branch**
 ```
-MCP: mcp__nexus__hub__create_branch  repo={OWNER}/{REPO} branch={branch} ref={base} [provider={provider}]
+MCP: mcp__hub__hub__create_branch  repo={OWNER}/{REPO} branch={branch} ref={base} [provider={provider}]
 ```
 
 ---
@@ -119,30 +119,30 @@ These tools return `degraded: true` when the LLM backend is unavailable. Always 
 
 **Score issues by urgency**
 ```
-MCP: mcp__nexus__hub__score_issues  issues=[{issue_ids}]
+MCP: mcp__hub__hub__score_issues  issues=[{issue_ids}]
 Returns: {"scores": {"123": 72, "456": 41}}
 ```
 
 **Group issues into implementation waves**
 ```
-MCP: mcp__nexus__hub__group_issues  issues=[{issue_ids}]
+MCP: mcp__hub__hub__group_issues  issues=[{issue_ids}]
 Returns: {"groups": [[123, 456], [789]]}
 ```
 
 **Diagnose a job failure**
 ```
-MCP: mcp__nexus__hub__diagnose_failure  job_id={job_id} logs={logs}
+MCP: mcp__hub__hub__diagnose_failure  job_id={job_id} logs={logs}
 Returns: {"root_cause": "...", "suggestion": "...", "recoverable": true|false}
 ```
 
 **Review a PR**
 ```
-MCP: mcp__nexus__hub__review_pr  id={OWNER}/{REPO}!{N}
+MCP: mcp__hub__hub__review_pr  id={OWNER}/{REPO}!{N}
 Returns: {"verdict": "approve|request_changes|comment", "summary": "...", "comments": [...]}
 ```
 
 **Classify a task to a workflow**
 ```
-MCP: mcp__nexus__hub__classify_workflow  task={task_description}
+MCP: mcp__hub__hub__classify_workflow  task={task_description}
 Returns: {"workflow": "work-issue|review-pr|...", "confidence": 0.0-1.0}
 ```
