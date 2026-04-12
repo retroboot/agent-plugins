@@ -81,11 +81,7 @@ CLI: glab mr merge {N} --repo {PROJECT} --squash --remove-source-branch
 **Check CI**
 ```
 MCP: not available — use CLI
-CLI: glab ci status --repo {PROJECT} --branch {branch}
-     or: glab mr checks {N} --repo {PROJECT}
-```
-
-**Latest pipeline status**
-```
-CLI: glab ci list --repo {PROJECT} --branch {branch} --output json | jq '.[0].status'
+CLI: glab api projects/{PROJECT_ENCODED}/merge_requests/{N}/pipelines | jq -r '.[0].status // "none"'
+     (PROJECT_ENCODED = group%2Fproject)
+     # Returns: "success" | "failed" | "canceled" | "running" | "pending" | "none" (no pipeline)
 ```
