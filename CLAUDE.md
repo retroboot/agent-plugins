@@ -31,4 +31,10 @@ Full data platform skills — covers the complete stack from ingestion and pipel
 
 ## Running Multiple Instances
 
-When running multiple instances of the plugin, configure `CONTAINER_NETWORK` to reference the Docker network created by Docker Compose. The network name follows the pattern `{directory_name}_default`, where `directory_name` is the folder containing the compose file — not the project name. For example, if your compose file is located in `/path/to/agent-plugin/docker-compose.yml`, set `CONTAINER_NETWORK=agent-plugin_default`.
+When running multiple instances of the plugin, set the `CONTAINER_NETWORK` environment variable in your `.env` file to reference the Docker network created by Docker Compose. The network name follows the pattern `{directory_name}_default`, where `directory_name` is the folder containing the compose file — not the project name. For example, if your compose file is located in `/path/to/agent-plugin/docker-compose.yml`, add the following to your `.env` file:
+
+```
+CONTAINER_NETWORK=agent-plugin_default
+```
+
+If you define a custom network name in your `docker-compose.yml`, use that name instead of the `{directory_name}_default` pattern. If the specified network does not exist, Docker will fail to connect and containers will be unable to communicate.
