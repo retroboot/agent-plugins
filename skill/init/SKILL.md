@@ -141,6 +141,7 @@ jq empty .hivrr.json
 
 - Parses → Emit `INIT: .hivrr.json ok` and stop. **Never overwrite an existing file** — editing it is the user's job.
 - Fails to parse → Emit `INIT: .hivrr.json is malformed — {jq error}` and stop. Do not repair it silently.
+- `jq: command not found` (exit 127) → the validator is missing, not the config. Emit `INIT: .hivrr.json present (unvalidated — jq not installed)` and stop.
 
 **If absent:** continue to Step 3.
 
@@ -156,9 +157,9 @@ From the results, derive proposed values:
 - `provider` — the resolved `repoProvider`
 - `branches.integration` — the default branch, unless a `dev` branch exists on the remote, in which case propose `dev`
 - `branches.ladder` — the subset of `["dev", "staging", "main"]` (or `master`) that actually exists on the remote, ordered lowest environment first. A single existing branch yields a single-rung ladder, which is correct.
-- `branches.protected` — the ladder, plus the default branch if it is not already in it
+- `branches.protected` — omit this key unless the ladder or default branch adds a name the documented default does not already cover. Because precedence resolves per key, writing the key at all *replaces* the default set rather than extending it, so a scaffold that writes a narrow list leaves the repo less protected than one with no config at all. When you do write it, write the **union** of the documented default set (`main, master, dev, develop, staging, release/*`), the ladder, and the default branch — never a subset.
 
-Omit `project` and `verify` entirely. `project` requires the ID resolution flow; `verify` is filled in by Phase 4. An absent key is valid and falls through to its documented default.
+Omit `project` and `verify` entirely — neither has a consumer yet, and both are filled in by later work (`verify` by #108, `project` by #116). An absent key is valid and falls through to its documented default.
 
 **Step 4 — Confirm and write**
 
@@ -170,6 +171,6 @@ Write the file with the Write tool, then validate:
 jq empty .hivrr.json
 ```
 
-If validation fails, delete the file and report the error rather than leaving a malformed config behind.
+If `jq` reports a parse error, delete the file and report it rather than leaving a malformed config behind. If `jq` is not installed, keep the file and note that it went unvalidated.
 
 Emit: `INIT: .hivrr.json scaffolded (integration: {integration}, ladder: {ladder})`

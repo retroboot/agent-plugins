@@ -113,30 +113,40 @@ git status --porcelain
 
 If it reports anything, display `WARNING: Working tree has uncommitted changes — continuing anyway` and continue. This is a warning, not a guard — do not stash, reset, or discard the changes.
 
-Check whether the issue branch already exists:
+Check whether the issue branch already exists — **locally and on the remote**. Checking only local refs is not enough: on a fresh clone, a recreated container, or work resumed from another machine, `issue/{number}` exists on `origin` but not in `refs/heads`. Branching from the base in that situation produces a local branch with none of the remote's commits, and the push in Phase 11 fails as a non-fast-forward after all the implementation work is done.
 
 ```bash
-git show-ref --verify --quiet refs/heads/issue/{number}
+git fetch origin
+git show-ref --verify --quiet refs/heads/issue/{number}   # exit 0 = exists locally
+git ls-remote --exit-code --heads origin issue/{number}    # exit 0 = exists on origin
 ```
 
-**If it exists** (resume case) — switch to it and stop there:
+Then take exactly one of these three paths:
+
+**Local branch exists** (resume) — switch to it:
 
 ```bash
 git checkout issue/{number}
 ```
 
-Do **not** reset, rebase, or force-update the branch. Local commits from an earlier run must survive.
+**Remote only** (resume from elsewhere) — track the remote branch:
 
-**If it does not exist** — fetch the base and branch from it:
+```bash
+git checkout -b issue/{number} origin/issue/{number}
+```
+
+**Neither exists** (new work) — fetch the base and fork from it:
 
 ```bash
 git fetch origin {base}
 git checkout -b issue/{number} origin/{base}
 ```
 
-If either command fails, surface the error and stop.
+On both resume paths, do **not** reset, rebase, or force-update the branch. Commits from an earlier run must survive.
 
-Display: `Branch: issue/{number} (base: {base})`
+If any command fails, surface the error and stop.
+
+Display: `Branch: issue/{number} ({new | resumed local | resumed from origin}, base: {base})`
 
 ---
 

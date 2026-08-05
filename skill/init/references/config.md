@@ -50,14 +50,16 @@ Every top-level key is optional. A file containing only `{}` is valid and resolv
 | `branches.integration` | string | repo default branch | `work-issue`, `wave` |
 | `branches.ladder` | string[] | `[default branch]` | `merge-pr`, `promote` |
 | `branches.protected` | string[] | `["main", "master", "dev", "develop", "staging", "release/*"]` | `merge-pr`, `core`, `promote` |
-| `project` | object \| absent | absent — all board operations are silent no-ops | `planning`, `work-issue`, `merge-pr`, `score-issues`, `group-issues` |
-| `project.owner` | string | — | board operations |
-| `project.number` | number | — | board operations |
-| `project.statusFieldId` | string (`PVTSSF_…`) | — | board status transitions |
-| `project.status.todo` \| `.inProgress` \| `.done` | string (option id) | — | board status transitions |
-| `verify.test` | string | model detects, then offers to record | `work-issue`, `work-pr` |
-| `verify.lint` | string | model detects, then offers to record | `work-issue`, `work-pr` |
-| `verify.detectedFrom` | string[] | — | `init` (staleness check) |
+| `project` | object \| absent | absent — all board operations are silent no-ops | `planning`, `work-issue`, `merge-pr`, `score-issues`, `group-issues` ⏳ |
+| `project.owner` | string | — | board operations ⏳ |
+| `project.number` | number | — | board operations ⏳ |
+| `project.statusFieldId` | string (`PVTSSF_…`) | — | board status transitions ⏳ |
+| `project.status.todo` \| `.inProgress` \| `.done` | string (option id) | — | board status transitions ⏳ |
+| `verify.test` | string | model detects, then offers to record | `work-issue`, `work-pr` ⏳ |
+| `verify.lint` | string | model detects, then offers to record | `work-issue`, `work-pr` ⏳ |
+| `verify.detectedFrom` | string[] | — | `init` (staleness check) ⏳ |
+
+⏳ = specified here but not yet read by any skill. `verify.*` gains its consumers with #108; `project.*` with #116–#119. Until then these keys are inert, and their absence resolves to the documented default like any other missing key. Remove the marker as each consumer lands.
 
 ### `branches.integration`
 
@@ -72,6 +74,8 @@ A single-element ladder means promotion no-ops — which is the correct behavior
 ### `branches.protected`
 
 Branches that must never be deleted or force-pushed. Entries may use a trailing `*` wildcard (`release/*`). `merge-pr` consults this before passing `--delete-branch`.
+
+**Writing this key replaces the default set — it does not extend it.** Precedence resolves per key, so `"protected": ["main"]` leaves `dev`, `develop`, `staging`, and `release/*` unprotected. That is strictly worse than omitting the key. Set it only to *add* names the default does not cover, and when you do, write the full union rather than a subset.
 
 ### `project`
 
@@ -113,6 +117,8 @@ Absent is normal. Skip to step 4 and resolve every key from the fallback chain.
 jq empty .hivrr.json
 ```
 
+A non-zero exit here means malformed JSON — **except** for `command not found` (exit 127), which means `jq` is missing, not that the config is bad. Treat that case as "unvalidated but readable": note it once and continue to step 3. Do not report a valid config as malformed because the validator is absent.
+
 **3 — Read it.**
 
 Use the Read tool on `.hivrr.json`. Do not `cat` it — the Read tool keeps the content in context for later phases.
@@ -128,7 +134,8 @@ These are deliberately different, and conflating them is a bug:
 | Condition | Behavior |
 |---|---|
 | File absent | **Normal.** Resolve everything from fallbacks. Emit nothing. |
-| File present, `jq empty` fails | **Hard error.** Stop and report the parse error with the file path. Do not guess at defaults — a malformed config is a mistake the user needs to see, and silently ignoring it produces behavior they did not ask for. |
+| File present, `jq empty` reports a parse error | **Hard error.** Stop and report the parse error with the file path. Do not guess at defaults — a malformed config is a mistake the user needs to see, and silently ignoring it produces behavior they did not ask for. |
+| File present, `jq` itself is not installed (exit 127) | **Not an error.** The validator is missing, not the config. Note it once and read the file anyway. |
 | File present, valid JSON, key missing | **Normal.** Fall through to the next source for that key. |
 | File present, key has the wrong type (e.g. `ladder` is a string) | **Hard error.** Report the key and the expected type. |
 

@@ -36,24 +36,7 @@ and exit.
 
 Store: `logs_text`.
 
-## Phase 3 — Hub Fast-Path
-
-If `hub_mcp=true`:
-
-Call `mcp__hub__hub__diagnose_failure` with `job_id={job_id}` and `logs={logs_text}`.
-
-If the response does not contain `degraded: true`:
-- Map `root_cause` → `diagnosis`
-- If `recoverable=true` → `RETRY`
-- If `recoverable=false` and `suggestion` contains "skip", "invalid", or "not found" → `SKIP`
-- Otherwise → `HUMAN_REVIEW`
-- Emit result and skip to Phase 5.
-
-If the response contains `degraded: true`: continue to Phase 4.
-
-If `hub_mcp=false`: continue to Phase 4.
-
-## Phase 4 — Diagnose
+## Phase 3 — Diagnose
 
 Analyze the logs for the failed job. Consider:
 - What operation was being performed (based on `task_type` hint and log content)
@@ -62,7 +45,7 @@ Analyze the logs for the failed job. Consider:
 missing config, logic error)
 - Whether retrying is likely to succeed
 
-## Phase 5 — Emit Result
+## Phase 4 — Emit Result
 
 Display:
 ```
