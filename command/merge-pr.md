@@ -38,3 +38,5 @@ This command is machine-executed. When the workflow completes, your **entire fin
   "followup_issues": [issue_numbers]
 }
 ```
+
+`branch_deleted` is `"none"` when a branch-deletion safety rule prevented the delete.

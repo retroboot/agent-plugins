@@ -38,12 +38,43 @@ Store: `logs_text`.
 
 ## Phase 3 — Diagnose
 
-Analyze the logs for the failed job. Consider:
-- What operation was being performed (based on `task_type` hint and log content)
-- The last error message or exception
-- Whether it is a transient failure (network, timeout, rate limit) or a persistent one (bad code,
-missing config, logic error)
-- Whether retrying is likely to succeed
+Analyze `logs_text` yourself. Produce three intermediate values, then map them to the output — the
+mapping is mechanical, so a given diagnosis always yields the same recommendation.
+
+**Step 1 — Read the logs for:**
+
+- What operation was being performed, from the `task_type` hint and the log content
+- The **last** error or exception, not the first — earlier errors are often retried successfully and
+  the final one is what actually stopped the job
+- Whether anything partially succeeded before the failure, which changes whether a retry is safe
+
+**Step 2 — Produce `root_cause`, `suggestion`, and `recoverable`:**
+
+- `root_cause` — one sentence naming what failed and why
+- `suggestion` — the concrete next action
+- `recoverable` — `true` when re-running the same job unchanged has a real chance of succeeding
+
+Classify `recoverable` from the failure's nature:
+
+| `recoverable` | Failure type | Examples |
+|---|---|---|
+| `true` | Transient — the input was fine, the environment was not | network error, timeout, rate limit, `502`/`503`, lock contention, a runner dying mid-job |
+| `false` | Persistent — re-running changes nothing | compile or syntax error, failing assertion, missing config or credential, merge conflict, issue not found, permission denied |
+
+An out-of-quota or expired-credential failure is **not** transient: it recurs on retry until a human
+intervenes.
+
+**Step 3 — Map to `recommendation`:**
+
+- `recoverable == true` → `RETRY`
+- `recoverable == false` **and** `suggestion` indicates the work should be abandoned — it names the
+  target as invalid, not found, already done, or otherwise moot → `SKIP`
+- Otherwise → `HUMAN_REVIEW`
+
+`HUMAN_REVIEW` is the correct answer when the logs are ambiguous. Do not force a `RETRY` or `SKIP` to
+avoid it — a wrong `RETRY` burns a job slot, and a wrong `SKIP` silently drops real work.
+
+Set `diagnosis` to `root_cause`.
 
 ## Phase 4 — Emit Result
 

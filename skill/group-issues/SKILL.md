@@ -35,6 +35,26 @@ Skip any issue that errors. Truncate each body to 500 characters.
 Group issues into waves. Each wave will be implemented as a single pull request in one worker
 session.
 
+Work the two signals in this order — dependency first, then file overlap. Stating the order matters:
+two issues that depend on each other belong together even when they touch different files, while two
+issues that merely share a file may be entirely unrelated.
+
+**Step 1 — Build the dependency edges.** Read each body for explicit statements: `Depends on #N`,
+`Blocked by #N`, `Closes #N`, `Part of #N`, or prose naming another issue as a prerequisite. An
+issue and its stated prerequisite are candidates for the same group. Treat an unstated dependency as
+absent — do not infer one from topic similarity.
+
+**Step 2 — Measure file overlap.** Collect the file paths each body mentions. Two issues overlap
+when they name the same file, not merely the same directory or product area. Overlap makes grouping
+*safe* (it avoids conflicting PRs); it does not by itself make grouping *correct*.
+
+**Step 3 — Apply the rules below** to each candidate pair, then apply the sensitivity level.
+
+**Step 4 — Order within each group.** The group order is the implementation order, so sort each
+group: structural and rename changes first, then type definitions, then new features, then bug
+fixes, then documentation. A prerequisite always precedes the issue that depends on it. When a
+dependency cycle appears, break it by splitting the pair into separate groups and note it.
+
 **Sensitivity levels:**
 - 1 (conservative): Only group when certain both issues are small and will land in one PR. Any
 doubt means separate.
@@ -55,7 +75,11 @@ non-trivial.
 - They address distinct concerns, even within the same module
 - You are uncertain
 
-Maximum `max_wave_size` issues per group. Every issue must appear in exactly one group.
+Maximum `max_wave_size` issues per group. Every issue must appear in exactly one group — no issue
+may be dropped or duplicated, and a single-issue group is a valid result.
+
+If a group would exceed `max_wave_size`, split it at the weakest link: the pair with no dependency
+edge and the least file overlap.
 
 ## Phase 4 — Emit Result
 

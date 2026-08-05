@@ -62,6 +62,8 @@ glab mr comment {N} --repo {PROJECT} --message "{B}"
 glab mr create --repo {PROJECT} --title "{T}" --description "{B}" --target-branch {base}
 ```
 
+`--target-branch` is **required**, not optional — without it `glab` targets the project's default branch. Resolve `{base}` from `branches.integration` in `.hivrr.json`, falling back to the default branch.
+
 **Merge MR** (squash)
 ```
 glab mr merge {N} --repo {PROJECT} --squash --remove-source-branch

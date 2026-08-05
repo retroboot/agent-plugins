@@ -11,6 +11,8 @@ You are a workflow driver. Your job is to take an approved PR or MR through merg
 
 Before starting: read this entire skill, then create a focused todo list, then execute.
 
+You run each command yourself and read its output. There is no merge script — every step below is a command you issue directly, so nothing is hidden from you and nothing depends on a subprocess having a TTY.
+
 ---
 
 ## Phase 1 — Parse the Input
@@ -25,7 +27,7 @@ Extract:
 - `pr_number` — the PR number to merge
 - `auto_mode` — true if `--auto` is present
 
-Get the repo: run `git remote get-url origin` and parse the owner and repo name into `repo_slug` (format: `owner/repo`).
+Get the repo: run `git remote get-url origin` and parse the owner and repo name into `repo_slug` (format: `owner/repo`). For GitLab API calls you also need `repo_encoded` — `repo_slug` with `/` replaced by `%2F`.
 
 Display: `Input: PR/MR #{pr_number} | auto: {auto_mode}`
 
@@ -33,13 +35,13 @@ Display: `Input: PR/MR #{pr_number} | auto: {auto_mode}`
 
 ## Branch Deletion Safety
 
-**This binds every merge in this skill**, whether the merge runs via a script, via `gh pr merge`, via `glab mr merge`, or by any other means. Read it before performing any merge step.
+**This binds every merge in this skill**, however the merge is performed. Read it before performing any merge step.
 
 Deleting a branch is not cleanup when the branch is long-lived — it destroys an environment. A `dev → staging` promotion merged with `--delete-branch` deletes `dev` both locally and on the remote.
 
 Before deleting a head branch, check all three rules. **If any rule trips, do not delete.**
 
-**Rule 1 — Protected names.** Never delete a head branch in this set:
+**Rule 1 — Protected names.** Never delete a head branch in the protected set:
 
 ```
 main, master, dev, develop, staging, release/*
@@ -47,15 +49,21 @@ main, master, dev, develop, staging, release/*
 
 `release/*` matches any branch whose name starts with `release/`.
 
-**Rule 2 — The base branch.** Never delete a branch equal to the PR's base branch (`baseRefName`).
+**Rule 2 — The base branch.** Never delete a branch equal to the PR's base branch (`baseRefName` / `target_branch`).
 
 **Rule 3 — Branches other PRs target.** Before deleting, confirm no open PR targets the branch:
 
 ```bash
+# GitHub
 gh pr list --repo {repo_slug} --base {head_branch} --state open --json number --jq 'length'
+
+# GitLab
+glab api "projects/{repo_encoded}/merge_requests?state=opened&target_branch={head_branch}" --jq 'length'
 ```
 
 A result greater than `0` means other work is stacked on this branch. Do not delete it.
+
+**If the query itself fails**, treat that as a trip, not a pass. An unevaluable safety rule is not a satisfied one — keep the branch and report that the check could not run.
 
 **When any rule trips:**
 
@@ -68,69 +76,263 @@ A result greater than `0` means other work is stacked on this branch. Do not del
 
 ---
 
-## Phase 2 — Run hivrr-merge.sh
+## Phase 2 — Fetch the PR/MR
 
-Invoke the merge script, passing the values extracted in Phase 1:
-
-```
-bash "${CLAUDE_SKILL_DIR}/scripts/hivrr-merge.sh" \
-  --pr {pr_number} \
-  --repo {repo_slug} \
-  --provider {REPO_PROVIDER} \
-  --issue-tracker {ISSUE_TRACKER} \
-  [--auto]
-```
-
-Include `--auto` only when `auto_mode` is true.
-
-**Before invoking it:** evaluate the Branch Deletion Safety rules above against this PR's head branch. The script deletes the head branch unconditionally — it has no guard. If any rule trips, **do not use the script**; take the direct path below instead.
-
-**If the script exits non-zero:** surface the error output and stop. Do not proceed to Phase 4.
-
-**On success:** the script prints a structured summary line before exiting:
-
-```
-HIVRR_MERGE_SUMMARY pr={pr_number} issues_closed={comma_list|none} branch_deleted={branch_name}
-```
-
-Parse this line to extract `merged_pr`, `issues_closed` (list of numbers, may be empty), and `branch_deleted`. These values populate the Phase 4 completion JSON.
-
-### Direct path (any deletion rule tripped)
-
-The script is the only producer of `HIVRR_MERGE_SUMMARY`, and it also owns the linked-issue close loop. Skipping it means performing both of those jobs here — otherwise the completion JSON has no source and linked issues silently stay open.
-
-**Step 1 — Merge.** Use the **Merge PR** command from the loaded reference with its delete flag removed:
-
+**GitHub:**
 ```bash
-# GitHub — drop --delete-branch
-gh pr merge {pr_number} --repo {repo_slug} --squash
-
-# GitLab — drop --remove-source-branch
-glab mr merge {pr_number} --repo {repo_slug} --squash
+gh pr view {pr_number} --repo {repo_slug} --json title,body,headRefName,state,baseRefName,reviews
 ```
 
-**Step 2 — Close linked issues.** This is required, not cleanup. GitHub honors `Closes #N` only on merges into the **default** branch, so on any other base this loop is the sole mechanism that closes anything.
+**GitLab:**
+```bash
+glab api projects/{repo_encoded}/merge_requests/{pr_number}
+```
 
-Extract issue references from the PR title and body. Accept both forms:
+Extract `pr_title`, `pr_body`, `head_branch`, `base_branch`, and `pr_state`. GitLab uses `source_branch`/`target_branch`/`description` and lowercase states — normalize `opened → OPEN`, `merged → MERGED`, `closed → CLOSED` so the rest of this skill reads the same either way.
+
+**Handle terminal states before anything else:**
+
+| State | Action |
+|---|---|
+| `MERGED` | Already merged. Set `already_merged = true`, skip Phases 4–6, and go straight to Phase 7 cleanup. |
+| `CLOSED` | Closed without merging. **Stop.** Report that a closed PR cannot be merged. Do not reopen it. |
+| `OPEN` | Continue. |
+
+Then count reviews requesting changes — `reviews[].state == "CHANGES_REQUESTED"` on GitHub, `reviewers[].state == "requested_changes"` on GitLab. If any exist, warn but do not stop; the confirmation checkpoint in Phase 5 is where the user decides.
+
+Display: `PR/MR #{pr_number}: "{pr_title}" | state: {pr_state} | {head_branch} → {base_branch}`
+
+---
+
+## Phase 3 — Extract Linked Issues
+
+Scan `pr_title` and `pr_body` for closing keywords followed by an issue reference. Accept **both** reference forms:
 
 - `#123` — GitHub/GitLab numeric
 - `ENG-123` — Linear-style, pattern `[A-Z]+-[0-9]+`
 
-For each reference, check whether it is still open, and close it with the **Close issue** command from the loaded reference if so. Collect the numbers actually closed.
+Keywords: `close`, `closes`, `closed`, `fix`, `fixes`, `fixed`, `resolve`, `resolves`, `resolved` — case-insensitive. Deduplicate the results.
 
-**Step 3 — Build the summary yourself.** From the observed results, not from parsed output:
+Store as `linked_issues`.
 
-- `merged_pr` — `{pr_number}`
-- `issues_closed` — the list collected in Step 2, or empty
-- `branch_deleted` — `none`, plus which rule tripped
-
-Display: `Merged: #{pr_number} (direct) | issues closed: {list|none} | branch_deleted: none — {rule that tripped}`
-
-Then continue to Phase 3.
+Display: `Linked issues: {list | none}`
 
 ---
 
-## Phase 3 — Capture Follow-up Work
+## Phase 4 — Check CI
+
+Skip this phase when `already_merged` is true.
+
+**GitHub:**
+```bash
+gh pr checks {pr_number} --repo {repo_slug}
+```
+
+`gh pr checks` exits non-zero when no checks are configured. Read the output before treating a non-zero exit as an error — text matching `no checks` means "nothing to verify", which is not a failure.
+
+**Exclude `claude-review` from failure detection.** That check is advisory and routinely reports non-success on PRs that are fine to merge; treating it as blocking would wedge every merge. Match its name case-insensitively against both `claude-review` and `claude review`.
+
+A check counts as **failed** when its state is one of `fail`, `failure`, `timed_out`, `cancelled`, `startup_failure`, `action_required`.
+
+A check counts as **unfinished** when its state is `pending`, `queued`, or `in_progress`.
+
+**GitLab:**
+```bash
+glab api projects/{repo_encoded}/merge_requests/{pr_number}/pipelines | jq -r '.[0].status // "none"'
+```
+
+`success` and `none` pass. `failed` and `canceled` are **failed**. `running` and `pending` are **unfinished**.
+
+**Both failed and unfinished block the merge**, and the rule is identical across providers — merging on a pipeline that has not finished defeats the point of checking it. Applying this to only one provider would let the same PR state merge on GitHub and block on GitLab.
+
+**Report them differently**, because they call for different actions — one needs a fix, the other needs a wait:
+
+- Failed → `CI: {n} failing — {names}`. Stop.
+- Unfinished → `CI: {n} still running — {names}`. Stop, and say that re-running the command once CI settles will proceed.
+
+Display when clear: `CI: {all checks passed | no checks configured}`
+
+---
+
+## Phase 5 — Confirm
+
+Skip this phase when `auto_mode` is true or `already_merged` is true.
+
+Present the merge summary and **wait for the user's answer**:
+
+```
+--- Merge Summary ---
+  PR:      #{pr_number} — {pr_title}
+  Merge:   {head_branch} → {base_branch}
+  Method:  squash
+  Branch:  {head_branch} will be deleted | will NOT be deleted ({rule that tripped})
+  Issues:  {linked_issues} will be closed | none
+  CI:      {ci_result}
+```
+
+Ask whether to proceed. Anything other than an affirmative answer stops the workflow with nothing merged.
+
+This is a genuine checkpoint, not a formality — it is the last point at which a wrong PR number costs nothing.
+
+---
+
+## Phase 6 — Merge
+
+Skip this phase when `already_merged` is true.
+
+Evaluate the Branch Deletion Safety rules against `head_branch` first, then merge with squash:
+
+**GitHub — no rule tripped:**
+```bash
+gh pr merge {pr_number} --repo {repo_slug} --squash --delete-branch
+```
+
+**GitHub — a rule tripped:**
+```bash
+gh pr merge {pr_number} --repo {repo_slug} --squash
+```
+
+**GitLab — no rule tripped:**
+```bash
+glab mr merge {pr_number} --repo {repo_slug} --squash --remove-source-branch
+```
+
+**GitLab — a rule tripped:**
+```bash
+glab mr merge {pr_number} --repo {repo_slug} --squash
+```
+
+If the merge command fails, re-check the PR state before concluding anything — `--delete-branch` can fail on an already-deleted branch *after* the merge itself succeeded, which looks like a failed merge but is not:
+
+```bash
+# GitHub
+gh pr view {pr_number} --repo {repo_slug} --json state --jq '.state'
+
+# GitLab
+glab api projects/{repo_encoded}/merge_requests/{pr_number} --jq '.state'
+```
+
+`MERGED` (GitHub) or `merged` (GitLab) means the merge landed and only the deletion failed; continue. Anything else means the merge genuinely failed — report the error and stop.
+
+Record `remote_branch_deleted` (true only when the merge command deleted it) and `branch_deleted` (`{head_branch}` or `none` plus the rule that tripped).
+
+Display: `Merged: PR/MR #{pr_number} → {base_branch} (squash)`
+
+---
+
+## Phase 7 — Close Linked Issues
+
+**This loop is required, not cleanup. Do not remove it as redundant.**
+
+GitHub honors `Closes #N` in a PR body **only when the PR merges into the repository's default branch**. Once integration moves to `dev`, closing keywords never fire on their own, and this loop becomes the sole mechanism that closes anything. It looks redundant on a repo whose default branch is also its integration branch — that is exactly the situation in which deleting it causes silent damage later.
+
+For each reference in `linked_issues`:
+
+**Linear identifier** (`[A-Z]+-[0-9]+`):
+```bash
+linear issue update {ID} --state Done
+```
+
+**Numeric, GitHub:** check the state first, since a merge into the default branch may already have closed it.
+```bash
+gh issue view {N} --repo {repo_slug} --json state --jq '.state'
+gh issue close {N} --repo {repo_slug}      # only if still OPEN
+```
+
+**Numeric, GitLab:**
+```bash
+glab api projects/{repo_encoded}/issues/{N} --jq '.state'
+glab issue close {N} --repo {repo_slug}    # only if still "opened"
+```
+
+Auto-close is not instantaneous. If an issue still reads open immediately after the merge, wait ~2 seconds and check **once** more, then close it manually if it is still open. Two checks total — that covers GitHub's auto-close latency and bounds the wait at a couple of seconds. Closing an issue that was about to auto-close is harmless; the second read just keeps the reported count honest.
+
+A failure to close one issue is a warning, not a stop. Continue to the next and report which ones failed.
+
+Collect the references actually closed into `issues_closed`.
+
+Display: `Issues: {count} verified, {count} closed | none`
+
+---
+
+## Phase 8 — Return to the Base Branch
+
+Switch to the branch this PR actually merged into and update it. **Report its real name** — it is not always `main`:
+
+```bash
+git checkout {base_branch}
+git pull origin {base_branch}
+```
+
+Display: `{base_branch}: updated`
+
+---
+
+## Phase 9 — Clean Up Branches
+
+**Step 1 — This PR's head branch.**
+
+Skip entirely if a deletion rule tripped in Phase 6.
+
+```bash
+git show-ref --verify --quiet refs/heads/{head_branch}   # exists locally?
+git branch -D {head_branch}
+```
+
+If `remote_branch_deleted` is false, delete the remote branch too:
+
+```bash
+git ls-remote --heads origin {head_branch}
+git push origin --delete {head_branch}
+```
+
+**Step 2 — Prune stale local branches.**
+
+Nothing else cleans these up, so they accumulate indefinitely. Note that **ancestry checks do not work here**: this repo squash-merges, so a merged branch shares no commit with the base and `git branch --merged` finds nothing. Use the remote's view instead.
+
+```bash
+git fetch --prune
+git branch -vv | grep ': gone]'
+```
+
+**`: gone]` means the remote ref disappeared — not that the work landed.** A PR closed without merging, a branch someone deleted on the remote, and a force-pushed rename all produce this same signature. Since `git branch -d` is useless here (squash merges leave no shared ancestry, so it refuses on every branch), git's own safety check is unavailable and has to be replaced rather than dropped.
+
+For each candidate, in order:
+
+**1 — Is it protected?** Check the name against the Rule 1 set individually. Never pipe the list straight into a delete. Protected → keep.
+
+**2 — Did it actually merge?**
+
+```bash
+# GitHub
+gh pr list --repo {repo_slug} --head {branch} --state merged --json number --jq 'length'
+
+# GitLab
+glab api "projects/{repo_encoded}/merge_requests?state=merged&source_branch={branch}" --jq 'length'
+```
+
+If the query fails, keep the branch — the same rule as Rule 3. A check that could not run is not a check that passed.
+
+- Greater than `0` → the work landed. Delete it:
+  ```bash
+  git branch -D {branch}
+  ```
+- `0` → the work did **not** land. **Keep the branch** and report it with its unmerged commit count, so the user can decide rather than discovering the loss later:
+  ```bash
+  git log origin/{base_branch}..{branch} --oneline | wc -l
+  ```
+
+Report skipped branches as `kept: {branch} ({n} unmerged commits)`.
+
+**Step 3 — Report what happened.** Cleanup must be visible, not silent:
+
+```
+Cleanup: head {deleted | kept — {rule}} | pruned: {branch names | none}
+```
+
+---
+
+## Phase 10 — Capture Follow-up Work
 
 After merge, collect any unaddressed PR/MR feedback that should become future issues. This prevents good suggestions from being lost.
 
@@ -158,13 +360,16 @@ Display: `Follow-up: {count} issues created {issue_numbers.join(', ') || ''}`
 
 ---
 
-## Phase 4 — Done
+## Phase 11 — Done
 
-Emit the completion JSON as defined in the command's Output section.
+Build the completion JSON from what you observed while running the phases above — `pr_number`, `issues_closed` from Phase 7, `branch_deleted` from Phase 6, and the follow-up issue numbers from Phase 10. Emit it as defined in the command's Output section.
 
 ---
 
 ## Error Handling
 
-- If the script exits non-zero: surface the error and stop — do not proceed to Phase 4
-- If follow-up issue creation fails: warn and list the suggestions so the user can create them manually
+- A closed-but-not-merged PR is a hard stop — never reopen it to force a merge
+- Failing CI is a hard stop, `claude-review` excepted
+- A failed issue close is a warning; finish the remaining issues and report which failed
+- A failed branch delete is a warning; the merge already landed
+- Never treat a `--delete-branch` failure as a failed merge without re-checking the PR state first

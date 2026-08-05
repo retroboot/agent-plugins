@@ -32,13 +32,34 @@ Truncate each body to 500 characters before scoring.
 
 ## Phase 3 — Score
 
-Score each fetched issue on a 0–99 urgency scale using these criteria:
+Score each fetched issue on a 0–99 urgency scale. Work through the rubric in order — band first,
+then adjust — so that the same issue scores the same way on two different runs. An unstated rubric
+produces scores that look precise and are not comparable.
 
-- **Impact on users** — does it break core functionality or cause data loss?
-- **Severity** — crash/data loss (high) vs. cosmetic/minor (low)
-- **Blocking other work** — does it block other issues or the team?
-- **Label signals** — `P0`/`critical` push toward 90+, `bug` toward 50–70, `enhancement` toward
-20–50, `docs`/`chore` toward 0–20
+**Step 1 — Pick the band from severity and impact.**
+
+| Band | Meaning | Typical signals |
+|---|---|---|
+| 90–99 | Production is broken or data is at risk right now | data loss, corruption, security vulnerability, auth bypass, total outage, `P0`, `critical` |
+| 70–89 | Core functionality broken for many users, with no workaround | crash on a main path, a primary feature unusable, `P1` |
+| 50–69 | A real defect with a workaround, or a partial-impact bug | incorrect output in a secondary path, degraded performance, `bug` |
+| 30–49 | Wanted work that is not a defect | `enhancement`, `feature`, refactors with a clear payoff |
+| 10–29 | Maintenance and polish | `chore`, `refactor`, test coverage, cosmetic UI |
+| 0–9 | Documentation and trivia | `docs`, typos, comment fixes |
+
+**Step 2 — Adjust within the band.** Each adjustment moves the score, never the band:
+
+- **+10** if the issue blocks other issues or another person's work — state which
+- **+5** if it is a regression of something that previously worked
+- **+5** if the body gives concrete reproduction steps, making it immediately actionable
+- **−5** if requirements are unclear or the issue is a question rather than a task
+- **−10** if it is explicitly blocked by another open issue that is not yet done
+
+Clamp the result into `0…99`.
+
+**Step 3 — Resolve label conflicts.** When labels disagree with the body, the body wins — labels are
+applied by hand and go stale. When two priority labels are present, the most urgent wins. Note the
+conflict in your reasoning, not in the output.
 
 Assign one integer per issue. Issues that errored during fetch receive score 0.
 

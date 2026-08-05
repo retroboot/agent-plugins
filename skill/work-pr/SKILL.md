@@ -129,15 +129,25 @@ When done, display: `Implement: complete | feedback addressed: {blocking_count} 
 
 ## Phase 7 — Verify
 
-Run:
+Read `verify.test` and `verify.lint` from `.hivrr.json` and run each command directly. See [`config.md`](../init/references/config.md) for the read steps and per-key precedence.
+
+**If `verify` is absent from config** (or there is no `.hivrr.json`), detect the commands yourself using the detection tables in `init` Phase 4, run them, and then offer to record what you found so the next run does not repeat the guesswork.
+
+**If a key is recorded as `null`**, that repo genuinely has no such command — report `skipped`, and do not go looking.
+
+### Running the commands
+
+Run each command and **show its real output**. Never reduce a failure to a bare status word: "tests fail" with no output tells you nothing about what to fix and forces another round trip. Do not pipe through `--silent`, do not capture into a variable you then discard, and do not swallow stderr.
+
+On failure, fix the cause and retry — up to 3 attempts. If it still fails, stop and report the actual output.
+
+### When to skip tests
+
+Skip tests only when the changed files **cannot affect behavior**, judged by what each file does rather than by its extension. Configuration, manifests, CI definitions, and markdown that a tool consumes as instructions all affect behavior; prose documentation does not. When in doubt, run them.
+
 ```bash
-if [[ -z "$CLAUDE_PLUGIN_ROOT" ]]; then
-  echo "ERROR: CLAUDE_PLUGIN_ROOT is not set — cannot locate hivrr-verify.sh" >&2
-  exit 1
-fi
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/hivrr-verify.sh"
+git diff --name-only HEAD
 ```
-Consume the printed summary line for the `Verify:` display. If the script exits non-zero, fix the failures and retry, up to 3 attempts.
 
 **Review your own changes:**
 - Does each piece of blocking feedback have a clear resolution?

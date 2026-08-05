@@ -55,11 +55,13 @@ Every top-level key is optional. A file containing only `{}` is valid and resolv
 | `project.number` | number | — | board operations ⏳ |
 | `project.statusFieldId` | string (`PVTSSF_…`) | — | board status transitions ⏳ |
 | `project.status.todo` \| `.inProgress` \| `.done` | string (option id) | — | board status transitions ⏳ |
-| `verify.test` | string | model detects, then offers to record | `work-issue`, `work-pr` ⏳ |
-| `verify.lint` | string | model detects, then offers to record | `work-issue`, `work-pr` ⏳ |
-| `verify.detectedFrom` | string[] | — | `init` (staleness check) ⏳ |
+| `verify.test` | string \| `null` | model detects, then offers to record | `work-issue`, `work-pr` |
+| `verify.lint` | string \| `null` | model detects, then offers to record | `work-issue`, `work-pr` |
+| `verify.detectedFrom` | string[] | — | `init` Phase 4 (staleness check) |
 
-⏳ = specified here but not yet read by any skill. `verify.*` gains its consumers with #108; `project.*` with #116–#119. Until then these keys are inert, and their absence resolves to the documented default like any other missing key. Remove the marker as each consumer lands.
+⏳ = written by `init` Phase 5 but not yet read by any skill. The consumers arrive with #117 (add issues to the board), #118 (status transitions), and #119 (board-aware scoring and grouping). Until then the keys are inert, and their absence resolves to the documented default like any other missing key. Remove the marker as each consumer lands.
+
+A `verify` command recorded as `null` means "checked, this repo has nothing" — distinct from the key being absent, which means "never checked".
 
 ### `branches.integration`
 
@@ -144,3 +146,105 @@ These are deliberately different, and conflating them is a bug:
 ## Scaffolding
 
 `init` Phase 3 offers to write a `.hivrr.json` derived from detected repo state. It **never overwrites an existing file** — if one is present, init reports it and moves on. Editing an existing config is the user's job.
+
+---
+
+## Resolving GitHub Project v2 IDs
+
+Projects v2 field mutations are **GraphQL-only** — there is no `gh project` subcommand that edits a single-select field by name. Editing an item's Status requires four opaque IDs: the project ID, the item ID, the *field* ID, and the *option* ID for the value you want.
+
+Three of those are stable per repo, so resolve them **once** and cache them in `.hivrr.json.project`. Only the item ID is per-issue and must be looked up at call time. Re-resolving the cached IDs on every board operation would add two GraphQL round trips to every workflow step for values that never change.
+
+### Required token scopes
+
+`gh auth login` does not grant project scopes by default. Board operations need:
+
+| Scope | Needed for |
+|---|---|
+| `read:project` | Reading the board, resolving field and option IDs |
+| `project` | Writing — adding items, changing Status |
+
+Check what the current token has:
+
+```bash
+gh auth status
+```
+
+Add them without re-authenticating from scratch:
+
+```bash
+gh auth refresh -s read:project -s project
+```
+
+A missing scope surfaces as a GraphQL error containing `INSUFFICIENT_SCOPES` or `Resource not accessible by personal access token` — **not** as an empty result. Report the missing scope and the `gh auth refresh` command; do not silently treat it as "no project configured".
+
+### Step 1 — Resolve the project ID
+
+For an organization-owned project:
+
+```bash
+gh api graphql -f query='
+  query($owner: String!, $number: Int!) {
+    organization(login: $owner) {
+      projectV2(number: $number) { id title }
+    }
+  }' -f owner={project.owner} -F number={project.number}
+```
+
+For a user-owned project, replace `organization` with `user`. Try `organization` first; a `Could not resolve to an Organization` error means retry as `user`.
+
+### Step 2 — Resolve the Status field and its options
+
+One query returns both the field ID and every option ID:
+
+```bash
+gh api graphql -f query='
+  query($projectId: ID!) {
+    node(id: $projectId) {
+      ... on ProjectV2 {
+        fields(first: 50) {
+          nodes {
+            ... on ProjectV2SingleSelectField {
+              id
+              name
+              options { id name }
+            }
+          }
+        }
+      }
+    }
+  }' -f projectId={project_id}
+```
+
+Find the node whose `name` is `Status`. Its `id` is `statusFieldId`. Match its options to the three config keys by name, case-insensitively:
+
+| Config key | Matches option named |
+|---|---|
+| `status.todo` | `Todo`, `To do`, `Backlog` |
+| `status.inProgress` | `In Progress`, `In progress`, `Doing` |
+| `status.done` | `Done`, `Complete`, `Completed` |
+
+### Step 3 — Cache the result
+
+Write `project.statusFieldId` and the three `project.status.*` option IDs into `.hivrr.json`, preserving every other key. Validate with `jq empty`.
+
+Verify:
+
+```bash
+jq '.project | {statusFieldId, status}' .hivrr.json
+```
+
+### Re-resolution
+
+Re-resolve **only** when an ID is absent, or when explicitly asked to. Do not re-resolve as a routine step.
+
+### Failure modes
+
+| Condition | Behavior |
+|---|---|
+| `project` absent from `.hivrr.json` | **Not an error.** The repo has no board. Every board operation is a silent no-op. |
+| Token missing `read:project` / `project` | Report the missing scope and the `gh auth refresh` command. Do not confuse this with "no project". |
+| Project number does not exist | Report it. The likely cause is a typo in `project.number` or an org/user mismatch. |
+| No field named `Status` | Report which fields do exist. Some boards rename it. |
+| A Status option was renamed, so a config key has no match | **Warn, name the unmatched key and the options that do exist, and offer to re-resolve.** Never crash, and never write a `null` option ID — a null would make later `item-edit` calls fail with a far less obvious error. |
+| A cached option ID no longer exists on the board | Same as above: the option was deleted or recreated. Re-resolve. |
