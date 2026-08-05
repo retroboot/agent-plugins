@@ -97,13 +97,21 @@ Display: `Branch: wave skill will create`
 
 **Single issue or sequential strategy:**
 
-Determine the base branch — the repository default branch:
+Determine the **integration branch** — the branch feature work forks from. Read `branches.integration`
+from `.hivrr.json`; see [`config.md`](../init/references/config.md) for the read steps and per-key
+precedence.
+
+When the file or the key is absent, fall back to the repository default branch:
 
 ```bash
 gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'
 ```
 
-If that fails (no remote, or the provider is not GitHub), fall back to the branch `origin/HEAD` points at, then to `main`.
+If that fails too (no remote, or the provider is not GitHub), fall back to the branch `origin/HEAD`
+points at, then to `main`.
+
+Store it as `{integration}`. Branching from the current HEAD is not acceptable: if the previous task
+left you on `staging`, an issue branch forked from there carries unrelated commits into its PR.
 
 Check whether the working tree is dirty:
 
@@ -135,18 +143,18 @@ git checkout issue/{number}
 git checkout -b issue/{number} origin/issue/{number}
 ```
 
-**Neither exists** (new work) — fetch the base and fork from it:
+**Neither exists** (new work) — fetch the integration branch and fork from it:
 
 ```bash
-git fetch origin {base}
-git checkout -b issue/{number} origin/{base}
+git fetch origin {integration}
+git checkout -b issue/{number} origin/{integration}
 ```
 
-On both resume paths, do **not** reset, rebase, or force-update the branch. Commits from an earlier run must survive.
+On both resume paths, do **not** reset, rebase, or force-update the branch. Commits from an earlier run must survive. In particular, do not "re-base onto the integration branch" to make a resumed branch match the new base — that discards or rewrites work.
 
 If any command fails, surface the error and stop.
 
-Display: `Branch: issue/{number} ({new | resumed local | resumed from origin}, base: {base})`
+Display: `Branch: issue/{number} ({new | resumed local | resumed from origin}, base: {integration})`
 
 ---
 
@@ -191,15 +199,32 @@ When done, display: `Implement: complete | files changed: {count}`
 
 ## Phase 8 — Verify
 
-Run:
+Read `verify.test` and `verify.lint` from `.hivrr.json` and run each command directly. See [`config.md`](../init/references/config.md) for the read steps and per-key precedence.
+
+**If `verify` is absent from config** (or there is no `.hivrr.json`), detect the commands yourself using the detection tables in `init` Phase 4, run them, and then offer to record what you found so the next run does not repeat the guesswork.
+
+**If a key is recorded as `null`**, that repo genuinely has no such command — report `skipped`, and do not go looking.
+
+### Running the commands
+
+Run each command and **show its real output**. Never reduce a failure to a bare status word: "tests fail" with no output tells you nothing about what to fix and forces another round trip. Do not pipe through `--silent`, do not capture into a variable you then discard, and do not swallow stderr.
+
+On failure, fix the cause and retry — up to 3 attempts. If it still fails, stop and report the actual output.
+
+### When to skip tests
+
+Skip tests only when the changed files **cannot affect behavior**. Judge this by what each file does, not by its extension.
+
 ```bash
-if [[ -z "$CLAUDE_PLUGIN_ROOT" ]]; then
-  echo "ERROR: CLAUDE_PLUGIN_ROOT is not set — cannot locate hivrr-verify.sh" >&2
-  exit 1
-fi
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/hivrr-verify.sh"
+git diff --name-only HEAD
 ```
-Consume the printed summary line for the `Verify:` display. If the script exits non-zero, the verify step failed — fix the failures and retry, up to 3 attempts.
+
+Extension is not the test. In this repo, `.json` and `.md` *are* the product — `marketplace.json` defines which skills load, and a skill's `SKILL.md` is its implementation. Treating them as docs is how a change to either ships unverified.
+
+- **Affects behavior** — source files, configuration that programs read, CI workflow definitions, schema and manifest files, and any markdown a tool consumes as instructions
+- **Does not affect behavior** — prose documentation, `README`, `CHANGELOG`, `LICENSE`, comments
+
+When in doubt, run the tests. The cost of running them unnecessarily is far below the cost of skipping them when they mattered.
 
 **Review your own changes:**
 - Do the changes actually satisfy the acceptance criteria from the issue(s)?
@@ -249,11 +274,14 @@ Display: `Commit: {message}`
 Push the branch: `git push -u origin {branch_name}`
 
 Use the **Create PR** command from the loaded reference with:
+- **Base: `--base {integration}`, passed explicitly.** Resolve `{integration}` the same way Phase 5 does — `branches.integration` from `.hivrr.json`, falling back to the repo default branch. Omitting `--base` makes `gh` silently target the repository default branch, so on a ladder repo where the default is `main`, **every feature PR would aim at production.** Pass it even when the two happen to be the same value; a PR that targets the right branch by coincidence breaks the moment the default changes.
 - Title: the issue title for a single issue, or a clear group summary for wave
 - Body: what was done, why, how to test it, and a `Closes #N` line for every issue in the group (use Linear identifiers like `ENG-123` if `ISSUE_TRACKER=linear`)
 - Link it to all relevant issues
 
-Display: `PR: {url}`
+**When the base is not the repository default branch**, GitHub will not honor the `Closes #N` keywords on merge. That is expected — `merge-pr` Phase 7 closes them explicitly. Keep the lines in the body regardless; they are what `merge-pr` parses.
+
+Display: `PR: {url} (base: {integration})`
 
 ---
 

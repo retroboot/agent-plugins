@@ -33,15 +33,25 @@ Examples:
 
 ## Step 2 — Create or Resume the Branch
 
+First resolve the **integration branch** — `branches.integration` from `.hivrr.json`, falling back to
+the repository default branch when the file or key is absent. Everything below compares against and
+forks from that branch, not from `main`. On a ladder repo the integration branch is `dev`, and
+assuming `main` there produces a wave summary listing commits that are already merged.
+
+Store it as `{integration}`.
+
 Check whether this branch already exists:
 
 ```
 git ls-remote --heads origin wave/{min}-{max}-{count}
 ```
 
-**If the branch does not exist:** Create and switch to it:
+**If the branch does not exist:** Fork it from the integration branch rather than from whatever HEAD
+happens to be — a wave started while sitting on another task's branch would otherwise carry that
+task's commits into its PR:
 ```
-git checkout -b wave/{min}-{max}-{count}
+git fetch origin {integration}
+git checkout -b wave/{min}-{max}-{count} origin/{integration}
 ```
 
 **If the branch already exists** (resume case): Switch to it:
@@ -52,7 +62,7 @@ git pull origin wave/{min}-{max}-{count}
 
 Then check which issues were already implemented by scanning the git log:
 ```
-git log origin/main..HEAD --format="%s %b"
+git log origin/{integration}..HEAD --format="%s %b"
 ```
 
 Look for issue references (`#123`, `Closes #123`, etc.) in the commit messages. Any issue numbers from your group that appear in the log are already done — mark them as complete and skip them in Step 3.

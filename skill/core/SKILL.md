@@ -24,11 +24,22 @@ Complete the task you were given. Work until done - do not stop prematurely.
 
 ## Git Safety
 
-Never work on main/master directly. Always use isolated branches.
+Never work on a protected branch directly. Always use isolated branches.
+
+The protected set is `branches.protected` from `.hivrr.json`. When that is absent — which is the
+normal case for a repo that has never configured it — the set defaults to:
+
+```
+main, master, dev, develop, staging, release/*
+```
+
+`main` and `master` are only the most common members, not the whole set. Under a dev/staging/main
+ladder, `dev` and `staging` are long-lived environments and are exactly as protected as `main`.
 
 - Feature branches: `feat/description` or `issue/{number}`
 - Conventional commits: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`
-- Never force push to main/master
+- Never force push to a branch in the protected set
+- Never delete a branch in the protected set
 
 ## Code Review Standards
 

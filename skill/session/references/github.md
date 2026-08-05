@@ -59,6 +59,8 @@ gh pr comment {N} --repo {OWNER}/{REPO} --body "{B}"
 gh pr create --repo {OWNER}/{REPO} --title "{T}" --body "{B}" --base {base}
 ```
 
+`--base` is **required**, not optional. Without it `gh` silently targets the repository default branch — which on a ladder repo means aiming a feature PR at production. Resolve `{base}` from `branches.integration` in `.hivrr.json`, falling back to the repo default branch.
+
 **Merge PR** (squash)
 ```
 gh pr merge {N} --repo {OWNER}/{REPO} --squash --delete-branch

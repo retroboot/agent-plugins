@@ -174,3 +174,95 @@ jq empty .hivrr.json
 If `jq` reports a parse error, delete the file and report it rather than leaving a malformed config behind. If `jq` is not installed, keep the file and note that it went unvalidated.
 
 Emit: `INIT: .hivrr.json scaffolded (integration: {integration}, ladder: {ladder})`
+
+---
+
+## Phase 4 — Detect Verify Commands
+
+Record how this repo runs its tests and its linter, so `work-issue` and `work-pr` can run the right commands instead of re-guessing from heuristics on every invocation.
+
+**This phase does not obey the "skip if already configured" rule that governs Phases 1–3.** Detection is a fact about the repo, and repo facts drift — a project migrating `.eslintrc.json → eslint.config.js` would otherwise keep running a command that no longer matches anything. Re-validate every time; that costs a few file checks and prevents a silent `lint skipped`.
+
+**Step 1 — Read what is already recorded**
+
+Read `verify.test`, `verify.lint`, and `verify.detectedFrom` from `.hivrr.json`. Any of them may be absent.
+
+**Step 2 — Detect from the repo**
+
+Look for a test command, in this order, and stop at the first match:
+
+| Source | Command |
+|---|---|
+| `package.json` with a `scripts.test` entry | `npm test` |
+| `Makefile` with a `test:` target | `make test` |
+| `pyproject.toml` with `[tool.pytest…]`, or `pytest.ini` | `pytest` |
+| `jest.config.{js,ts,mjs,cjs}` | `npx jest` |
+| `go.mod` | `go test ./...` |
+| `Cargo.toml` | `cargo test` |
+| A CI workflow that runs a test step | the command that workflow runs |
+
+Then a lint command, same rule:
+
+| Source | Command |
+|---|---|
+| `package.json` with a `scripts.lint` entry | `npm run lint` |
+| `eslint.config.{js,mjs,cjs,ts}` — **flat config** | `npx eslint .` |
+| `.eslintrc`, `.eslintrc.{js,cjs,json,yaml,yml}` — legacy config | `npx eslint .` |
+| `ruff.toml`, or `pyproject.toml` with `[tool.ruff]` | `ruff check .` |
+| `.flake8`, or `setup.cfg` with `[flake8]` | `flake8 .` |
+| `Makefile` with a `lint:` target | `make lint` |
+| A CI workflow that runs a lint step | the command that workflow runs |
+
+Check flat config **and** legacy config. Matching only `.eslintrc*` is how a repo on `eslint.config.js` silently reports `lint skipped`.
+
+Record the file and key that justified each command in `verify.detectedFrom`, e.g. `["package.json:scripts.test", "eslint.config.js"]`. This is the fingerprint, not decoration — Step 3 depends on it.
+
+If a repo genuinely has no test or lint setup, record the key as `null` rather than omitting it. `null` means "checked, there is nothing"; absent means "never checked".
+
+**Step 3 — Compare against the fingerprint**
+
+For each path in the recorded `verify.detectedFrom`, check whether it still exists and still contains the key it names.
+
+- **Fingerprint intact and commands match** → Emit `INIT: verify ok` and stop.
+- **Fingerprint broken, or detection produced a different command** → the repo changed. Report the change explicitly:
+
+  ```
+  INIT: verify commands updated (npx eslint . → npm run lint)
+  ```
+
+  Then confirm with the user before writing, and write the new values plus the new `detectedFrom`.
+
+**Step 4 — Confirm and record**
+
+Confirm with the user on first detection, and again whenever re-detection changes a command. In `--auto` mode, write without asking but still report the change.
+
+Write `verify.test`, `verify.lint`, and `verify.detectedFrom` into `.hivrr.json`, preserving every other key. Validate with `jq empty` afterward.
+
+If `.hivrr.json` does not exist, do not create one solely for this — report the detected commands so the user can adopt them, and let `work-issue` fall back to detection.
+
+Emit: `INIT: verify recorded (test: {test}, lint: {lint})`
+
+---
+
+## Phase 5 — Resolve Project Board IDs
+
+Resolve and cache the GitHub Projects v2 IDs that board operations need, so they are looked up once
+rather than on every call.
+
+**Skip this phase entirely** when `project` is absent from `.hivrr.json`, or when `project.owner` and
+`project.number` are not both set. A repo with no board is the normal case, not an error — emit
+nothing and move on.
+
+**Skip it as well** when `project.statusFieldId` and all three `project.status.*` option IDs are
+already present. Re-resolve only when an ID is missing or the user explicitly asks.
+
+Otherwise follow **Resolving GitHub Project v2 IDs** in `references/config.md` — it has the token
+scopes, the two `gh api graphql` queries, the option-name matching table, and the failure modes.
+
+Every failure in this phase is a warning, never a stop. A board that cannot be reached must not
+prevent `init` from completing.
+
+Emit one of:
+- `INIT: project IDs resolved ({project.owner}/#{project.number})`
+- `INIT: project IDs already cached`
+- `INIT: project resolution failed — {reason}` (warning only)

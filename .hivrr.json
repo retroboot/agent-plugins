@@ -3,5 +3,10 @@
   "branches": {
     "integration": "main",
     "ladder": ["main"]
+  },
+  "verify": {
+    "test": null,
+    "lint": null,
+    "detectedFrom": []
   }
 }
