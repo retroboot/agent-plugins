@@ -267,7 +267,7 @@ Display: `Merged: PR/MR #{pr_number} → {base_branch} ({strategy})`
 
 ## Phase 7 — Close Linked Issues
 
-**Skip this phase entirely when `is_promotion` is true.** Report `Issues: skipped (promotion PR)` and continue to Phase 8. Those issues closed at their feature merge; see Phase 2b for why re-checking them is pure cost.
+**Skip this phase entirely when `is_promotion` is true** — both the closing loop and the board update below. Report `Issues: skipped (promotion PR) | Board: unchanged` and continue to Phase 8. Those issues closed and were marked Done at their feature merge; see Phase 2b for why re-checking them is pure cost.
 
 For every other merge:
 
@@ -304,7 +304,7 @@ Display: `Issues: {count} verified, {count} closed | none`
 
 ### Move the board cards to Done
 
-**Skip when `is_promotion` is true** — those issues were marked Done at their feature merge, and a promotion closes nothing. Report `Board: skipped (promotion PR)`.
+Reached only on a non-promotion merge — the phase-level skip above already covers promotions, so do not re-check `is_promotion` here.
 
 **Skip silently when `project` is absent from `.hivrr.json`.** See **Board operations** in [`config.md`](../init/references/config.md) for the commands and the shared rules.
 
@@ -316,7 +316,7 @@ For each issue in `linked_issues`:
 
 **Warn and continue on any failure.** The merge has already landed; a board error cannot be allowed to make a completed merge look failed.
 
-Display: `Board: {n} issue(s) → Done` | `Board: skipped (promotion PR)` | nothing when unconfigured
+Display: `Board: {n} issue(s) → Done`, or nothing when unconfigured
 
 ---
 

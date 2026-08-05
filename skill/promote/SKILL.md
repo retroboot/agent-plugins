@@ -49,14 +49,26 @@ Fetch first so every comparison below is against the real remote state:
 git fetch origin {source} {target}
 ```
 
-**Check 1 — Is the source behind its own upstream?**
+**Check 1 — Has the local source diverged from its upstream?**
+
+Check **both** directions in one command:
 
 ```bash
-git rev-list --count origin/{source}..{source}   # local ahead of remote
-git rev-list --count {source}..origin/{source}   # local behind remote
+git rev-list --left-right --count origin/{source}...{source}   # behind<TAB>ahead
 ```
 
-If the local branch is behind `origin/{source}`, **refuse.** Promoting a stale local view ships less than the rung actually contains. Report the gap and tell the user to pull.
+A promotion PR merges `origin/{source}` into `origin/{target}` — the **remote** branches. The local working copy is not part of what ships, which is what makes each direction matter for a different reason:
+
+- **Behind** (`origin/{source}` has commits the local branch lacks) → **refuse.** Nothing is lost, but the local view disagrees with what will actually be promoted, so the commit list in the Phase 4 summary would understate the promotion. Tell the user to pull.
+
+- **Ahead** (the local branch has commits `origin/{source}` lacks) → **refuse.** This is the case that loses work: unpushed commits are not on the remote branch, so they are **not promoted**, while the user sees "promoted" and reasonably assumes their work shipped. Tell the user to push first.
+
+Report the counts in both cases so the gap is concrete:
+
+```
+Promote: refused — {source} has diverged from origin/{source} ({behind} behind, {ahead} ahead).
+{Pull before promoting. | Push before promoting — {ahead} local commit(s) would not be promoted.}
+```
 
 **Check 2 — Does the target have commits the source does not?**
 
@@ -128,7 +140,7 @@ Display: `PR: {url}`
 
 Skip when `--auto` is set.
 
-Show the summary and wait:
+This is the **only** checkpoint in the promotion workflow — Phase 5 suppresses `merge-pr`'s own confirmation. Show the summary and wait:
 
 ```
 --- Promotion Summary ---
@@ -144,7 +156,9 @@ Show the summary and wait:
 
 ## Phase 5 — Merge via `merge-pr`
 
-Load the `merge-pr` skill and run it against the PR from Phase 3, passing `--auto` through.
+Load the `merge-pr` skill and run it against the PR from Phase 3, **always passing `--auto`** — regardless of whether `--auto` was passed to `promote`.
+
+Phase 4 owns the checkpoint for this workflow. Its summary already shows the rungs, the commit count, the strategy, and the branch disposition, which is everything `merge-pr`'s own summary would restate. Letting both prompt would ask the user to answer twice for one decision.
 
 `merge-pr` detects this as a promotion on its own — Phase 2b's predicate is that head and base are both in `branches.ladder`, which is true by construction here. It therefore:
 

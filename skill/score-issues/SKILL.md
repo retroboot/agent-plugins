@@ -48,6 +48,10 @@ display:
 Excluded (board): #123 In Progress, #456 Done
 ```
 
+This skill is machine-executed, so a display line is not enough — record the excluded issues as
+`excluded` and emit them in Phase 4 alongside `scores`. Store it as
+`{issue_number_string: status_name}`.
+
 If the board query fails, warn and score every issue — the same fallback as an unconfigured board.
 Losing the filter degrades the result; aborting destroys it.
 
@@ -90,6 +94,7 @@ Display:
 ```
 WORKFLOW COMPLETE
 Issues scored: {issue_numbers.join(', ')}
+Excluded: {excluded_numbers.join(', ') or 'none'}
 ```
 
 Then output this exact line as the final line of your response:
@@ -97,5 +102,11 @@ Then output this exact line as the final line of your response:
 RESULT_JSON: {"scores": {"123": 72, "456": 41, "789": 8}}
 
 Where keys are issue number strings and values are integer scores 0–99.
+
+**When Phase 2 excluded issues**, add the `excluded` key so the omission is machine-readable rather than an unexplained gap between what was requested and what came back:
+
+RESULT_JSON: {"scores": {"123": 72, "456": 41}, "excluded": {"789": "Done"}}
+
+`excluded` maps issue number strings to the board status that caused the exclusion. **Omit the key entirely when nothing was excluded** — including when no board is configured — so its presence always means the board filter actually ran. Existing consumers that read only `scores` are unaffected.
 
 No explanation after this line.
