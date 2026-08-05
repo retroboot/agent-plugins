@@ -1,6 +1,6 @@
 ---
 name: init
-description: One-time provider config setup — validates ~/.claude/settings.json and prompts if any required fields are missing. Idempotent: skips immediately if already configured.
+description: One-time setup — validates ~/.claude/settings.json, bootstraps repo labels, and offers to scaffold a repo-local .hivrr.json. Idempotent.
 license: MIT
 compatibility: opencode
 ---
@@ -114,3 +114,63 @@ open(path, 'w').write(json.dumps(s, indent=2))
 Substitute the actual `{OWNER}/{REPO}` value into `REPO` before running.
 
 Emit: `INIT: labels bootstrapped for {OWNER}/{REPO}`
+
+---
+
+## Phase 3 — Scaffold `.hivrr.json`
+
+Offer the repo a committed config file so branch, board, and verify settings travel with the code instead of living in per-user global settings.
+
+**Step 1 — Load the config reference**
+
+```
+Read $CLAUDE_SKILL_DIR/references/config.md
+```
+
+**Step 2 — Check for an existing file**
+
+```bash
+test -f .hivrr.json && echo present || echo absent
+```
+
+**If present:** validate it and stop.
+
+```bash
+jq empty .hivrr.json
+```
+
+- Parses → Emit `INIT: .hivrr.json ok` and stop. **Never overwrite an existing file** — editing it is the user's job.
+- Fails to parse → Emit `INIT: .hivrr.json is malformed — {jq error}` and stop. Do not repair it silently.
+- `jq: command not found` (exit 127) → the validator is missing, not the config. Emit `INIT: .hivrr.json present (unvalidated — jq not installed)` and stop.
+
+**If absent:** continue to Step 3.
+
+**Step 3 — Detect repo state**
+
+```bash
+gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'
+git branch -r --format='%(refname:short)' | sed 's|^origin/||'
+```
+
+From the results, derive proposed values:
+
+- `provider` — the resolved `repoProvider`
+- `branches.integration` — the default branch, unless a `dev` branch exists on the remote, in which case propose `dev`
+- `branches.ladder` — the subset of `["dev", "staging", "main"]` (or `master`) that actually exists on the remote, ordered lowest environment first. A single existing branch yields a single-rung ladder, which is correct.
+- `branches.protected` — omit this key unless the ladder or default branch adds a name the documented default does not already cover. Because precedence resolves per key, writing the key at all *replaces* the default set rather than extending it, so a scaffold that writes a narrow list leaves the repo less protected than one with no config at all. When you do write it, write the **union** of the documented default set (`main, master, dev, develop, staging, release/*`), the ladder, and the default branch — never a subset.
+
+Omit `project` and `verify` entirely — neither has a consumer yet, and both are filled in by later work (`verify` by #108, `project` by #116). An absent key is valid and falls through to its documented default.
+
+**Step 4 — Confirm and write**
+
+Show the proposed JSON and ask whether to write it. In `--auto` mode, write it without asking.
+
+Write the file with the Write tool, then validate:
+
+```bash
+jq empty .hivrr.json
+```
+
+If `jq` reports a parse error, delete the file and report it rather than leaving a malformed config behind. If `jq` is not installed, keep the file and note that it went unvalidated.
+
+Emit: `INIT: .hivrr.json scaffolded (integration: {integration}, ladder: {ladder})`

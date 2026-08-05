@@ -72,11 +72,22 @@ Display: `Complexity: {simple|medium|complex}`
 
 ## Phase 4 — Checkout PR Branch
 
-Run:
+Check whether the working tree is dirty:
+
 ```bash
-bash "${CLAUDE_SKILL_DIR}/scripts/hivrr-pr-checkout.sh" --branch {branch_name}
+git status --porcelain
 ```
-If the script exits non-zero, surface the error and stop.
+
+If it reports anything, display `WARNING: Working tree has uncommitted changes — continuing anyway` and continue. This is a warning, not a guard — do not stash, reset, or discard the changes.
+
+Check out the PR branch and bring it up to date:
+
+```bash
+git checkout {branch_name}
+git pull origin {branch_name}
+```
+
+If either command fails, surface the error and stop.
 
 Display: `Branch: {branch_name}`
 

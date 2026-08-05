@@ -96,13 +96,57 @@ Skip this phase — the `wave` skill creates and manages its own branch in Phase
 Display: `Branch: wave skill will create`
 
 **Single issue or sequential strategy:**
-Run:
-```bash
-bash "${CLAUDE_SKILL_DIR}/scripts/hivrr-branch-setup.sh" --issue {number}
-```
-If the script exits non-zero, surface the error and stop.
 
-Display: `Branch: issue/{number}`
+Determine the base branch — the repository default branch:
+
+```bash
+gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'
+```
+
+If that fails (no remote, or the provider is not GitHub), fall back to the branch `origin/HEAD` points at, then to `main`.
+
+Check whether the working tree is dirty:
+
+```bash
+git status --porcelain
+```
+
+If it reports anything, display `WARNING: Working tree has uncommitted changes — continuing anyway` and continue. This is a warning, not a guard — do not stash, reset, or discard the changes.
+
+Check whether the issue branch already exists — **locally and on the remote**. Checking only local refs is not enough: on a fresh clone, a recreated container, or work resumed from another machine, `issue/{number}` exists on `origin` but not in `refs/heads`. Branching from the base in that situation produces a local branch with none of the remote's commits, and the push in Phase 11 fails as a non-fast-forward after all the implementation work is done.
+
+```bash
+git fetch origin
+git show-ref --verify --quiet refs/heads/issue/{number}   # exit 0 = exists locally
+git ls-remote --exit-code --heads origin issue/{number}    # exit 0 = exists on origin
+```
+
+Then take exactly one of these three paths:
+
+**Local branch exists** (resume) — switch to it:
+
+```bash
+git checkout issue/{number}
+```
+
+**Remote only** (resume from elsewhere) — track the remote branch:
+
+```bash
+git checkout -b issue/{number} origin/issue/{number}
+```
+
+**Neither exists** (new work) — fetch the base and fork from it:
+
+```bash
+git fetch origin {base}
+git checkout -b issue/{number} origin/{base}
+```
+
+On both resume paths, do **not** reset, rebase, or force-update the branch. Commits from an earlier run must survive.
+
+If any command fails, surface the error and stop.
+
+Display: `Branch: issue/{number} ({new | resumed local | resumed from origin}, base: {base})`
 
 ---
 

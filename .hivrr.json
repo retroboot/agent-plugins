@@ -1,0 +1,7 @@
+{
+  "provider": "github",
+  "branches": {
+    "integration": "main",
+    "ladder": ["main"]
+  }
+}

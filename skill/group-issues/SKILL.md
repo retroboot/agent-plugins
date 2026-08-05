@@ -24,25 +24,13 @@ If `--repo` or `--issues` is missing or the issue list is empty, emit:
 RESULT_JSON: {"groups": []}
 and exit.
 
-## Phase 2 — Hub Fast-Path
-
-If `hub_mcp=true`:
-
-Call `mcp__hub__hub__group_issues` with `issues=[{issue_numbers}]`.
-
-If the response does not contain `degraded: true`: emit the result directly as `RESULT_JSON` (using the returned `groups` array) and skip to Phase 5.
-
-If the response contains `degraded: true`: continue to Phase 3.
-
-If `hub_mcp=false`: continue to Phase 3.
-
-## Phase 3 — Fetch Issues
+## Phase 2 — Fetch Issues
 
 For each issue number, use the **Get issue** command from the loaded reference. Run fetches in parallel where possible.
 
 Skip any issue that errors. Truncate each body to 500 characters.
 
-## Phase 4 — Group
+## Phase 3 — Group
 
 Group issues into waves. Each wave will be implemented as a single pull request in one worker
 session.
@@ -69,7 +57,7 @@ non-trivial.
 
 Maximum `max_wave_size` issues per group. Every issue must appear in exactly one group.
 
-## Phase 5 — Emit Result
+## Phase 4 — Emit Result
 
 Display:
 ```

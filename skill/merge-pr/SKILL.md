@@ -31,9 +31,46 @@ Display: `Input: PR/MR #{pr_number} | auto: {auto_mode}`
 
 ---
 
+## Branch Deletion Safety
+
+**This binds every merge in this skill**, whether the merge runs via a script, via `gh pr merge`, via `glab mr merge`, or by any other means. Read it before performing any merge step.
+
+Deleting a branch is not cleanup when the branch is long-lived — it destroys an environment. A `dev → staging` promotion merged with `--delete-branch` deletes `dev` both locally and on the remote.
+
+Before deleting a head branch, check all three rules. **If any rule trips, do not delete.**
+
+**Rule 1 — Protected names.** Never delete a head branch in this set:
+
+```
+main, master, dev, develop, staging, release/*
+```
+
+`release/*` matches any branch whose name starts with `release/`.
+
+**Rule 2 — The base branch.** Never delete a branch equal to the PR's base branch (`baseRefName`).
+
+**Rule 3 — Branches other PRs target.** Before deleting, confirm no open PR targets the branch:
+
+```bash
+gh pr list --repo {repo_slug} --base {head_branch} --state open --json number --jq 'length'
+```
+
+A result greater than `0` means other work is stacked on this branch. Do not delete it.
+
+**When any rule trips:**
+
+- Merge **without** `--delete-branch` (GitHub) or **without** `--remove-source-branch` (GitLab)
+- Do not run `git branch -d`/`-D` or `git push origin --delete` against that branch either
+- Report `branch_deleted: none` in the completion output
+- State which rule tripped, so the skip is visible rather than silent
+
+**When no rule trips:** delete the head branch normally. Feature branches (`issue/N`, `feat/*`, `wave/*`) are unaffected by these rules and continue to be cleaned up.
+
+---
+
 ## Phase 2 — Run hivrr-merge.sh
 
-Invoke the merge script, passing the values extracted in Phase 2:
+Invoke the merge script, passing the values extracted in Phase 1:
 
 ```
 bash "${CLAUDE_SKILL_DIR}/scripts/hivrr-merge.sh" \
@@ -46,6 +83,8 @@ bash "${CLAUDE_SKILL_DIR}/scripts/hivrr-merge.sh" \
 
 Include `--auto` only when `auto_mode` is true.
 
+**Before invoking it:** evaluate the Branch Deletion Safety rules above against this PR's head branch. The script deletes the head branch unconditionally — it has no guard. If any rule trips, **do not use the script**; take the direct path below instead.
+
 **If the script exits non-zero:** surface the error output and stop. Do not proceed to Phase 4.
 
 **On success:** the script prints a structured summary line before exiting:
@@ -54,7 +93,40 @@ Include `--auto` only when `auto_mode` is true.
 HIVRR_MERGE_SUMMARY pr={pr_number} issues_closed={comma_list|none} branch_deleted={branch_name}
 ```
 
-Parse this line to extract `merged_pr`, `issues_closed` (list of numbers, may be empty), and `branch_deleted`. These values populate the Phase 5 completion JSON.
+Parse this line to extract `merged_pr`, `issues_closed` (list of numbers, may be empty), and `branch_deleted`. These values populate the Phase 4 completion JSON.
+
+### Direct path (any deletion rule tripped)
+
+The script is the only producer of `HIVRR_MERGE_SUMMARY`, and it also owns the linked-issue close loop. Skipping it means performing both of those jobs here — otherwise the completion JSON has no source and linked issues silently stay open.
+
+**Step 1 — Merge.** Use the **Merge PR** command from the loaded reference with its delete flag removed:
+
+```bash
+# GitHub — drop --delete-branch
+gh pr merge {pr_number} --repo {repo_slug} --squash
+
+# GitLab — drop --remove-source-branch
+glab mr merge {pr_number} --repo {repo_slug} --squash
+```
+
+**Step 2 — Close linked issues.** This is required, not cleanup. GitHub honors `Closes #N` only on merges into the **default** branch, so on any other base this loop is the sole mechanism that closes anything.
+
+Extract issue references from the PR title and body. Accept both forms:
+
+- `#123` — GitHub/GitLab numeric
+- `ENG-123` — Linear-style, pattern `[A-Z]+-[0-9]+`
+
+For each reference, check whether it is still open, and close it with the **Close issue** command from the loaded reference if so. Collect the numbers actually closed.
+
+**Step 3 — Build the summary yourself.** From the observed results, not from parsed output:
+
+- `merged_pr` — `{pr_number}`
+- `issues_closed` — the list collected in Step 2, or empty
+- `branch_deleted` — `none`, plus which rule tripped
+
+Display: `Merged: #{pr_number} (direct) | issues closed: {list|none} | branch_deleted: none — {rule that tripped}`
+
+Then continue to Phase 3.
 
 ---
 
