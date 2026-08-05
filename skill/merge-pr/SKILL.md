@@ -99,10 +99,14 @@ Parse this line to extract `merged_pr`, `issues_closed` (list of numbers, may be
 
 The script is the only producer of `HIVRR_MERGE_SUMMARY`, and it also owns the linked-issue close loop. Skipping it means performing both of those jobs here — otherwise the completion JSON has no source and linked issues silently stay open.
 
-**Step 1 — Merge.** Use the provider's **Merge PR** command with its delete flag removed:
+**Step 1 — Merge.** Use the **Merge PR** command from the loaded reference with its delete flag removed:
 
 ```bash
+# GitHub — drop --delete-branch
 gh pr merge {pr_number} --repo {repo_slug} --squash
+
+# GitLab — drop --remove-source-branch
+glab mr merge {pr_number} --repo {repo_slug} --squash
 ```
 
 **Step 2 — Close linked issues.** This is required, not cleanup. GitHub honors `Closes #N` only on merges into the **default** branch, so on any other base this loop is the sole mechanism that closes anything.
