@@ -126,18 +126,25 @@ gh pr checks {pr_number} --repo {repo_slug}
 
 **Exclude `claude-review` from failure detection.** That check is advisory and routinely reports non-success on PRs that are fine to merge; treating it as blocking would wedge every merge. Match its name case-insensitively against both `claude-review` and `claude review`.
 
-A check counts as failing when its state is one of `fail`, `failure`, `timed_out`, `cancelled`, `startup_failure`, `action_required`.
+A check counts as **failed** when its state is one of `fail`, `failure`, `timed_out`, `cancelled`, `startup_failure`, `action_required`.
+
+A check counts as **unfinished** when its state is `pending`, `queued`, or `in_progress`.
 
 **GitLab:**
 ```bash
 glab api projects/{repo_encoded}/merge_requests/{pr_number}/pipelines | jq -r '.[0].status // "none"'
 ```
 
-`success` and `none` pass. `failed` and `canceled` fail. `running` and `pending` are not finished — treat as failing, since merging on an unfinished pipeline defeats the check.
+`success` and `none` pass. `failed` and `canceled` are **failed**. `running` and `pending` are **unfinished**.
 
-**If anything is failing:** report which checks and stop. Do not merge.
+**Both failed and unfinished block the merge**, and the rule is identical across providers — merging on a pipeline that has not finished defeats the point of checking it. Applying this to only one provider would let the same PR state merge on GitHub and block on GitLab.
 
-Display: `CI: {all checks passed | no checks configured | N failing}`
+**Report them differently**, because they call for different actions — one needs a fix, the other needs a wait:
+
+- Failed → `CI: {n} failing — {names}`. Stop.
+- Unfinished → `CI: {n} still running — {names}`. Stop, and say that re-running the command once CI settles will proceed.
+
+Display when clear: `CI: {all checks passed | no checks configured}`
 
 ---
 
@@ -228,7 +235,7 @@ glab api projects/{repo_encoded}/issues/{N} --jq '.state'
 glab issue close {N} --repo {repo_slug}    # only if still "opened"
 ```
 
-Auto-close is not instantaneous. If an issue still reads open immediately after the merge, wait a moment and check once more before closing it manually — closing an issue that was about to auto-close is harmless, but the extra read keeps the reported count honest.
+Auto-close is not instantaneous. If an issue still reads open immediately after the merge, wait ~2 seconds and check **once** more, then close it manually if it is still open. Two checks total — that covers GitHub's auto-close latency and bounds the wait at a couple of seconds. Closing an issue that was about to auto-close is harmless; the second read just keeps the reported count honest.
 
 A failure to close one issue is a warning, not a stop. Continue to the next and report which ones failed.
 
@@ -278,13 +285,28 @@ git fetch --prune
 git branch -vv | grep ': gone]'
 ```
 
-Every branch listed has a remote-tracking ref whose upstream is gone — its PR was merged and the remote branch deleted. Delete each one that is **not** in the protected set from Rule 1:
+**`: gone]` means the remote ref disappeared — not that the work landed.** A PR closed without merging, a branch someone deleted on the remote, and a force-pushed rename all produce this same signature. Since `git branch -d` is useless here (squash merges leave no shared ancestry, so it refuses on every branch), git's own safety check is unavailable and has to be replaced rather than dropped.
+
+For each candidate, in order:
+
+**1 — Is it protected?** Check the name against the Rule 1 set individually. Never pipe the list straight into a delete. Protected → keep.
+
+**2 — Did it actually merge?**
 
 ```bash
-git branch -D {branch}
+gh pr list --repo {repo_slug} --head {branch} --state merged --json number --jq 'length'
 ```
 
-Check every candidate against the protected set individually. Never pipe the list straight into a delete.
+- Greater than `0` → the work landed. Delete it:
+  ```bash
+  git branch -D {branch}
+  ```
+- `0` → the work did **not** land. **Keep the branch** and report it with its unmerged commit count, so the user can decide rather than discovering the loss later:
+  ```bash
+  git log origin/{base_branch}..{branch} --oneline | wc -l
+  ```
+
+Report skipped branches as `kept: {branch} ({n} unmerged commits)`.
 
 **Step 3 — Report what happened.** Cleanup must be visible, not silent:
 

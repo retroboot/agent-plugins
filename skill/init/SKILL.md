@@ -7,7 +7,11 @@ compatibility: opencode
 
 # Init
 
-Ensure provider config exists before any workflow runs. Called once per command — skips silently if config is already present.
+Ensure provider config, labels, repo config, and verify commands are in place before any workflow runs. Called once per command.
+
+**Phase contract — read this before anything else.** The five phases run **in order, every time**. A phase that finds its work already done reports and **continues to the next phase**; it does not end the skill. Only an unrecoverable error stops `init`.
+
+"Idempotent" here means each phase is cheap and safe to re-run, not that the skill exits early. Phase 4 in particular exists to catch repo drift and is worthless if an earlier phase short-circuits past it.
 
 ---
 
@@ -22,7 +26,7 @@ Read `~/.claude/settings.json` using the Read tool. Check `providerConfig` for t
 
 Emit: `INIT: ok`
 
-Stop — no further action needed.
+Phase 1 complete — continue to Phase 2.
 
 **If either field is missing:**
 
@@ -69,7 +73,7 @@ If this fails (not in a git repo, no remote, or `repoProvider` is not `github`):
 
 Emit: `INIT: no repo detected — skipping label bootstrap`
 
-Stop — no further action needed.
+Skip the rest of Phase 2 and continue to Phase 3.
 
 **Step 2 — Check bootstrap record**
 
@@ -79,7 +83,7 @@ If the detected `{OWNER}/{REPO}` is already in the list:
 
 Emit: `INIT: labels ok`
 
-Stop — no further action needed.
+Skip the rest of Phase 2 and continue to Phase 3.
 
 **Step 3 — Load label reference**
 
@@ -133,15 +137,15 @@ Read $CLAUDE_SKILL_DIR/references/config.md
 test -f .hivrr.json && echo present || echo absent
 ```
 
-**If present:** validate it and stop.
+**If present:** validate it, then continue to Phase 4. **Never overwrite an existing file** — editing it is the user's job.
 
 ```bash
 jq empty .hivrr.json
 ```
 
-- Parses → Emit `INIT: .hivrr.json ok` and stop. **Never overwrite an existing file** — editing it is the user's job.
-- Fails to parse → Emit `INIT: .hivrr.json is malformed — {jq error}` and stop. Do not repair it silently.
-- `jq: command not found` (exit 127) → the validator is missing, not the config. Emit `INIT: .hivrr.json present (unvalidated — jq not installed)` and stop.
+- Parses → Emit `INIT: .hivrr.json ok` and continue to Phase 4.
+- Fails to parse → Emit `INIT: .hivrr.json is malformed — {jq error}` and **stop the skill**. Do not repair it silently. This is the one unrecoverable error in `init`: every later phase reads and writes this file, so continuing would compound the damage.
+- `jq: command not found` (exit 127) → the validator is missing, not the config. Emit `INIT: .hivrr.json present (unvalidated — jq not installed)` and continue to Phase 4.
 
 **If absent:** continue to Step 3.
 
@@ -159,7 +163,7 @@ From the results, derive proposed values:
 - `branches.ladder` — the subset of `["dev", "staging", "main"]` (or `master`) that actually exists on the remote, ordered lowest environment first. A single existing branch yields a single-rung ladder, which is correct.
 - `branches.protected` — omit this key unless the ladder or default branch adds a name the documented default does not already cover. Because precedence resolves per key, writing the key at all *replaces* the default set rather than extending it, so a scaffold that writes a narrow list leaves the repo less protected than one with no config at all. When you do write it, write the **union** of the documented default set (`main, master, dev, develop, staging, release/*`), the ladder, and the default branch — never a subset.
 
-Omit `project` and `verify` entirely — neither has a consumer yet, and both are filled in by later work (`verify` by #108, `project` by #116). An absent key is valid and falls through to its documented default.
+Omit `project` and `verify` entirely — Phase 4 fills in `verify` and Phase 5 fills in `project`, both against the file this step writes. An absent key is valid and falls through to its documented default.
 
 **Step 4 — Confirm and write**
 
@@ -221,9 +225,11 @@ If a repo genuinely has no test or lint setup, record the key as `null` rather t
 
 **Step 3 — Compare against the fingerprint**
 
-For each path in the recorded `verify.detectedFrom`, check whether it still exists and still contains the key it names.
+**An empty or absent `detectedFrom` is a miss, not a match.** Iterating an empty list succeeds vacuously, which would report a fingerprint as intact when nothing was ever recorded — the one case where re-detection is *most* warranted. Treat `[]` and absent identically: fall straight through to the mismatch branch and re-detect. This is cheap and silent when the repo genuinely still has nothing, because re-detection produces the same `null` values and Step 3 only reports when a command actually changes.
 
-- **Fingerprint intact and commands match** → Emit `INIT: verify ok` and stop.
+Otherwise, for each path in the recorded `verify.detectedFrom`, check whether it still exists and still contains the key it names.
+
+- **Fingerprint intact and commands match** → Emit `INIT: verify ok` and continue to Phase 5.
 - **Fingerprint broken, or detection produced a different command** → the repo changed. Report the change explicitly:
 
   ```
