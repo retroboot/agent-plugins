@@ -54,10 +54,16 @@ main, master, dev, develop, staging, release/*
 **Rule 3 — Branches other PRs target.** Before deleting, confirm no open PR targets the branch:
 
 ```bash
+# GitHub
 gh pr list --repo {repo_slug} --base {head_branch} --state open --json number --jq 'length'
+
+# GitLab
+glab api "projects/{repo_encoded}/merge_requests?state=opened&target_branch={head_branch}" --jq 'length'
 ```
 
 A result greater than `0` means other work is stacked on this branch. Do not delete it.
+
+**If the query itself fails**, treat that as a trip, not a pass. An unevaluable safety rule is not a satisfied one — keep the branch and report that the check could not run.
 
 **When any rule trips:**
 
@@ -199,10 +205,14 @@ glab mr merge {pr_number} --repo {repo_slug} --squash
 If the merge command fails, re-check the PR state before concluding anything — `--delete-branch` can fail on an already-deleted branch *after* the merge itself succeeded, which looks like a failed merge but is not:
 
 ```bash
+# GitHub
 gh pr view {pr_number} --repo {repo_slug} --json state --jq '.state'
+
+# GitLab
+glab api projects/{repo_encoded}/merge_requests/{pr_number} --jq '.state'
 ```
 
-`MERGED` means the merge landed and only the deletion failed; continue. Anything else means the merge genuinely failed — report the error and stop.
+`MERGED` (GitHub) or `merged` (GitLab) means the merge landed and only the deletion failed; continue. Anything else means the merge genuinely failed — report the error and stop.
 
 Record `remote_branch_deleted` (true only when the merge command deleted it) and `branch_deleted` (`{head_branch}` or `none` plus the rule that tripped).
 
@@ -294,8 +304,14 @@ For each candidate, in order:
 **2 — Did it actually merge?**
 
 ```bash
+# GitHub
 gh pr list --repo {repo_slug} --head {branch} --state merged --json number --jq 'length'
+
+# GitLab
+glab api "projects/{repo_encoded}/merge_requests?state=merged&source_branch={branch}" --jq 'length'
 ```
+
+If the query fails, keep the branch — the same rule as Rule 3. A check that could not run is not a check that passed.
 
 - Greater than `0` → the work landed. Delete it:
   ```bash
