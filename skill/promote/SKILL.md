@@ -51,7 +51,15 @@ git fetch origin {source} {target}
 
 **Check 1 — Has the local source diverged from its upstream?**
 
-Check **both** directions in one command:
+First, does a local `{source}` branch even exist?
+
+```bash
+git show-ref --verify --quiet refs/heads/{source}
+```
+
+**If it does not, skip this check entirely.** Not having `dev` checked out locally is the normal state for someone who only ever promotes it, and with no local branch there is no divergence to worry about — the promotion is purely between remote refs. Do not refuse, and do not create the branch.
+
+If it does exist, check **both** directions in one command:
 
 ```bash
 git rev-list --left-right --count origin/{source}...{source}   # behind<TAB>ahead
