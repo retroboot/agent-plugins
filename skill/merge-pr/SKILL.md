@@ -31,6 +31,43 @@ Display: `Input: PR/MR #{pr_number} | auto: {auto_mode}`
 
 ---
 
+## Branch Deletion Safety
+
+**This binds every merge in this skill**, whether the merge runs via a script, via `gh pr merge`, via `glab mr merge`, or by any other means. Read it before performing any merge step.
+
+Deleting a branch is not cleanup when the branch is long-lived — it destroys an environment. A `dev → staging` promotion merged with `--delete-branch` deletes `dev` both locally and on the remote.
+
+Before deleting a head branch, check all three rules. **If any rule trips, do not delete.**
+
+**Rule 1 — Protected names.** Never delete a head branch in this set:
+
+```
+main, master, dev, develop, staging, release/*
+```
+
+`release/*` matches any branch whose name starts with `release/`.
+
+**Rule 2 — The base branch.** Never delete a branch equal to the PR's base branch (`baseRefName`).
+
+**Rule 3 — Branches other PRs target.** Before deleting, confirm no open PR targets the branch:
+
+```bash
+gh pr list --repo {repo_slug} --base {head_branch} --state open --json number --jq 'length'
+```
+
+A result greater than `0` means other work is stacked on this branch. Do not delete it.
+
+**When any rule trips:**
+
+- Merge **without** `--delete-branch` (GitHub) or **without** `--remove-source-branch` (GitLab)
+- Do not run `git branch -d`/`-D` or `git push origin --delete` against that branch either
+- Report `branch_deleted: none` in the completion output
+- State which rule tripped, so the skip is visible rather than silent
+
+**When no rule trips:** delete the head branch normally. Feature branches (`issue/N`, `feat/*`, `wave/*`) are unaffected by these rules and continue to be cleaned up.
+
+---
+
 ## Phase 2 — Run hivrr-merge.sh
 
 Invoke the merge script, passing the values extracted in Phase 2:
@@ -45,6 +82,8 @@ bash "${CLAUDE_SKILL_DIR}/scripts/hivrr-merge.sh" \
 ```
 
 Include `--auto` only when `auto_mode` is true.
+
+**Before invoking it:** evaluate the Branch Deletion Safety rules above against this PR's head branch. The script deletes the head branch unconditionally — it has no guard. If any rule trips, **do not use the script**. Perform the merge directly with the provider's **Merge PR** command minus its delete flag, then continue from Phase 3.
 
 **If the script exits non-zero:** surface the error output and stop. Do not proceed to Phase 4.
 

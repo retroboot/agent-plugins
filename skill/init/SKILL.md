@@ -1,6 +1,6 @@
 ---
 name: init
-description: One-time provider config setup — validates ~/.claude/settings.json and prompts if any required fields are missing. Idempotent: skips immediately if already configured.
+description: One-time setup — validates ~/.claude/settings.json, bootstraps repo labels, and offers to scaffold a repo-local .hivrr.json. Idempotent.
 license: MIT
 compatibility: opencode
 ---
@@ -114,3 +114,62 @@ open(path, 'w').write(json.dumps(s, indent=2))
 Substitute the actual `{OWNER}/{REPO}` value into `REPO` before running.
 
 Emit: `INIT: labels bootstrapped for {OWNER}/{REPO}`
+
+---
+
+## Phase 3 — Scaffold `.hivrr.json`
+
+Offer the repo a committed config file so branch, board, and verify settings travel with the code instead of living in per-user global settings.
+
+**Step 1 — Load the config reference**
+
+```
+Read $CLAUDE_SKILL_DIR/references/config.md
+```
+
+**Step 2 — Check for an existing file**
+
+```bash
+test -f .hivrr.json && echo present || echo absent
+```
+
+**If present:** validate it and stop.
+
+```bash
+jq empty .hivrr.json
+```
+
+- Parses → Emit `INIT: .hivrr.json ok` and stop. **Never overwrite an existing file** — editing it is the user's job.
+- Fails to parse → Emit `INIT: .hivrr.json is malformed — {jq error}` and stop. Do not repair it silently.
+
+**If absent:** continue to Step 3.
+
+**Step 3 — Detect repo state**
+
+```bash
+gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'
+git branch -r --format='%(refname:short)' | sed 's|^origin/||'
+```
+
+From the results, derive proposed values:
+
+- `provider` — the resolved `repoProvider`
+- `branches.integration` — the default branch, unless a `dev` branch exists on the remote, in which case propose `dev`
+- `branches.ladder` — the subset of `["dev", "staging", "main"]` (or `master`) that actually exists on the remote, ordered lowest environment first. A single existing branch yields a single-rung ladder, which is correct.
+- `branches.protected` — the ladder, plus the default branch if it is not already in it
+
+Omit `project` and `verify` entirely. `project` requires the ID resolution flow; `verify` is filled in by Phase 4. An absent key is valid and falls through to its documented default.
+
+**Step 4 — Confirm and write**
+
+Show the proposed JSON and ask whether to write it. In `--auto` mode, write it without asking.
+
+Write the file with the Write tool, then validate:
+
+```bash
+jq empty .hivrr.json
+```
+
+If validation fails, delete the file and report the error rather than leaving a malformed config behind.
+
+Emit: `INIT: .hivrr.json scaffolded (integration: {integration}, ladder: {ladder})`

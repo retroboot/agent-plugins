@@ -96,13 +96,47 @@ Skip this phase — the `wave` skill creates and manages its own branch in Phase
 Display: `Branch: wave skill will create`
 
 **Single issue or sequential strategy:**
-Run:
-```bash
-bash "${CLAUDE_SKILL_DIR}/scripts/hivrr-branch-setup.sh" --issue {number}
-```
-If the script exits non-zero, surface the error and stop.
 
-Display: `Branch: issue/{number}`
+Determine the base branch — the repository default branch:
+
+```bash
+gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'
+```
+
+If that fails (no remote, or the provider is not GitHub), fall back to the branch `origin/HEAD` points at, then to `main`.
+
+Check whether the working tree is dirty:
+
+```bash
+git status --porcelain
+```
+
+If it reports anything, display `WARNING: Working tree has uncommitted changes — continuing anyway` and continue. This is a warning, not a guard — do not stash, reset, or discard the changes.
+
+Check whether the issue branch already exists:
+
+```bash
+git show-ref --verify --quiet refs/heads/issue/{number}
+```
+
+**If it exists** (resume case) — switch to it and stop there:
+
+```bash
+git checkout issue/{number}
+```
+
+Do **not** reset, rebase, or force-update the branch. Local commits from an earlier run must survive.
+
+**If it does not exist** — fetch the base and branch from it:
+
+```bash
+git fetch origin {base}
+git checkout -b issue/{number} origin/{base}
+```
+
+If either command fails, surface the error and stop.
+
+Display: `Branch: issue/{number} (base: {base})`
 
 ---
 

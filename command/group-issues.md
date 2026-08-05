@@ -6,7 +6,7 @@ description: Group GitHub issues into implementation waves for batched execution
 
 Bootstrap — run in order before the main skill:
 1. Load the `init` skill — validates provider config (skips immediately if already configured)
-2. Load the `session` skill — probes MCP availability and loads the active provider reference
+2. Load the `session` skill — reads config and loads the active provider reference
 
 Then load the `group-issues` skill and group the given issues into waves.
 

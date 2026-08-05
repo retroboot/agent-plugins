@@ -6,7 +6,7 @@ description: Address PR feedback end-to-end — fetch, implement, test, push
 
 Bootstrap — run in order before the main skill:
 1. Load the `init` skill — validates provider config (skips immediately if already configured)
-2. Load the `session` skill — probes MCP availability and loads the active provider reference
+2. Load the `session` skill — reads config and loads the active provider reference
 3. Load the `core` skill — internalizes quality gates, git safety, and task completion standards
 
 Then load the `work-pr` skill and drive the full PR feedback resolution workflow.

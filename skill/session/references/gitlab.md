@@ -1,10 +1,10 @@
 # GitLab Reference
 
-Use MCP tools when `repo_mcp=true` / `issues_mcp=true`. Fall back to `glab` CLI otherwise.
+All operations use the `glab` CLI.
 
 **Terminology:** MR (Merge Request) = PR. Issues and MRs use `iid` (project-scoped internal ID), not a global number. Branch fields are `source_branch` / `target_branch` (snake_case from the raw API).
 
-Variables: `{PROJECT}` = `group/project` path, `{N}` = issue iid or MR iid, `{B}` = body/description, `{T}` = title.
+Variables: `{PROJECT}` = `group/project` path, `{PROJECT_ENCODED}` = `group%2Fproject`, `{N}` = issue iid or MR iid, `{B}` = body/description, `{T}` = title.
 
 ---
 
@@ -12,28 +12,24 @@ Variables: `{PROJECT}` = `group/project` path, `{N}` = issue iid or MR iid, `{B}
 
 **List**
 ```
-MCP: mcp__gitlab__list_issues  project_id={PROJECT} state=opened
-CLI: glab issue list --repo {PROJECT}
+glab issue list --repo {PROJECT}
 ```
 
 **Get**
 ```
-MCP: mcp__gitlab__get_issue  project_id={PROJECT} issue_iid={N}
-CLI: glab issue view {N} --repo {PROJECT}
+glab issue view {N} --repo {PROJECT}
 ```
 
 **Create**
 ```
-MCP: mcp__gitlab__create_issue  project_id={PROJECT} title={T} description={B} labels=[{labels}]
-CLI: glab issue create --repo {PROJECT} --title "{T}" --description "{B}" --label "{labels}"
+glab issue create --repo {PROJECT} --title "{T}" --description "{B}" --label "{labels}"
 ```
 
 Use labels from the label reference loaded by init. Pick one or more that fit the issue type and priority.
 
 **Close**
 ```
-MCP: mcp__gitlab__update_issue  project_id={PROJECT} issue_iid={N} state_event=close
-CLI: glab issue close {N} --repo {PROJECT}
+glab issue close {N} --repo {PROJECT}
 ```
 
 ---
@@ -42,46 +38,39 @@ CLI: glab issue close {N} --repo {PROJECT}
 
 **Get diff**
 ```
-MCP: mcp__gitlab__get_merge_request_diffs  project_id={PROJECT} merge_request_iid={N}
-CLI: glab mr diff {N} --repo {PROJECT}
+glab mr diff {N} --repo {PROJECT}
 ```
 
 **View MR**
 ```
-MCP: mcp__gitlab__get_merge_request  project_id={PROJECT} merge_request_iid={N}
-CLI: glab api projects/{PROJECT_ENCODED}/merge_requests/{N}
-     (PROJECT_ENCODED = group%2Fproject — glab mr view lacks --output json in older versions)
+glab api projects/{PROJECT_ENCODED}/merge_requests/{N}
+     (glab mr view lacks --output json in older versions)
 ```
 
 **MR discussion notes** (conversation thread)
 ```
-MCP: mcp__gitlab__list_merge_request_notes  project_id={PROJECT} merge_request_iid={N}
-CLI: glab api projects/{PROJECT_ENCODED}/merge_requests/{N}/notes
-     (PROJECT_ENCODED = group%2Fproject)
+glab api projects/{PROJECT_ENCODED}/merge_requests/{N}/notes
 ```
 
 **Post comment**
 ```
-MCP: mcp__gitlab__create_note  project_id={PROJECT} noteable_type=MergeRequest noteable_iid={N} body={B}
-CLI: glab mr comment {N} --repo {PROJECT} --message "{B}"
+glab mr comment {N} --repo {PROJECT} --message "{B}"
 ```
 
 **Create MR**
 ```
-MCP: mcp__gitlab__create_merge_request  project_id={PROJECT} title={T} description={B} source_branch={branch} target_branch={base}
-CLI: glab mr create --repo {PROJECT} --title "{T}" --description "{B}" --target-branch {base}
+glab mr create --repo {PROJECT} --title "{T}" --description "{B}" --target-branch {base}
 ```
 
 **Merge MR** (squash)
 ```
-MCP: mcp__gitlab__merge_merge_request  project_id={PROJECT} merge_request_iid={N}
-CLI: glab mr merge {N} --repo {PROJECT} --squash --remove-source-branch
+glab mr merge {N} --repo {PROJECT} --squash --remove-source-branch
 ```
+
+Apply the branch-deletion safety rules in `merge-pr/SKILL.md` before passing `--remove-source-branch`.
 
 **Check CI**
 ```
-MCP: not available — use CLI
-CLI: glab api projects/{PROJECT_ENCODED}/merge_requests/{N}/pipelines | jq -r '.[0].status // "none"'
-     (PROJECT_ENCODED = group%2Fproject)
+glab api projects/{PROJECT_ENCODED}/merge_requests/{N}/pipelines | jq -r '.[0].status // "none"'
      # Returns: "success" | "failed" | "canceled" | "running" | "pending" | "none" (no pipeline)
 ```

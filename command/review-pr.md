@@ -6,7 +6,7 @@ description: Review a pull request — fetches the diff, analyzes it, and posts 
 
 Bootstrap — run in order before the main skill:
 1. Load the `init` skill — validates provider config (skips immediately if already configured)
-2. Load the `session` skill — probes MCP availability and loads the active provider reference
+2. Load the `session` skill — reads config and loads the active provider reference
 3. Load the `core` skill — internalizes quality gates and code review standards
 
 Then load the `review-pr` skill and run a full PR review.
