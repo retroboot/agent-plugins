@@ -30,6 +30,27 @@ Skip any issue that returns an error (closed, not found) — do not stop.
 
 Truncate each body to 500 characters before scoring.
 
+**Exclude issues already underway.** A raw issue list says nothing about whether someone is already
+working on an issue, so scoring one that is In Progress proposes duplicate work. Board status is the
+better signal.
+
+Read `project` from `.hivrr.json`. **When `project` is absent, skip this step entirely** and score
+every open issue — that is the correct behavior for a repo with no board, not a degraded one. See
+**Board operations** in [`config.md`](../init/references/config.md) for the status query.
+
+Read the board status for each candidate and drop any whose status is **In Progress** or **Done**.
+An issue that is not on the board has no status; keep it — "not tracked" is not "underway".
+
+**Surface the exclusion.** A silently shorter list looks like a scoring decision. Before Phase 3,
+display:
+
+```
+Excluded (board): #123 In Progress, #456 Done
+```
+
+If the board query fails, warn and score every issue — the same fallback as an unconfigured board.
+Losing the filter degrades the result; aborting destroys it.
+
 ## Phase 3 — Score
 
 Score each fetched issue on a 0–99 urgency scale. Work through the rubric in order — band first,

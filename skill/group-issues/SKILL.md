@@ -30,6 +30,29 @@ For each issue number, use the **Get issue** command from the loaded reference. 
 
 Skip any issue that errors. Truncate each body to 500 characters.
 
+**Exclude issues already underway.** Grouping an In Progress issue into a new wave proposes work
+someone is already doing, and worse, may pair it with an issue that then conflicts with the branch
+already open against it.
+
+Read `project` from `.hivrr.json`. **When `project` is absent, skip this step entirely** and group
+every open issue — the correct behavior for a repo with no board. See **Board operations** in
+[`config.md`](../init/references/config.md) for the status query.
+
+Read the board status for each candidate and drop any whose status is **In Progress** or **Done**.
+An issue that is not on the board has no status; keep it.
+
+**Surface the exclusion** before Phase 3:
+
+```
+Excluded (board): #123 In Progress, #456 Done
+```
+
+If the board query fails, warn and group every issue — the same fallback as an unconfigured board.
+
+Note that an excluded issue may be the stated dependency of one that remains. When that happens,
+group the remaining issue on its own and note the dependency rather than pulling the excluded issue
+back in.
+
 ## Phase 3 — Group
 
 Group issues into waves. Each wave will be implemented as a single pull request in one worker

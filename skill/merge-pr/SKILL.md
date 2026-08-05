@@ -26,6 +26,7 @@ The input will be one of these forms:
 Extract:
 - `pr_number` — the PR number to merge
 - `auto_mode` — true if `--auto` is present
+- `strategy_override` — the value of `--strategy squash|merge|rebase` if present, otherwise none
 
 Get the repo: run `git remote get-url origin` and parse the owner and repo name into `repo_slug` (format: `owner/repo`). For GitLab API calls you also need `repo_encoded` — `repo_slug` with `/` replaced by `%2F`.
 
@@ -41,13 +42,15 @@ Deleting a branch is not cleanup when the branch is long-lived — it destroys a
 
 Before deleting a head branch, check all three rules. **If any rule trips, do not delete.**
 
-**Rule 1 — Protected names.** Never delete a head branch in the protected set:
+**Rule 1 — Protected names.** Never delete a head branch in the protected set.
+
+Read `branches.protected` from `.hivrr.json`; see [`config.md`](../init/references/config.md) for the read steps and per-key precedence. When the file or the key is absent, the set defaults to:
 
 ```
 main, master, dev, develop, staging, release/*
 ```
 
-`release/*` matches any branch whose name starts with `release/`.
+Entries may use a trailing `*` wildcard — `release/*` matches any branch whose name starts with `release/`.
 
 **Rule 2 — The base branch.** Never delete a branch equal to the PR's base branch (`baseRefName` / `target_branch`).
 
@@ -101,6 +104,39 @@ Extract `pr_title`, `pr_body`, `head_branch`, `base_branch`, and `pr_state`. Git
 Then count reviews requesting changes — `reviews[].state == "CHANGES_REQUESTED"` on GitHub, `reviewers[].state == "requested_changes"` on GitLab. If any exist, warn but do not stop; the confirmation checkpoint in Phase 5 is where the user decides.
 
 Display: `PR/MR #{pr_number}: "{pr_title}" | state: {pr_state} | {head_branch} → {base_branch}`
+
+---
+
+## Phase 2b — Classify the Merge
+
+Under a dev/staging/main ladder the right merge behavior depends on which rungs are involved. One predicate drives strategy, deletion, and issue-closing — no new flags are needed to detect it.
+
+Read `branches.ladder` from `.hivrr.json`, defaulting to `[default branch]` when absent.
+
+**The promotion predicate: `head_branch` and `base_branch` are BOTH in `branches.ladder`.**
+
+| Head → Base | Promotion? | Strategy | Delete head? | Close issues? |
+|---|---|---|---|---|
+| `issue/N` → `dev` | no | squash | yes | **yes** |
+| `dev` → `staging` | yes | merge commit | no | no |
+| `staging` → `main` | yes | merge commit | no | no |
+
+**Derive the strategy:**
+
+- Promotion → **merge commit**. Squashing a promotion would collapse every feature commit on the rung into one, destroying the history that makes the ladder auditable.
+- Not a promotion → **squash**.
+
+**`--strategy squash|merge|rebase` overrides the derived value.** When `strategy_override` is set, use it and report that it was overridden — an override that applies silently is indistinguishable from a wrong default.
+
+Deletion is still governed by Branch Deletion Safety. On a promotion both rungs are normally in `branches.protected`, so Rule 1 already prevents deleting the head; the promotion predicate does not replace those rules, it agrees with them.
+
+**Issue-closing on promotions is skipped.** A promotion PR body aggregates every `Closes #N` from the commits beneath it. Those issues were already closed when their `issue/N → dev` PR merged, so re-polling costs a `gh issue view` per issue — each with the Phase 7 retry — to confirm what is already true.
+
+This is the **only** case where skipping is correct. On a feature merge the close loop is mandatory, because closing keywords do not fire on a non-default base.
+
+Store `is_promotion` and `strategy`.
+
+Display: `Merge: {promotion | feature} | strategy: {strategy}{ (overridden)}`
 
 ---
 
@@ -164,9 +200,10 @@ Present the merge summary and **wait for the user's answer**:
 --- Merge Summary ---
   PR:      #{pr_number} — {pr_title}
   Merge:   {head_branch} → {base_branch}
-  Method:  squash
+  Type:    feature | promotion ({head_branch} → {base_branch} on the ladder)
+  Method:  {strategy}{ (overridden via --strategy)}
   Branch:  {head_branch} will be deleted | will NOT be deleted ({rule that tripped})
-  Issues:  {linked_issues} will be closed | none
+  Issues:  {linked_issues} will be closed | none | skipped (promotion PR)
   CI:      {ci_result}
 ```
 
@@ -180,26 +217,34 @@ This is a genuine checkpoint, not a formality — it is the last point at which 
 
 Skip this phase when `already_merged` is true.
 
-Evaluate the Branch Deletion Safety rules against `head_branch` first, then merge with squash:
+Evaluate the Branch Deletion Safety rules against `head_branch` first, then merge using the `strategy` from Phase 2b.
+
+Map `strategy` to the provider flag:
+
+| `strategy` | GitHub | GitLab |
+|---|---|---|
+| `squash` | `--squash` | `--squash` |
+| `merge` | `--merge` | *(no flag — a merge commit is `glab mr merge`'s default)* |
+| `rebase` | `--rebase` | `--rebase` |
 
 **GitHub — no rule tripped:**
 ```bash
-gh pr merge {pr_number} --repo {repo_slug} --squash --delete-branch
+gh pr merge {pr_number} --repo {repo_slug} {strategy_flag} --delete-branch
 ```
 
 **GitHub — a rule tripped:**
 ```bash
-gh pr merge {pr_number} --repo {repo_slug} --squash
+gh pr merge {pr_number} --repo {repo_slug} {strategy_flag}
 ```
 
 **GitLab — no rule tripped:**
 ```bash
-glab mr merge {pr_number} --repo {repo_slug} --squash --remove-source-branch
+glab mr merge {pr_number} --repo {repo_slug} {strategy_flag} --remove-source-branch
 ```
 
 **GitLab — a rule tripped:**
 ```bash
-glab mr merge {pr_number} --repo {repo_slug} --squash
+glab mr merge {pr_number} --repo {repo_slug} {strategy_flag}
 ```
 
 If the merge command fails, re-check the PR state before concluding anything — `--delete-branch` can fail on an already-deleted branch *after* the merge itself succeeded, which looks like a failed merge but is not:
@@ -216,11 +261,15 @@ glab api projects/{repo_encoded}/merge_requests/{pr_number} --jq '.state'
 
 Record `remote_branch_deleted` (true only when the merge command deleted it) and `branch_deleted` (`{head_branch}` or `none` plus the rule that tripped).
 
-Display: `Merged: PR/MR #{pr_number} → {base_branch} (squash)`
+Display: `Merged: PR/MR #{pr_number} → {base_branch} ({strategy})`
 
 ---
 
 ## Phase 7 — Close Linked Issues
+
+**Skip this phase entirely when `is_promotion` is true.** Report `Issues: skipped (promotion PR)` and continue to Phase 8. Those issues closed at their feature merge; see Phase 2b for why re-checking them is pure cost.
+
+For every other merge:
 
 **This loop is required, not cleanup. Do not remove it as redundant.**
 
@@ -252,6 +301,22 @@ A failure to close one issue is a warning, not a stop. Continue to the next and 
 Collect the references actually closed into `issues_closed`.
 
 Display: `Issues: {count} verified, {count} closed | none`
+
+### Move the board cards to Done
+
+**Skip when `is_promotion` is true** — those issues were marked Done at their feature merge, and a promotion closes nothing. Report `Board: skipped (promotion PR)`.
+
+**Skip silently when `project` is absent from `.hivrr.json`.** See **Board operations** in [`config.md`](../init/references/config.md) for the commands and the shared rules.
+
+For each issue in `linked_issues`:
+
+1. Resolve its item ID
+2. If it is not on the board, warn and skip it — do not add an issue to the board at merge time just to immediately mark it Done, which would manufacture a card for work the board never tracked
+3. Set Status to Done using `project.statusFieldId` and `project.status.done`
+
+**Warn and continue on any failure.** The merge has already landed; a board error cannot be allowed to make a completed merge look failed.
+
+Display: `Board: {n} issue(s) → Done` | `Board: skipped (promotion PR)` | nothing when unconfigured
 
 ---
 

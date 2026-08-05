@@ -428,6 +428,22 @@ Collect the created issue numbers/identifiers and URLs.
 
 Display each as it's created: `Created: #{number} — {title}`
 
+**Then add it to the project board.** Issues that never reach the board are invisible to anyone working from the project view, which defeats the point of planning them.
+
+Read `project` from `.hivrr.json`. **When `project` is absent, skip this silently** — most repos have no board, and saying so for every issue is noise. See **Board operations** in [`config.md`](../init/references/config.md) for the commands and the shared rules.
+
+For each created issue:
+
+1. Add it: `gh project item-add {project.number} --owner {project.owner} --url {issue_url}`
+2. Resolve its item ID
+3. Set Status to Todo using `project.statusFieldId` and `project.status.todo`
+
+**Every one of these warns and continues on failure.** Never abort issue creation because a board update failed — the issues are the deliverable and they already exist by this point. A board outage must not lose a planning session's output.
+
+Track how many landed on the board for the Phase 13 summary.
+
+Display: `Board: {n}/{total} issues added as Todo` or `Board: not configured — skipped`
+
 ---
 
 ## Phase 11 — Create Linear Issues (if ISSUE_TRACKER=linear)
@@ -488,6 +504,7 @@ Session:   {session_uuid}
 Plan doc:  docs/plans/{filename}.md
 GitHub:    {issue_numbers or 'plan-only mode — no issues created'}
 Linear:    {linear_ids or 'not configured'}
+Board:     {n}/{total} added as Todo | not configured | {n} failed — see warnings above
 
 Next: /work-issue {first_issue_number}    ← standard mode
 Next: review docs/plans/{filename}.md     ← plan-only mode (no issues created)

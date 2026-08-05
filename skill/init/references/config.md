@@ -27,6 +27,7 @@ Global `providerConfig` survives for values that genuinely are user-shaped: `git
   "project": {
     "owner": "hivrr",
     "number": 1,
+    "id": "PVT_xxx",
     "statusFieldId": "PVTSSF_xxx",
     "status": { "todo": "<option id>", "inProgress": "<option id>", "done": "<option id>" }
   },
@@ -50,16 +51,15 @@ Every top-level key is optional. A file containing only `{}` is valid and resolv
 | `branches.integration` | string | repo default branch | `work-issue`, `wave` |
 | `branches.ladder` | string[] | `[default branch]` | `merge-pr`, `promote` |
 | `branches.protected` | string[] | `["main", "master", "dev", "develop", "staging", "release/*"]` | `merge-pr`, `core`, `promote` |
-| `project` | object \| absent | absent — all board operations are silent no-ops | `planning`, `work-issue`, `merge-pr`, `score-issues`, `group-issues` ⏳ |
-| `project.owner` | string | — | board operations ⏳ |
-| `project.number` | number | — | board operations ⏳ |
-| `project.statusFieldId` | string (`PVTSSF_…`) | — | board status transitions ⏳ |
-| `project.status.todo` \| `.inProgress` \| `.done` | string (option id) | — | board status transitions ⏳ |
+| `project` | object \| absent | absent — all board operations are silent no-ops | `planning`, `work-issue`, `merge-pr`, `score-issues`, `group-issues` |
+| `project.owner` | string | — | board operations |
+| `project.number` | number | — | board operations |
+| `project.id` | string (`PVT_…`) | — | `gh project item-edit --project-id` |
+| `project.statusFieldId` | string (`PVTSSF_…`) | — | board status transitions |
+| `project.status.todo` \| `.inProgress` \| `.done` | string (option id) | — | board status transitions |
 | `verify.test` | string \| `null` | model detects, then offers to record | `work-issue`, `work-pr` |
 | `verify.lint` | string \| `null` | model detects, then offers to record | `work-issue`, `work-pr` |
 | `verify.detectedFrom` | string[] | — | `init` Phase 4 (staleness check) |
-
-⏳ = written by `init` Phase 5 but not yet read by any skill. The consumers arrive with #117 (add issues to the board), #118 (status transitions), and #119 (board-aware scoring and grouping). Until then the keys are inert, and their absence resolves to the documented default like any other missing key. Remove the marker as each consumer lands.
 
 A `verify` command recorded as `null` means "checked, this repo has nothing" — distinct from the key being absent, which means "never checked".
 
@@ -180,6 +180,8 @@ A missing scope surfaces as a GraphQL error containing `INSUFFICIENT_SCOPES` or 
 
 ### Step 1 — Resolve the project ID
 
+The `id` returned here is the project **node ID** (`PVT_…`). It is a distinct value from `project.number`, and `gh project item-edit --project-id` needs the node ID, not the number.
+
 For an organization-owned project:
 
 ```bash
@@ -226,12 +228,12 @@ Find the node whose `name` is `Status`. Its `id` is `statusFieldId`. Match its o
 
 ### Step 3 — Cache the result
 
-Write `project.statusFieldId` and the three `project.status.*` option IDs into `.hivrr.json`, preserving every other key. Validate with `jq empty`.
+Write `project.id` (from Step 1), `project.statusFieldId`, and the three `project.status.*` option IDs into `.hivrr.json`, preserving every other key. Validate with `jq empty`.
 
 Verify:
 
 ```bash
-jq '.project | {statusFieldId, status}' .hivrr.json
+jq '.project | {id, statusFieldId, status}' .hivrr.json
 ```
 
 ### Re-resolution
@@ -248,3 +250,65 @@ Re-resolve **only** when an ID is absent, or when explicitly asked to. Do not re
 | No field named `Status` | Report which fields do exist. Some boards rename it. |
 | A Status option was renamed, so a config key has no match | **Warn, name the unmatched key and the options that do exist, and offer to re-resolve.** Never crash, and never write a `null` option ID — a null would make later `item-edit` calls fail with a far less obvious error. |
 | A cached option ID no longer exists on the board | Same as above: the option was deleted or recreated. Re-resolve. |
+
+---
+
+## Board operations
+
+The operations every board-aware skill performs, defined once. `planning`, `work-issue`, `merge-pr`, `score-issues`, and `group-issues` all use these rather than each carrying its own GraphQL.
+
+### The universal rule
+
+**Every board call warns and continues on failure. None of them ever aborts the workflow that called it.**
+
+A board is a reporting surface. Failing to move a card must never prevent an issue from being created, a branch from being made, or a PR from merging — the work is the point, and the card is a record of it. A skill that aborts on a board error converts a cosmetic outage into a blocked pipeline.
+
+Likewise, **`project` absent from `.hivrr.json` is a silent no-op**, not a warning. Most repos have no board; saying so on every invocation is noise.
+
+### Add an issue to the board
+
+```bash
+gh project item-add {project.number} --owner {project.owner} --url {issue_url}
+```
+
+Adding an item that is already on the board is harmless — it returns the existing item.
+
+### Resolve an issue's item ID
+
+Item IDs are per-issue and cannot be cached. Resolve at call time:
+
+```bash
+gh project item-list {project.number} --owner {project.owner} --format json \
+  --jq '.items[] | select(.content.number == {N}) | .id'
+```
+
+**Empty result means the issue is not on the board.** Add it first with `item-add`, then resolve again. If it is still missing after that, warn and skip — do not loop.
+
+For large boards, pass `--limit` above the default (`gh project item-list` defaults to 30) or the query will silently miss items:
+
+```bash
+gh project item-list {project.number} --owner {project.owner} --limit 500 --format json
+```
+
+### Set an item's Status
+
+```bash
+gh project item-edit \
+  --project-id {project.id} \
+  --id {item_id} \
+  --field-id {project.statusFieldId} \
+  --single-select-option-id {project.status.todo | .inProgress | .done}
+```
+
+All four IDs are required, and three of them come from the cache written by `init` Phase 5. If `statusFieldId` or the needed option ID is missing, warn that the board IDs are unresolved, point at `init`, and continue.
+
+### Read an issue's Status
+
+```bash
+gh project item-list {project.number} --owner {project.owner} --limit 500 --format json \
+  --jq '.items[] | select(.content.number == {N}) | .status'
+```
+
+Returns the option **name** (`Todo`, `In Progress`, `Done`), not its ID. Match it case-insensitively — boards rename these.
+
+An issue absent from the board has no status. Treat that as "not tracked", which is different from `Todo`.
