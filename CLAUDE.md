@@ -4,19 +4,39 @@ Skills and commands for implementation, brainstorming, planning, and code review
 
 ## Plugins
 
-### `hivrr`
-Full development toolkit — implementation, brainstorming, planning, and code review.
+`.claude-plugin/marketplace.json` is the source of truth for what ships. Keep this list in sync with it.
 
-**Skills:** `audit`, `audit-accessibility`, `audit-performance`, `audit-security`, `audit-tech-debt`, `brainstorm`, `core`, `debug`, `merge-pr`, `planning`, `review-pr`, `wave`, `work-issue`, `work-pr`
+### `dev`
+Implementation and code review — issues, PRs, waves, merges, and environment promotions.
 
-**Commands:** `audit`, `brainstorm`, `debug`, `merge-pr`, `planning`, `review-pr`, `work-issue`, `work-pr`, `write-plan`
+**Skills:** `core`, `init`, `session`, `debug`, `merge-pr`, `promote`, `review-pr`, `wave`, `work-issue`, `work-pr`
+
+**Commands:** `debug`, `merge-pr`, `promote`, `review-pr`, `wave`, `work-issue`, `work-pr`
 
 ---
 
-### `manager`
+### `auditor`
+Code audit skills — security, accessibility, performance, and tech debt.
+
+**Skills:** `audit`, `audit-accessibility`, `audit-performance`, `audit-security`, `audit-tech-debt`
+
+**Commands:** `audit`
+
+---
+
+### `planner`
+Planning and brainstorming — open-ended thinking sessions through to sized issues, blueprints, and plan documents.
+
+**Skills:** `init`, `session`, `brainstorm`, `planning`
+
+**Commands:** `brainstorm`, `planning`, `write-plan`
+
+---
+
+### `dispatcher`
 Manager utility skills for automated work allocation — scoring, grouping, and failure diagnosis.
 
-**Skills:** `score-issues`, `group-issues`, `diagnose-failure`
+**Skills:** `init`, `session`, `score-issues`, `group-issues`, `diagnose-failure`
 
 **Commands:** `score-issues`, `group-issues`, `diagnose-failure`
 
@@ -28,6 +48,31 @@ Full data platform skills — covers the complete stack from ingestion and pipel
 **Skills:** `senior-data-scientist`, `senior-data-engineer`, `senior-data-analyst`, `senior-ai-engineer`, `snowflake`, `postgres`, `postgres-query`
 
 ---
+
+## Shared setup skills
+
+`init` and `session` are included by `dev`, `planner`, and `dispatcher`, and every command loads them before its main skill.
+
+- **`init`** — five ordered phases: provider config, repo labels, `.hivrr.json` scaffold, verify-command detection, and project board ID resolution. The phases run **in order, every time**; a phase with nothing to do reports and continues rather than ending the skill.
+- **`session`** — reads config and loads the active provider reference for the session.
+
+## Repo configuration
+
+Per-repo settings live in a committed `.hivrr.json`. The file is optional — a repo without one gets documented defaults, not errors. Precedence resolves **per key**: `.hivrr.json` → global `providerConfig` → hardcoded default.
+
+Full schema, defaults, board operations, and Projects v2 ID resolution: `skill/init/references/config.md`.
+
+## Script policy
+
+**This repo ships no shell scripts.** A script earns its place only when it is read-only or trivially reversible, non-interactive, single-purpose, and performs deterministic computation the model cannot reliably do in prose. Workflow logic goes in skills as explicit steps, where each command is visible and each real output is read.
+
+The full rule, and the reasoning behind it, is in `skill/core/SKILL.md`.
+
+## Verification
+
+The product here is JSON and Markdown, so verification is structural — validate that every JSON file parses and that every skill and command registered in `marketplace.json` resolves to a real path. Both commands are in the README.
+
+Because JSON and Markdown *are* the product in this repo, a change to `marketplace.json` or any `SKILL.md` is a behavior change, not a docs change. Do not skip verification on it.
 
 ## Running Multiple Instances
 

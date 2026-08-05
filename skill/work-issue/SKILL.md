@@ -156,6 +156,22 @@ If any command fails, surface the error and stop.
 
 Display: `Branch: issue/{number} ({new | resumed local | resumed from origin}, base: {integration})`
 
+### Move the board card to In Progress
+
+Work has now started, and this skill is the only thing that knows it. Read `project` from `.hivrr.json` and set each issue's Status to In Progress.
+
+**When `project` is absent, skip this silently.** See **Board operations** in [`config.md`](../init/references/config.md) for the commands and the shared rules.
+
+For each issue in the group:
+
+1. Resolve its item ID
+2. If it is not on the board, add it with `item-add` and resolve again — a planned issue may have been created before the board existed
+3. Set Status to In Progress using `project.statusFieldId` and `project.status.inProgress`
+
+**Warn and continue on any failure.** A board that cannot be reached must never stop the branch from being created or the work from starting.
+
+Display: `Board: {n} issue(s) → In Progress` or nothing when unconfigured
+
 ---
 
 ## Phase 6 — Plan (medium and complex only)

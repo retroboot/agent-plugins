@@ -17,13 +17,17 @@ Supported formats:
 - `99` — PR number
 - `https://github.com/owner/repo/pull/99` — GitHub PR URL
 - Append `--auto` to skip the confirmation checkpoint and auto-create follow-up issues
+- Append `--strategy squash|merge|rebase` to override the strategy derived from `branches.ladder`
 
 Examples:
 ```
 /merge-pr 99
 /merge-pr 99 --auto
+/merge-pr 99 --strategy merge
 /merge-pr https://github.com/owner/repo/pull/99
 ```
+
+The strategy is derived automatically: a **promotion** PR — one whose head and base are both rungs in `branches.ladder` — merges with a merge commit, keeps its head branch, and closes no issues. Everything else squashes.
 
 ## Output
 

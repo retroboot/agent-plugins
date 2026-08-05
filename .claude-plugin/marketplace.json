@@ -1,9 +1,11 @@
 {
   "name": "hivrr-agent-plugins",
-  "owner": { "name": "hivrr" },
+  "owner": {
+    "name": "hivrr"
+  },
   "metadata": {
-    "description": "Hivrr Agent Plugin — Skills and commands for implementation, brainstorming, planning, and code review",
-    "version": "1.0.12"
+    "description": "Hivrr Agent Plugin \u2014 Skills and commands for implementation, brainstorming, planning, and code review",
+    "version": "1.1.0"
   },
   "plugins": [
     {
@@ -17,6 +19,7 @@
         "./skill/session",
         "./skill/debug",
         "./skill/merge-pr",
+        "./skill/promote",
         "./skill/review-pr",
         "./skill/wave",
         "./skill/work-issue",
@@ -25,14 +28,16 @@
       "commands": [
         "./command/debug.md",
         "./command/merge-pr.md",
+        "./command/promote.md",
         "./command/review-pr.md",
+        "./command/wave.md",
         "./command/work-issue.md",
         "./command/work-pr.md"
       ]
     },
     {
       "name": "auditor",
-      "description": "Code audit skills — security, accessibility, performance, and tech debt",
+      "description": "Code audit skills \u2014 security, accessibility, performance, and tech debt",
       "source": "./",
       "strict": true,
       "skills": [
@@ -48,7 +53,7 @@
     },
     {
       "name": "planner",
-      "description": "Planning and brainstorming skills — from open-ended thinking sessions to comprehensive implementation plans with TDD tasks, blueprints, and automated plan review",
+      "description": "Planning and brainstorming skills \u2014 from open-ended thinking sessions to comprehensive implementation plans with TDD tasks, blueprints, and automated plan review",
       "source": "./",
       "strict": true,
       "skills": [
@@ -65,7 +70,7 @@
     },
     {
       "name": "dispatcher",
-      "description": "Manager utility skills — score, group, and diagnose issues for automated work allocation",
+      "description": "Manager utility skills \u2014 score, group, and diagnose issues for automated work allocation",
       "source": "./",
       "strict": true,
       "skills": [
@@ -83,7 +88,7 @@
     },
     {
       "name": "data-platform",
-      "description": "Full data platform skills — data science, engineering, analysis, AI engineering, Snowflake, and PostgreSQL. Covers the complete stack from ingestion and pipelines to ML, LLMs, dashboards, and database administration.",
+      "description": "Full data platform skills \u2014 data science, engineering, analysis, AI engineering, Snowflake, and PostgreSQL. Covers the complete stack from ingestion and pipelines to ML, LLMs, dashboards, and database administration.",
       "source": "./",
       "strict": true,
       "skills": [

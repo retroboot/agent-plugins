@@ -30,6 +30,31 @@ Skip any issue that returns an error (closed, not found) — do not stop.
 
 Truncate each body to 500 characters before scoring.
 
+**Exclude issues already underway.** A raw issue list says nothing about whether someone is already
+working on an issue, so scoring one that is In Progress proposes duplicate work. Board status is the
+better signal.
+
+Read `project` from `.hivrr.json`. **When `project` is absent, skip this step entirely** and score
+every open issue — that is the correct behavior for a repo with no board, not a degraded one. See
+**Board operations** in [`config.md`](../init/references/config.md) for the status query.
+
+Read the board status for each candidate and drop any whose status is **In Progress** or **Done**.
+An issue that is not on the board has no status; keep it — "not tracked" is not "underway".
+
+**Surface the exclusion.** A silently shorter list looks like a scoring decision. Before Phase 3,
+display:
+
+```
+Excluded (board): #123 In Progress, #456 Done
+```
+
+This skill is machine-executed, so a display line is not enough — record the excluded issues as
+`excluded` and emit them in Phase 4 alongside `scores`. Store it as
+`{issue_number_string: status_name}`.
+
+If the board query fails, warn and score every issue — the same fallback as an unconfigured board.
+Losing the filter degrades the result; aborting destroys it.
+
 ## Phase 3 — Score
 
 Score each fetched issue on a 0–99 urgency scale. Work through the rubric in order — band first,
@@ -69,6 +94,7 @@ Display:
 ```
 WORKFLOW COMPLETE
 Issues scored: {issue_numbers.join(', ')}
+Excluded: {excluded_numbers.join(', ') or 'none'}
 ```
 
 Then output this exact line as the final line of your response:
@@ -76,5 +102,11 @@ Then output this exact line as the final line of your response:
 RESULT_JSON: {"scores": {"123": 72, "456": 41, "789": 8}}
 
 Where keys are issue number strings and values are integer scores 0–99.
+
+**When Phase 2 excluded issues**, add the `excluded` key so the omission is machine-readable rather than an unexplained gap between what was requested and what came back:
+
+RESULT_JSON: {"scores": {"123": 72, "456": 41}, "excluded": {"789": "Done"}}
+
+`excluded` maps issue number strings to the board status that caused the exclusion. **Omit the key entirely when nothing was excluded** — including when no board is configured — so its presence always means the board filter actually ran. Existing consumers that read only `scores` are unaffected.
 
 No explanation after this line.

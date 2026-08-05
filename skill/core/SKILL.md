@@ -54,6 +54,28 @@ Only report findings with >=80% confidence.
 Always include file:line references for every finding.
 Always note at least one positive observation.
 
+## Script Policy
+
+**Prefer explicit steps in a skill over a script.** This plugin accumulated 609 lines of bash that the
+model read and then bypassed, because reading a destructive script before running it is correct agent
+behavior — which defeats the point of having a script at all.
+
+A script earns its place only when **all four** hold:
+
+1. **Read-only or trivially reversible.** Anything that merges, deletes branches, closes issues, or
+   writes outside a temp directory belongs in the skill, where each step is visible and individually
+   confirmable.
+2. **Non-interactive.** No `read`, no prompts, no assumed TTY. A script that blocks on stdin dies
+   silently at EOF in an agent or container — and under `set -e` it dies with no error output at all.
+3. **Single-purpose.** One job with one output. A script that merges *and* closes issues *and* cleans
+   up branches is a workflow, and workflows belong in skills.
+4. **Deterministic computation the model cannot reliably do in prose.** Parsing a large file, a
+   non-trivial transform, arithmetic over many rows. Wrapping two `git` commands in flag parsing is
+   not this — it costs a file read and a permission prompt and buys nothing.
+
+When a script fails any of these, write the steps into the skill. The model runs each command, reads
+each real output, and nothing is hidden behind an exit code.
+
 ## Discovery
 
 Follow existing patterns in the codebase. One pattern well-applied is better than five variations.
