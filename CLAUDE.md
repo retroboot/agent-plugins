@@ -23,9 +23,9 @@ other in the same commit; a description is what a user reads when deciding wheth
 understated one ships a narrower plugin than the one that exists.
 
 **The fifth structural check enforces this**, so a mismatch fails verification rather than shipping.
-It reports `DESC DRIFT {name}` when the two disagree, `DESC NO HEADING {name}` when a plugin has no
-section here, and `DESC NO PLUGIN {name}` when this file documents a plugin `marketplace.json` no
-longer lists. Fix the disagreement — never edit around the check.
+It reports a `DESC …` message naming the plugin and the specific disagreement; `README.md` has the
+full table, kept there so adding a message does not leave a stale list here. Fix the disagreement —
+never edit around the check.
 
 For that to be one rule rather than five special cases, **keep every `marketplace.json` description
 a single sentence with no terminal period.** A two-sentence description ends in a period of its

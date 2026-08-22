@@ -269,8 +269,9 @@ invisible in rendered Markdown, so a reader told the heading is missing would lo
 have nowhere to go. Testing for the heading and for the line under it as two conditions costs one
 `grep` and keeps each message pointing at its own fix.
 
-The last one is not a style rule. The invariant the check compares is `claude_line == description +
-"."`, which only holds because every description is a single sentence with no terminal period. A
+`DESC TERMINAL PERIOD` is not a style rule. The invariant the check compares is
+`claude_line == description + "."`, which only holds because every description is a single sentence
+with no terminal period. A
 two-sentence description ends in its own period, `CLAUDE.md` then adds nothing, and the comparison
 reports drift on a row that is correct. Catching the period directly turns that into a message that
 names the real cause instead of a confusing `DESC DRIFT`. `CLAUDE.md` states the single-sentence
