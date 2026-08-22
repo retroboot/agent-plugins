@@ -227,6 +227,7 @@ See [references/plan-writing.md](references/plan-writing.md) for the full task s
 
 ### Simple tier
 Brief plan doc: goal, architecture, key files, linked issues. No TDD task breakdown. 1-2 pages.
+In `--plan-only` mode there are no issues to link — omit that section rather than leaving it empty.
 
 ### Medium tier
 Full implementation plan with TDD task breakdown. For each task:
@@ -502,6 +503,17 @@ three look like an empty array. `plan_only = true` says which, and tells the con
 
 **Local file fallback:**
 If memory is unavailable, write to `.ai/session/{session_uuid}/plan.md` containing the full plan and PRD content. Log a warning: `WARNING: Memory unavailable, plan written to .ai/session/{session_uuid}/plan.md`
+
+Open that file with a mode line, so the discriminator survives the fallback path too:
+
+```markdown
+Mode: plan-only     ← or: Mode: standard
+```
+
+Without it a plan-only session leaves a `plan.md` holding no issues and nothing saying that was
+deliberate — the same ambiguity `plan_only` exists to remove, one layer down. A reader that finds no
+`Mode:` line at all should assume standard mode; that is what every `plan.md` written before this
+line existed means.
 
 Do not fail if memory write fails — log the warning and continue.
 
