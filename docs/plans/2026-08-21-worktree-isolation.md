@@ -727,9 +727,10 @@ Expected: the warning, and work proceeding in the main checkout.
   a loop, and any candidate may be held by *another* session's worktree — that session is still
   working, so its worktree must not be touched. The ordered candidate list has two checks today —
   `1 — Is it protected?` and `2 — Did it actually merge?` — so this appends as **check 3**, leaving
-  their numbering alone. It is a local command and the checks short-circuit on the first `keep`, so
-  running it ahead of check 2 would save a network call; that is a fair optimization but renumbers an
-  existing check, so it is not bundled here:
+  their numbering alone. It must run **before** the merge check, which is not a
+  filter — its positive branch runs `git branch -D`, so a worktree check placed after it never
+  prevents anything. Renumbering the existing check is the smaller cost. Saving a network call is a
+  side benefit, not the reason:
 
   ````markdown
   **3 — Is it held by a worktree?** A branch checked out in any worktree cannot be deleted, and the
@@ -768,11 +769,16 @@ Expected: the warning, and work proceeding in the main checkout.
   ```
 
   For each worktree other than the main checkout, report those that are **prunable** (directory gone,
-  metadata stale) or whose branch is already merged into `branches.integration`:
+  metadata stale) or whose branch is gone from the remote:
 
   ```bash
-  git branch --merged origin/{integration} --format='%(refname:short)'
+  git branch -vv | grep ': gone]'
   ```
+
+  **Not `git branch --merged`.** Under squash merges a merged branch shares no commit with the base,
+  so `--merged` returns nothing for exactly the branches this phase needs — the same reason
+  `merge-pr` Phase 9 Step 2 rejects ancestry checks. Report it as `branch gone from remote`, which is
+  what was actually checked.
 
   ```
   INIT: 2 orphan worktree(s)

@@ -360,3 +360,56 @@ Emit one of:
 - `INIT: .hivrr.json committed on {branch}`
 - `INIT: .hivrr.json staged — {branch} is protected, commit deliberately`
 - `INIT: .hivrr.json unchanged`
+
+---
+
+## Phase 7 — Report Orphan Worktrees
+
+**Skip when `worktree` is absent from `.hivrr.json`.** This is the phase's only gate.
+
+Like Phase 6, this is a **sibling of Phase 5, not a step inside it.** Phase 5 skips entirely when
+`project` is absent, and a repo that configures `worktree` without a board would then never hear
+about its orphans. The two keys are independent.
+
+An abandoned or crashed session leaves a worktree that nothing else will notice, and each one holds
+a branch that cannot be deleted while it exists. `init` runs on every command, which makes it the
+cheapest place to surface them.
+
+```bash
+git worktree list --porcelain
+```
+
+For each worktree other than the main checkout, report those in either of two states:
+
+**Prunable** — the directory is gone but the metadata survives. `git worktree list --porcelain`
+marks these itself; no second command is needed.
+
+**Branch gone from the remote** — the usual signature of a session whose PR merged and whose
+worktree was never cleaned up:
+
+```bash
+git branch -vv | grep ': gone]'
+```
+
+**Do not use `git branch --merged` here.** Under squash merges — this plugin's default strategy, and
+what `merge-pr` Phase 9 Step 2 documents at length — a merged branch shares no commit with the base,
+so `--merged` returns nothing for exactly the branches this phase most needs to find. The failure is
+silent: an empty result is indistinguishable from "no merged orphans".
+
+`: gone]` means the remote ref disappeared, **not** that the work landed — a closed-unmerged PR and a
+force-pushed rename produce the same signature. `merge-pr` treats that ambiguity as a reason to
+verify before deleting. Here it is not a problem: this phase only reports, and a worktree worth a
+second look is worth reporting either way. Say `branch gone from remote` rather than `merged`, so
+the report claims only what it checked.
+
+```
+INIT: 2 orphan worktree(s)
+      .claude/worktrees/issue/41  [issue/41]  branch gone from remote
+      .claude/worktrees/issue/38  [issue/38]  prunable
+      Clean up: git worktree prune, or git worktree remove {path}
+```
+
+**Report only — never remove.** An orphan may hold the only copy of unfinished work, and `init` is
+setup, not cleanup. Offer the commands and let the user run them.
+
+Emit `INIT: worktrees ok` when there are none, and nothing at all when `worktree` is absent.
