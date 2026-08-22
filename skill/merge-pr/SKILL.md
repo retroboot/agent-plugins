@@ -421,7 +421,25 @@ For each candidate, in order:
 
 **1 — Is it protected?** Check the name against the Rule 1 set individually. Never pipe the list straight into a delete. Protected → keep.
 
-**2 — Did it actually merge?**
+**2 — Is it held by a worktree?** Skipped, along with the rest of this phase's worktree handling,
+when `worktree` is absent from `.hivrr.json`. A branch checked out in any worktree cannot be
+deleted, and the worktree may belong to a live session that is still working:
+
+```bash
+git worktree list --porcelain
+```
+
+Held → **keep it** and report as `kept: {branch} (held by worktree at {path})`. Never remove a
+worktree this skill did not create in order to delete a branch; the head branch handled in Step 1 is
+the only worktree this phase acts on.
+
+**This must come before check 3, which deletes.** Check 3 is not a filter — its positive branch runs
+`git branch -D`, so a worktree check placed after it never prevents anything: the delete has already
+failed with `cannot delete branch … used by worktree`. It is also purely local, so running it first
+skips a network call on every held branch. Step 1 already orders the worktree work ahead of its
+delete; this keeps the two steps consistent.
+
+**3 — Did it actually merge?**
 
 ```bash
 # GitHub
@@ -441,18 +459,6 @@ If the query fails, keep the branch — the same rule as Rule 3. A check that co
   ```bash
   git log origin/{base_branch}..{branch} --oneline | wc -l
   ```
-
-**3 — Is it held by a worktree?** Skipped along with the rest of this phase's worktree handling when
-`worktree` is absent from `.hivrr.json`. A branch checked out in any worktree cannot be deleted, and
-the worktree may belong to a live session:
-
-```bash
-git worktree list --porcelain
-```
-
-Held → **keep it** and report as `kept: {branch} (held by worktree at {path})`. Never remove a
-worktree this skill did not create in order to delete a branch; the head branch handled in Step 1 is
-the only worktree this phase acts on.
 
 Report skipped branches as `kept: {branch} ({n} unmerged commits)`.
 

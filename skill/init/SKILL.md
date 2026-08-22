@@ -379,16 +379,32 @@ cheapest place to surface them.
 git worktree list --porcelain
 ```
 
-For each worktree other than the main checkout, report those that are **prunable** (directory gone,
-metadata stale) or whose branch is already merged into `branches.integration`:
+For each worktree other than the main checkout, report those in either of two states:
+
+**Prunable** — the directory is gone but the metadata survives. `git worktree list --porcelain`
+marks these itself; no second command is needed.
+
+**Branch gone from the remote** — the usual signature of a session whose PR merged and whose
+worktree was never cleaned up:
 
 ```bash
-git branch --merged origin/{integration} --format='%(refname:short)'
+git branch -vv | grep ': gone]'
 ```
+
+**Do not use `git branch --merged` here.** Under squash merges — this plugin's default strategy, and
+what `merge-pr` Phase 9 Step 2 documents at length — a merged branch shares no commit with the base,
+so `--merged` returns nothing for exactly the branches this phase most needs to find. The failure is
+silent: an empty result is indistinguishable from "no merged orphans".
+
+`: gone]` means the remote ref disappeared, **not** that the work landed — a closed-unmerged PR and a
+force-pushed rename produce the same signature. `merge-pr` treats that ambiguity as a reason to
+verify before deleting. Here it is not a problem: this phase only reports, and a worktree worth a
+second look is worth reporting either way. Say `branch gone from remote` rather than `merged`, so
+the report claims only what it checked.
 
 ```
 INIT: 2 orphan worktree(s)
-      .claude/worktrees/issue/41  [issue/41]  branch merged
+      .claude/worktrees/issue/41  [issue/41]  branch gone from remote
       .claude/worktrees/issue/38  [issue/38]  prunable
       Clean up: git worktree prune, or git worktree remove {path}
 ```
