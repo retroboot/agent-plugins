@@ -330,24 +330,37 @@ Wait for their response before continuing.
 
 ## Phase 10 — Commit
 
-Stage all changes: `git add -A`
+**Stage only the files this work touched.** Never `git add -A` or `git add .` — both stage
+unrelated edits from any other work sharing this checkout, and `-A` does it repo-wide regardless of
+the current directory. A commit that sweeps in someone else's half-finished change is far more
+expensive to unpick than an extra staging command is to write.
 
-**Do not stage the session fallback directory.** When memory was unavailable, Phase 3 and Phase 12
-write under `.ai/session/{SESSION_UUID}/`. That is worker scratch state, not part of the change, and
-`git add -A` will sweep it into the PR unless the target repo already ignores it. Before committing:
+Build the file list from what you actually changed:
+
+- **Wave runs:** use the per-issue file lists recorded in Step 3 of the `wave` skill.
+- **Single-issue runs:** use the files you edited, plus any you created.
+
+Then stage them explicitly:
 
 ```bash
-git status --porcelain -- .ai/session
+git add {file} {file} …
 ```
 
-If it reports anything, unstage it and leave it on disk:
+Before committing, confirm nothing unexpected is staged:
 
 ```bash
-git reset -q -- .ai/session
+git status --short
 ```
 
-Suggest the repo add `.ai/` to its `.gitignore` so this stops recurring, but do not edit
-`.gitignore` as part of an unrelated issue's commit.
+Every staged path must be one you touched for this issue. **If an unexpected path appears, stop and
+report it** — it means another session is writing to this checkout, which is the exact condition
+worktree isolation exists to prevent. Do not unstage and continue silently.
+
+**Never name the session fallback directory in that list.** When memory was unavailable, Phase 3 and
+Phase 12 write under `.ai/session/{SESSION_UUID}/`. That is worker scratch state, not part of the
+change. Explicit staging means it can no longer be swept in — it can only be added by naming it, so
+do not. Suggest the repo add `.ai/` to its `.gitignore` so it stops appearing in `git status`, but do
+not edit `.gitignore` as part of an unrelated issue's commit.
 
 Write a conventional commit message:
 - Format: `{type}({scope}): {description}`

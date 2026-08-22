@@ -204,8 +204,10 @@ resolution** in `CLAUDE.md` for the contract the first three commands enforce.
 The fourth check guards against the failure the others cannot see: two skills carrying the same
 procedure in prose. Markdown that parses and resolves is still wrong if it says the same thing
 twice and the two copies disagree. `docs/shared-lines-allowlist.txt` holds the lines the two
-execution skills are *meant* to share — a flag, a warning, a framing sentence, and the two-line
-pointer at `skill/init/references/verify.md` itself. Adding a line to it is a deliberate claim that
+execution skills are *meant* to share — a flag, a warning, a framing sentence, the pointer at
+`skill/init/references/verify.md`, and the prohibition on blanket staging. That last one is shared
+deliberately: a rule stated two different ways invites the reading that they are two different
+rules, and only the *procedure* below it differs between the skills. Adding a line to it is a deliberate claim that
 the duplication is correct; if you cannot make that claim, extract the line into a reference
 instead. Never raise the `length > 60` threshold to make the check pass — that hides future
 duplication silently, which is the failure the check exists to catch.

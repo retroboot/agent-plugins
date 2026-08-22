@@ -133,7 +133,8 @@ test: {what tests cover}
 docs: {what docs add}
 ```
 
-One commit per task. Stage only the files for that task. Never `git add .`.
+One commit per task. Stage only the files for that task. Never `git add .` or `git add -A` — `-A`
+is the broader hazard, staging repo-wide including deletions regardless of the current directory.
 
 ---
 

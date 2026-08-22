@@ -7,3 +7,5 @@ For **simple** tasks: skip this phase, go straight to implementing.
 Emit the completion JSON as defined in the command's Output section.
 Follow [`verify.md`](../init/references/verify.md) — it has the command resolution, the
 run-and-show-real-output rule, the skip criteria, and the reporting format.
+**Stage only the files this work touched.** Never `git add -A` or `git add .` — both stage
+unrelated edits from any other work sharing this checkout, and `-A` does it repo-wide regardless of
