@@ -196,6 +196,20 @@ Record how this repo runs its tests and its linter, so `work-issue` and `work-pr
 
 Read `verify.test`, `verify.lint`, and `verify.detectedFrom` from `.hivrr.json`. Any of them may be absent.
 
+**If `detectedFrom` is exactly `["manual"]`, stop here.** That sentinel means a human recorded these
+commands deliberately and detection must not touch them. Emit `INIT: verify manual — not re-detected`
+and continue to Phase 5. Do not run Step 2, do not compare, do not offer to update.
+
+This exists because detection can only find what its tables know about, and a repo whose
+verification is real but unconventional would otherwise have it overwritten with `null` on every
+run — and `null` contractually means "checked, there is nothing", which makes `work-issue` and
+`work-pr` report `skipped`. The result is an unattended run skipping verification on a repo that
+has it. The sentinel is the repo saying *stop looking, I already told you*.
+
+`["manual"]` is a whole-block sentinel, not a per-key one: it governs `test` and `lint` together. A
+repo that wants one key detected and the other pinned should record both by hand — mixing the two
+would make the block's provenance unreadable.
+
 **Step 2 — Detect from the repo**
 
 Look for a test command, in this order, and stop at the first match:

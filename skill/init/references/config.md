@@ -106,6 +106,25 @@ GitHub Projects v2 board wiring. Field mutations on Projects v2 are GraphQL-only
 
 The test and lint commands for this repo. `detectedFrom` records *which files justified each command*, so `init` can tell a stale command from a current one rather than trusting a "already configured, skip" flag.
 
+#### The `["manual"]` sentinel
+
+`detectedFrom` set to exactly `["manual"]` means **a human recorded these commands and `init` Phase 4
+must not re-detect them.** Phase 4 stops at Step 1, emits `INIT: verify manual — not re-detected`,
+and leaves the block alone.
+
+Use it when a repo's verification is real but unconventional — structural checks defined in a
+`README`, a bespoke harness, anything the detection tables have no row for. Without the sentinel
+Phase 4 correctly finds nothing and writes `null`, and `null` contractually means "checked, there is
+nothing", so `work-issue` and `work-pr` report `skipped`. An unattended run then skips verification
+on a repo that has it — which is worse than never having detected at all, because the config now
+asserts the absence.
+
+It governs the whole block, not one key. A repo wanting `test` pinned and `lint` detected should
+record both by hand; a half-manual block has unreadable provenance.
+
+The trade is explicit: the sentinel buys accuracy and gives up drift detection. A manual command
+that stops working will keep being run until someone notices, because nothing re-checks it.
+
 ---
 
 ## Precedence

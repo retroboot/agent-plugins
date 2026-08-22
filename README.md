@@ -137,8 +137,16 @@ Per-repo settings live in a committed `.hivrr.json` at the repository root, so t
 | `branches.protected` | Branches that are never deleted or force-pushed | `main, master, dev, develop, staging, release/*` |
 | `project` | GitHub Projects v2 board wiring | absent — all board operations are silent no-ops |
 | `verify` | Test and lint commands, plus the files that justified them | model detects and offers to record |
+| `verify.detectedFrom` | The files that justified each command — or `["manual"]`, which pins the block and stops `init` re-detecting it | model records what it matched |
 
 Precedence resolves **per key**, not per file: `.hivrr.json` → global `providerConfig` → hardcoded default. `provider` and `issueTracker` resolve independently, so a repo hosted on one provider can track its issues on another — and a repo that overrides only `provider` still takes its tracker from global config. Note that writing `branches.protected` *replaces* the default set rather than extending it — omit the key unless you need to add a name the default does not cover.
+
+Set `verify.detectedFrom` to exactly `["manual"]` when a repo's verification is real but
+unconventional — structural checks defined in a `README`, a bespoke harness, anything `init`'s
+detection tables have no row for. Phase 4 then leaves the block alone. Without it, detection
+correctly finds nothing and writes `null`, which means "checked, there is nothing" — so the
+execution skills report `skipped` and an unattended run skips verification on a repo that has it.
+**This repo uses the sentinel**, because its own checks are the four in **Verification** below.
 
 Run `init` to scaffold the file from detected repo state. It never overwrites an existing one.
 
