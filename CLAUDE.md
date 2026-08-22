@@ -84,9 +84,22 @@ Full data platform skills — covers the complete stack from ingestion and pipel
 
 ## Repo configuration
 
-Per-repo settings live in a committed `.hivrr.json`. The file is optional — a repo without one gets documented defaults, not errors. Precedence resolves **per key**: `.hivrr.json` → global `providerConfig` → hardcoded default.
+Per-repo settings live in a committed `.hivrr.json`. The file is optional — a repo without one gets documented defaults, not errors. Precedence resolves **per key**: `.hivrr.json` → global `providerConfig` → hardcoded default. `provider` and `issueTracker` resolve independently, so state both here rather than assuming one implies the other.
 
 Full schema, defaults, board operations, and Projects v2 ID resolution: `skill/init/references/config.md`.
+
+### This repo has no project board — deliberately
+
+`.hivrr.json` has no `project` key, and that is a decision rather than an oversight. Do not add one,
+and do not treat `init` Phase 5 skipping or `merge-pr` skipping its board update as something to fix.
+
+Board operations are documented as silent no-ops when `project` is absent, which is the correct
+behavior and the one this repo relies on. The consequence worth knowing: any feature whose output is
+a board rollup — the sub-issue epic rollup among them — is **display-only here**. The hierarchy is
+still real and still readable through the tracker; there is simply no board for it to roll up onto.
+
+If a board is wanted later, `skill/init/references/config.md` has the full sequence: create it, add
+`project.owner` and `project.number`, and run `init` to resolve and cache the IDs.
 
 ## Script policy
 

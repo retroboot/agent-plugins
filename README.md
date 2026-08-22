@@ -107,6 +107,7 @@ Per-repo settings live in a committed `.hivrr.json` at the repository root, so t
 ```json
 {
   "provider": "github",
+  "issueTracker": "github",
   "branches": {
     "integration": "dev",
     "ladder": ["dev", "staging", "main"],
@@ -129,13 +130,15 @@ Per-repo settings live in a committed `.hivrr.json` at the repository root, so t
 
 | Key | What it does | Default when absent |
 |---|---|---|
+| `provider` | Where the repo is hosted | global `providerConfig.repoProvider`, then the host in `git remote get-url origin` |
+| `issueTracker` | Where this repo's issues live — independent of `provider` | global `providerConfig.issueTracker`, then the resolved `provider` |
 | `branches.integration` | Branch that feature work forks from and targets | repo default branch |
 | `branches.ladder` | Environment rungs, lowest first. Drives `/promote` and promotion detection in `merge-pr` | `[default branch]` — promotion no-ops |
 | `branches.protected` | Branches that are never deleted or force-pushed | `main, master, dev, develop, staging, release/*` |
 | `project` | GitHub Projects v2 board wiring | absent — all board operations are silent no-ops |
 | `verify` | Test and lint commands, plus the files that justified them | model detects and offers to record |
 
-Precedence resolves **per key**, not per file: `.hivrr.json` → global `providerConfig` → hardcoded default. Note that writing `branches.protected` *replaces* the default set rather than extending it — omit the key unless you need to add a name the default does not cover.
+Precedence resolves **per key**, not per file: `.hivrr.json` → global `providerConfig` → hardcoded default. `provider` and `issueTracker` resolve independently, so a repo hosted on one provider can track its issues on another — and a repo that overrides only `provider` still takes its tracker from global config. Note that writing `branches.protected` *replaces* the default set rather than extending it — omit the key unless you need to add a name the default does not cover.
 
 Run `init` to scaffold the file from detected repo state. It never overwrites an existing one.
 

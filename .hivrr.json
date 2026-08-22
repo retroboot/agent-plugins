@@ -1,5 +1,6 @@
 {
   "provider": "github",
+  "issueTracker": "github",
   "branches": {
     "integration": "main",
     "ladder": ["main"]

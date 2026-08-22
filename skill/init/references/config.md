@@ -19,6 +19,7 @@ Global `providerConfig` survives for values that genuinely are user-shaped: `git
 ```json
 {
   "provider": "github",
+  "issueTracker": "github",
   "branches": {
     "integration": "dev",
     "ladder": ["dev", "staging", "main"],
@@ -47,7 +48,8 @@ Every top-level key is optional. A file containing only `{}` is valid and resolv
 
 | Key | Type | Default when absent | Read by |
 |---|---|---|---|
-| `provider` | `"github"` \| `"gitlab"` | global `providerConfig.repoProvider` | `session` |
+| `provider` | `"github"` \| `"gitlab"` | global `providerConfig.repoProvider`, then the host in `git remote get-url origin` | `session` |
+| `issueTracker` | `"github"` \| `"gitlab"` \| `"linear"` | global `providerConfig.issueTracker`, then the resolved `provider` | `session` |
 | `branches.integration` | string | repo default branch | `work-issue`, `wave` |
 | `branches.ladder` | string[] | `[default branch]` | `merge-pr`, `promote` |
 | `branches.protected` | string[] | `["main", "master", "dev", "develop", "staging", "release/*"]` | `merge-pr`, `core`, `promote` |
@@ -62,6 +64,23 @@ Every top-level key is optional. A file containing only `{}` is valid and resolv
 | `verify.detectedFrom` | string[] | — | `init` Phase 4 (staleness check) |
 
 A `verify` command recorded as `null` means "checked, this repo has nothing" — distinct from the key being absent, which means "never checked".
+
+### `provider` and `issueTracker`
+
+Two independent keys, because the two facts are independent: a repo hosted on one provider can
+track its issues on another. Resolve them **separately** through the precedence chain — a repo
+that sets only `provider` still takes its tracker from global config.
+
+Setting one and not the other is the case that goes wrong quietly. A repo whose `.hivrr.json`
+says `"provider": "github"` against a global config of `{"repoProvider": "gitlab",
+"issueTracker": "gitlab"}` resolves as a GitHub repo whose issues are read from GitLab —
+`session` loads `gitlab.md` and every issue command in it is aimed at the wrong host. Nothing
+errors; the commands simply address a tracker that does not hold the issues.
+
+`issueTracker` falls through to global `providerConfig.issueTracker` when absent, and to the
+**resolved `provider`** when that is absent too. A repo that states its provider and nothing else
+therefore tracks issues on that same provider, which is the common arrangement and the one worth
+getting for free.
 
 ### `branches.integration`
 

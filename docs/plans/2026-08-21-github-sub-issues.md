@@ -41,6 +41,12 @@ Consequence: every operation is raw `gh api`. That diverges from `github.md`, wh
 | **F** | **A sub-issue has exactly one parent.** Re-parenting is remove-then-add. | Enforced by the API — the `422` message states it outright. |
 | **G** | **All sub-issue failures warn and continue.** Never abort the calling workflow. | Identical reasoning to the board rule in `config.md`: hierarchy is a reporting surface, and the issues/PR are the deliverable. |
 
+**Note on this repo, following from decision C:** the epic rollup is display-only here in a second
+sense. This repo has no Projects v2 board — see **Repo configuration** in `CLAUDE.md`, where the
+absence is recorded as a decision — so there is no board for a rollup to surface on. The hierarchy
+itself is unaffected: parents, children, and `subIssuesSummary` are all real and readable through
+the tracker, and `merge-pr` still closes a satisfied parent. Only the board view is missing.
+
 ### The three-identifier trap
 
 This is the single most likely implementation defect, so it is stated once here and enforced in every task.

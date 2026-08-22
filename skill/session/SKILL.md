@@ -13,12 +13,30 @@ Load provider context for the current workflow. Reads the validated config writt
 
 ## Phase 1 — Read Config
 
-Read `~/.claude/settings.json` using the Read tool. Extract `providerConfig`:
+Two sources, resolved **per key**. Read both before resolving anything.
 
-- `repoProvider` — `github` | `gitlab`
-- `issueTracker` — `github` | `gitlab` | `linear`
+**Repo-local:** run the **Read steps** in [`config.md`](../init/references/config.md) against
+`.hivrr.json`. An absent file is normal — it means every key resolves from the fallback chain.
 
-Optional fields: `repoTarget`, `gitlabGroup`, `githubOrg`, `linearTeam`.
+**Global:** read `~/.claude/settings.json` using the Read tool and extract `providerConfig`.
+
+Then resolve each key by taking the first source that defines it:
+
+| Variable | `.hivrr.json` | then global `providerConfig` | then |
+|---|---|---|---|
+| `REPO_PROVIDER` | `provider` | `repoProvider` | the host in `git remote get-url origin` |
+| `ISSUE_TRACKER` | `issueTracker` | `issueTracker` | the resolved `REPO_PROVIDER` |
+
+**Resolve the two separately.** They are independent facts, and a repo that overrides one without
+the other is the case this precedence exists for: `.hivrr.json` saying `"provider": "github"`
+against a global config of `{"repoProvider": "gitlab", "issueTracker": "gitlab"}` must resolve to
+`provider=github tracker=gitlab` only if the repo genuinely tracks issues on GitLab. If it does
+not, the repo states `"issueTracker": "github"` and this phase honors it. Taking the tracker from
+global config regardless of `.hivrr.json` would load `gitlab.md` for a repo whose issues are on
+GitHub — every command correct in form and aimed at the wrong host.
+
+Global-only fields, which have no repo-local equivalent: `repoTarget`, `gitlabGroup`, `githubOrg`,
+`linearTeam`.
 
 Store: `REPO_PROVIDER`, `ISSUE_TRACKER`, `REPO_TARGET`, provider slugs.
 
