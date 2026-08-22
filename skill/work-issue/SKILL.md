@@ -175,11 +175,69 @@ Display: `Complexity: {simple|medium|complex}`
 ## Phase 5 — Create a Working Branch
 
 **Unified wave strategy:**
-Skip this phase — the `wave` skill creates and manages its own branch in Phase 8.
+Skip this phase — the `wave` skill creates and manages its own branch, and its own worktree, in its Step 2. `work-issue` loads it in Phase 7.
 
 Display: `Branch: wave skill will create`
 
 **Single issue or sequential strategy:**
+
+### Enter a worktree (conditional)
+
+Read `worktree` from `.hivrr.json`. **Skip this entire section** when `worktree.enabled` is absent
+or false — the session works in the current checkout exactly as before.
+
+`{branch}` below is `issue/{number}` here, and `wave/{min}-{max}-{count}` when `wave` Step 2 follows
+this section. Nothing else differs between the two callers.
+
+Before entering, confirm the repo's `CLAUDE.md` authorizes it (see **Adopting worktrees** in
+[`config.md`](../init/references/config.md)). If the config key is set but the authorization line is
+absent, warn once and continue **without** a worktree:
+
+`Worktree: enabled in .hivrr.json but not authorized in CLAUDE.md — continuing in the current checkout`
+
+**Check for an existing worktree first.** Git refuses to check one branch out in two worktrees —
+`fatal: '{branch}' is already used by worktree at '…'` — so a resumed run must re-enter its own
+rather than create a second. This is a hard error, not a degraded path, which is why the check comes
+before the create:
+
+```bash
+git worktree list --porcelain
+```
+
+- **An entry already holds `{branch}`** — re-enter it with `EnterWorktree` using its `path`, then go
+  straight to the branch logic below. Skip the re-point, the carry, and the setup: all three ran on
+  creation.
+- **No entry holds it** — create one with `EnterWorktree` named `{branch}`, then continue with the
+  three steps below.
+
+**Re-point the branch — on creation only.** Skip this when you re-entered an existing worktree
+above. That branch already carries the earlier session's commits, and `checkout -B` would reset it
+to `origin/{integration}` and discard them — the same rule the resume paths below state in full.
+
+On creation, `EnterWorktree` forks per `worktree.baseRef`, whose default (`fresh`) forks from
+`origin/<default-branch>` — the wrong rung on a ladder repo, since `branches.integration` is `dev`
+and the default branch is `main`. This is the same class of defect
+[`github.md`](../session/references/github.md) already warns about for `gh pr create --base`.
+Re-point from inside the worktree rather than depending on a global setting every adopter would have
+to change:
+
+```bash
+git fetch origin {integration}
+git checkout -B {branch} origin/{integration}
+```
+
+Resolve `{integration}` exactly as the branch logic below does.
+
+**Carry untracked files — on creation only.** A worktree receives tracked files only. For each path
+in `worktree.carry`, copy it from the original checkout into the worktree — symlink it instead when
+it is a large directory such as `node_modules`. A path that does not exist in the source is a
+**warning**, not an error: a repo without a `.env` is normal.
+
+**Run setup — on creation only.** If `worktree.setup` is non-null, run it once inside the worktree.
+A non-zero exit is a **warning**: report the command and its exit code and continue. A worktree with
+missing dependencies is recoverable by hand; aborting loses the session.
+
+Display: `Worktree: {path} | branch: {branch} | carried: {n} | setup: ok | skipped | failed`
 
 Determine the **integration branch** — the branch feature work forks from. Read `branches.integration`
 from `.hivrr.json`; see [`config.md`](../init/references/config.md) for the read steps and per-key

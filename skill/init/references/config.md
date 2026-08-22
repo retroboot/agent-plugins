@@ -64,10 +64,10 @@ Every top-level key is optional. A file containing only `{}` is valid and resolv
 | `project.id` | string (`PVT_…`) | — | `gh project item-edit --project-id` |
 | `project.statusFieldId` | string (`PVTSSF_…`) | — | board status transitions |
 | `project.status.todo` \| `.inProgress` \| `.done` | string (option id) | — | board status transitions |
-| `worktree` | object \| absent | absent — no worktree behavior | `work-issue`, `wave`, `merge-pr`, `init` *(once #137, #138 land)* |
-| `worktree.enabled` | boolean | `false` | `work-issue`, `wave` *(once #137 lands)* |
-| `worktree.carry` | string[] | `[]` | `work-issue`, `wave` *(once #137 lands)* |
-| `worktree.setup` | string \| `null` | `null` | `work-issue`, `wave` *(once #137 lands)* |
+| `worktree` | object \| absent | absent — no worktree behavior | `work-issue`, `wave`; `merge-pr` and `init` *(once #138 lands)* |
+| `worktree.enabled` | boolean | `false` | `work-issue`, `wave` |
+| `worktree.carry` | string[] | `[]` | `work-issue`, `wave` |
+| `worktree.setup` | string \| `null` | `null` | `work-issue`, `wave` |
 | `verify.test` | string \| `null` | model detects, then offers to record | `work-issue`, `work-pr` |
 | `verify.lint` | string \| `null` | model detects, then offers to record | `work-issue`, `work-pr` |
 | `verify.detectedFrom` | string[] | — | `init` Phase 4 (staleness check) |
