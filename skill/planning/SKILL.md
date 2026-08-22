@@ -374,8 +374,8 @@ Display: `Plan Review: {status} | {n} issues found and fixed`
 **Stop here.** Present the proposed breakdown to the user:
 
 ```
-PLAN DRAFT
-──────────
+PLANNING DRAFT
+──────────────
 Complexity: {tier}
 Topic: {topic}
 Plan doc: docs/plans/{filename}.md

@@ -167,16 +167,30 @@ Or reference the local path during development:
 
 ## Verification
 
-This repo ships no shell scripts — see the script policy in `skill/core/SKILL.md`. Its product is JSON and Markdown, so verification is structural:
+This repo ships no shell scripts — see the script policy in `skill/core/SKILL.md`. Its product is JSON and Markdown, so verification is structural.
+
+Skills and commands resolve by different rules, so check them separately — a single `[ -e ]` test
+passes on a command entry that has lost its `.md`, and that command then fails to load silently.
+Let git enumerate the JSON files rather than listing them, so the check cannot drift from the repo:
 
 ```bash
 # every JSON file parses
-jq empty .hivrr.json .claude-plugin/marketplace.json
+jq empty $(git ls-files '*.json')
 
-# every registered skill and command resolves to a real path
-jq -r '.plugins[] | ((.skills // [])[], (.commands // [])[])' .claude-plugin/marketplace.json \
-  | while read -r p; do [ -e "$p" ] || echo "MISSING $p"; done
+# every registered skill is a directory holding a SKILL.md
+jq -r '.plugins[] | (.skills // [])[]' .claude-plugin/marketplace.json | sort -u \
+  | while read -r p; do [ -f "$p/SKILL.md" ] || echo "BAD SKILL $p"; done
+
+# every registered command is an existing .md file
+jq -r '.plugins[] | (.commands // [])[]' .claude-plugin/marketplace.json | sort -u \
+  | while read -r p; do
+      case "$p" in *.md) ;; *) echo "NO .md EXTENSION $p"; continue ;; esac
+      [ -f "$p" ] || echo "MISSING $p"
+    done
 ```
+
+Silence from all three means everything registered resolves. See **Path resolution** in `CLAUDE.md`
+for the contract these commands enforce.
 
 ## License
 
