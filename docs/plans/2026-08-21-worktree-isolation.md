@@ -111,10 +111,10 @@ Therefore adoption is **belt-and-braces**: the repo records `worktree.enabled` i
 | Modify | `skill/work-issue/SKILL.md:275` | Targeted staging; worktree entry in Phase 5 |
 | Modify | `skill/work-pr/SKILL.md:183` | Targeted staging |
 | Modify | `skill/planning/references/plan-writing.md:136` | Reconcile the staging rule wording |
-| Modify | `skill/init/SKILL.md` Phase 3–5 | Commit `.hivrr.json`; report orphan worktrees |
+| Modify | `skill/init/SKILL.md` — new Phases 6 and 7 | Commit `.hivrr.json`; report orphan worktrees. **Sibling phases, not steps inside Phase 5** — Phase 5 skips when `project` is absent |
 | Modify | `skill/init/references/config.md` | `worktree` key: schema, fields, failure modes |
 | Modify | `skill/wave/SKILL.md` Step 2 | Worktree-aware branch creation |
-| Modify | `skill/merge-pr/SKILL.md` Phase 6 | Exit → prune → delete ordering |
+| Modify | `skill/merge-pr/SKILL.md` Phase 9, Steps 1 and 2 | Exit → remove → prune → delete ordering; skip worktree-held branches in the stale-branch prune |
 | Modify | `CLAUDE.md` | Worktree opt-in sentence and the adopter snippet |
 
 ---
@@ -261,23 +261,37 @@ Expected: at least `1` in each file.
 
 ### Step 2: Commit `.hivrr.json` — branch: `fix/hivrr-config-sync`
 
-**Context brief:** `config.md:3` states `.hivrr.json` is committed and travels with the code, but `init` Phases 3, 4, and 5 write it without ever staging it — no phase mentions `git`. Until Step 1, blanket staging committed it accidentally into unrelated feature commits. **After Step 1 it will never be committed at all**, which is why this step is not optional and must not lag. `init` frequently runs while standing on a protected branch, and `core` forbids committing directly to those, so this step must distinguish the two cases rather than committing unconditionally.
+**Context brief:** `config.md:3` states `.hivrr.json` is committed and travels with the code, but `init` Phases 3, 4, and 5 write it without ever staging it — no phase mentions `git`. Until Step 1, blanket staging committed it accidentally into unrelated feature commits. **After Step 1 it will never be committed at all**, which is why this step is not optional and must not lag. `init` frequently runs while standing on a protected branch, and `core` forbids committing directly to those, so this step must distinguish the two cases rather than committing unconditionally. It also must not live inside Phase 5, which skips whenever `project` is absent — the boardless repos that skip would be precisely the ones left with an untracked config.
 
 **Dependencies:** Step 1 must be merged. See decision **B**.
 
 **Tasks:**
 
-- [ ] **Task 2.1 — Add a commit step to `init`**
+- [ ] **Task 2.1 — Add a commit phase to `init`**
 
-  Add a new step at the end of `skill/init/SKILL.md` Phase 5, after the project-ID caching, so it runs
-  once after every phase that may have written the file:
+  Add a **new top-level phase** to `skill/init/SKILL.md`, after Phase 5, so it runs once after every
+  phase that may have written the file.
+
+  **It must be a sibling of Phase 5, not a step inside it.** `init` Phase 5 opens with *"**Skip this
+  phase entirely** when `project` is absent from `.hivrr.json`"*, and a repo with no board is the
+  documented normal case — including this one. A commit step nested under Phase 5 would never run on
+  any boardless repo, which is exactly where an untracked `.hivrr.json` does the damage. Combined
+  with Step 1 removing the `git add -A` sweep, nesting it would deliver the silent regression
+  decision **B** exists to prevent while appearing to fix it.
+
+  Note also that Phase 5 has no `Step` subdivisions at all, and Phases 2–4 number theirs with bold
+  `**Step N —**` rather than `### Step N` headings — so there is nothing for a `### Step 4` to
+  continue from.
 
   ````markdown
-  ### Step 4 — Commit the config
+  ## Phase 6 — Reconcile the Config
 
   `.hivrr.json` is only useful if it travels with the code — an untracked config resolves to defaults
   for every teammate, agent, and CI runner, which is the failure this file exists to prevent. Phases
   3, 4, and 5 may all have written it, so reconcile once here rather than per phase.
+
+  This phase is gated on nothing but the file itself. It runs whether or not the repo has a project
+  board, a verify command, or a worktree.
 
   **Skip silently** when the file is unchanged:
 
@@ -326,7 +340,7 @@ Expected: at least `1` in each file.
   **Scaffolding** section:
 
   ```markdown
-  `init` Phase 5 Step 4 stages and commits `.hivrr.json` whenever a phase changed it — but **only on a
+  `init` Phase 6 stages and commits `.hivrr.json` whenever a phase changed it — but **only on a
   non-protected branch**. On a protected branch it stages the file and reports, because `core` forbids
   committing directly to protected branches and a setup phase is the wrong place to break that rule.
 
@@ -352,8 +366,15 @@ Expected: at least `1` in each file.
 
 **Verification:**
 
+Run: `grep -n "^## Phase 6 — Reconcile the Config" skill/init/SKILL.md`
+Expected: one hit — the phase is top-level, not nested under Phase 5.
+
 Run: `grep -n "protected" skill/init/SKILL.md`
-Expected: a hit in the new Phase 5 Step 4 covering the protected-branch branch of the logic.
+Expected: a hit inside the new Phase 6 covering the protected-branch branch of the logic.
+
+Run `init` on a repo whose `.hivrr.json` has **no** `project` key.
+Expected: Phase 5 reports nothing and Phase 6 still runs. This is the regression check for the
+nesting defect — a boardless repo is the common case, not an edge case.
 
 **Live check** — in a scratch clone with no `.hivrr.json`:
 
@@ -363,7 +384,7 @@ Expected: `INIT: .hivrr.json committed on {branch}`, and `git show --stat HEAD` 
 Run `init` while on `main`.
 Expected: `INIT: .hivrr.json staged — main is protected…`, and `git log -1` shows no new commit.
 
-**Exit criteria:** `init` never leaves a changed `.hivrr.json` untracked without saying so, never commits to a protected branch, never pushes, and never stages a second file alongside it.
+**Exit criteria:** `init` never leaves a changed `.hivrr.json` untracked without saying so, never commits to a protected branch, never pushes, and never stages a second file alongside it. The reconcile runs as a top-level phase, so it is reached on a repo with no project board — verify that case explicitly rather than assuming it.
 
 **Rollback:** `git revert` the commit. Already-committed configs stay committed and are correct.
 
@@ -620,7 +641,7 @@ Expected: the warning, and work proceeding in the main checkout.
 
 ### Step 5: Worktree cleanup — branch: `feat/worktree-cleanup`
 
-**Context brief:** `merge-pr` Phase 6 deletes the head branch subject to `branches.protected` and prunes stale local merged branches. Neither is aware of worktrees, and git makes the interaction hard-fail: a branch checked out in a worktree cannot be deleted, and a manually deleted worktree directory leaves a `prunable` entry that keeps blocking deletion until `git worktree prune` runs. Separately, an abandoned session leaves a worktree that nothing will ever notice; `init` already performs drift detection every run and is the natural place to report them. Nothing here deletes uncommitted work without an explicit decision.
+**Context brief:** `merge-pr` splits branch deletion across two phases. Phase 6 passes `--delete-branch` to the merge command, which removes the **remote** branch only; Phase 9 — Clean Up Branches does the local work, deleting the head branch in Step 1 and pruning stale local branches in Step 2, both subject to `branches.protected`. Only the Phase 9 commands are the ones git blocks, so this step targets Phase 9 and leaves Phase 6 alone. Neither phase is aware of worktrees today, and git makes the interaction hard-fail: a branch checked out in a worktree cannot be deleted, and a manually deleted worktree directory leaves a `prunable` entry that keeps blocking deletion until `git worktree prune` runs. Separately, an abandoned session leaves a worktree that nothing will ever notice; `init` already performs drift detection every run and is the natural place to report them. Nothing here deletes uncommitted work without an explicit decision.
 
 **Dependencies:** Step 3 must be merged. Independent of Step 4 — disjoint files.
 
@@ -628,7 +649,15 @@ Expected: the warning, and work proceeding in the main checkout.
 
 - [ ] **Task 5.1 — Teach `merge-pr` the cleanup ordering**
 
-  In `skill/merge-pr/SKILL.md` Phase 6, before the existing branch-deletion logic:
+  In `skill/merge-pr/SKILL.md` **Phase 9 — Clean Up Branches**, at the top of **Step 1**, before
+  `git branch -D {head_branch}`.
+
+  **Not Phase 6.** Phase 6 merges, and its only deletion is the `--delete-branch` /
+  `--remove-source-branch` flag on `gh pr merge` / `glab mr merge` — a **remote** deletion, which no
+  local worktree blocks. The refusal quoted below is a `git branch -D` error, and that command lives
+  in Phase 9 Step 1. Phase 6 evaluates the Branch Deletion Safety rules; Phase 9 acts on them and
+  skips when one tripped, so "then delete the branch, applying the existing rules unchanged" only has
+  a referent in Phase 9.
 
   ````markdown
   **Worktree cleanup runs before branch deletion — the order is enforced by git, not chosen.**
@@ -684,14 +713,38 @@ Expected: the warning, and work proceeding in the main checkout.
   Display: `Worktree: removed {path}` | `Worktree: left in place — uncommitted work` | nothing when none.
   ````
 
-- [ ] **Task 5.2 — Report orphan worktrees from `init`**
-
-  Add to `skill/init/SKILL.md` Phase 5, after the config commit step:
+  **Then cover Step 2 of the same phase.** Step 2 prunes stale local branches with `git branch -D` in
+  a loop, and any candidate may be held by *another* session's worktree — that session is still
+  working, so its worktree must not be touched. Add a fourth check to the ordered candidate list,
+  before the delete:
 
   ````markdown
-  ### Step 5 — Report orphan worktrees
+  **3 — Is it held by a worktree?** A branch checked out in any worktree cannot be deleted, and the
+  worktree may belong to a live session:
 
-  **Skip when `worktree` is absent from `.hivrr.json`.**
+  ```bash
+  git worktree list --porcelain
+  ```
+
+  Held → **keep it** and report as `kept: {branch} (held by worktree at {path})`. Never remove a
+  worktree this skill did not create in order to delete a branch; the head branch handled above is
+  the only worktree this phase acts on.
+  ````
+
+  This check is skipped along with the rest when `worktree` is absent from `.hivrr.json`.
+
+- [ ] **Task 5.2 — Report orphan worktrees from `init`**
+
+  Add a **new top-level phase** to `skill/init/SKILL.md`, after the Phase 6 added by Step 2.
+
+  Like Phase 6, it must be a sibling rather than a step inside Phase 5, which skips entirely when
+  `project` is absent. Nesting it there would mean a repo that configures `worktree` but has no
+  project board never hears about its orphans — and those two keys are independent.
+
+  ````markdown
+  ## Phase 7 — Report Orphan Worktrees
+
+  **Skip when `worktree` is absent from `.hivrr.json`.** This is the phase's only gate.
 
   An abandoned or crashed session leaves a worktree that nothing else will notice, and each one holds
   a branch that cannot be deleted while it exists. `init` runs on every command, which makes it the
@@ -739,10 +792,19 @@ Expected: the warning, and work proceeding in the main checkout.
 **Verification:**
 
 Run: `grep -n "worktree prune\|ExitWorktree" skill/merge-pr/SKILL.md`
-Expected: hits for both.
+Expected: hits for both, inside **Phase 9** — confirm with `sed -n '/^## Phase 9/,/^## Phase 10/p'`.
+
+Run: `sed -n '/^## Phase 6 — Merge/,/^## Phase 7/p' skill/merge-pr/SKILL.md | grep -c worktree`
+Expected: `0`. Phase 6 deletes only the remote branch and must stay untouched.
+
+Run: `grep -n "held by worktree" skill/merge-pr/SKILL.md`
+Expected: one hit, in Phase 9 Step 2's candidate checks.
+
+Run: `grep -n "^## Phase 7 — Report Orphan Worktrees" skill/init/SKILL.md`
+Expected: one hit — top-level, not nested under Phase 5.
 
 Run: `grep -n "orphan" skill/init/SKILL.md`
-Expected: a hit in the new Phase 5 Step 5.
+Expected: a hit inside the new Phase 7.
 
 **Live check** — in a scratch repo:
 
@@ -755,7 +817,7 @@ Expected: it stops and asks. The worktree still exists and the file is intact.
 Delete a worktree directory with `rm -rf`, then run any command.
 Expected: `INIT: 1 orphan worktree(s) … prunable`, and nothing removed.
 
-**Exit criteria:** `merge-pr` follows exit → remove → prune → delete, stops rather than forcing when uncommitted work exists, and never reports a merge as failed because cleanup failed. `init` reports orphans and removes nothing.
+**Exit criteria:** `merge-pr` Phase 9 follows exit → remove → prune → delete, keeps any stale branch held by another worktree, stops rather than forcing when uncommitted work exists, and never reports a merge as failed because cleanup failed. Phase 6 is unchanged. `init` reports orphans from a top-level phase that runs regardless of whether a project board is configured, and removes nothing.
 
 **Rollback:** `git revert` the commit. Worktrees accumulate again and branch deletion fails loudly rather than silently — no data is at risk.
 
@@ -774,6 +836,14 @@ Expected: `INIT: 1 orphan worktree(s) … prunable`, and nothing removed.
   network. But `.env` does not travel to a worktree except via `worktree.carry`, so the value carried
   in would be the *old* network name. Resolving this needs a decision about whether the name should be
   derived or pinned, and it belongs with the container work rather than here.
+- **Coordinating with the sub-issue plan.** `docs/plans/2026-08-21-github-sub-issues.md` Step 1 adds
+  an `issues` key to the same three anchors this plan's Step 3 touches: the `config.md` schema block,
+  the field table, and a `### {key}` subsection after `### project`. It also adds a row to the
+  `README.md` config table and a paragraph to `CLAUDE.md`. The two are independent in substance and
+  can land in either order, but **whichever lands second appends after the key the first one added**,
+  not after `project` — read the file before inserting rather than trusting the anchor named here.
+  Decision **E** already assumes `issues` exists as a precedent; it does not depend on it having
+  landed.
 - **Automatic orphan removal.** Decision **H**.
 - **`git add -A` in user repos' own scripts or CI.** Step 1 fixes the skills this repo ships. Anything
   a consuming repo runs itself is outside the plugin.
@@ -785,6 +855,7 @@ Expected: `INIT: 1 orphan worktree(s) … prunable`, and nothing removed.
 | Check | Result |
 |---|---|
 | Spec coverage | All three items raised — blanket staging, cleanup, config sync — have a step. Isolation itself spans Steps 3–5. |
+| Phase targeting | Verified against the current files rather than assumed: `init` Phase 5 skips when `project` is absent, so Steps 2 and 5 add **top-level** Phases 6 and 7. `merge-pr` Phase 6 deletes only the remote branch (`grep -c 'git branch -D'` → `0`); Phase 9 does the local deletion in both its steps (→ `2`), so Step 5 targets Phase 9. |
 | Placeholder scan | No TBD/TODO/vague steps. Every command is literal. |
 | Name consistency | `worktree.enabled`, `worktree.carry`, `worktree.setup` used identically across Steps 3, 4, and 5. Branch and worktree names match (`issue/{N}`, `wave/{min}-{max}-{count}`). |
 | Allowed APIs | Every git mechanic was executed on 2026-08-21: the delete/double-checkout refusals, the dirty-remove refusal, the prunable-then-prune sequence, and the `checkout -B` re-point. Tool contracts quoted from `EnterWorktree`/`ExitWorktree`. |

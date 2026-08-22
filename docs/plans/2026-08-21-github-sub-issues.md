@@ -327,10 +327,12 @@ Step 1 is the hard gate: Steps 2 and 3 both consume commands that only exist onc
   Expected: no output from either command.
 
   Confirm every fenced block in the new section is balanced — the `github.md` addition nests fenced
-  blocks inside a fenced block, which is the most likely place for this step to break rendering:
+  blocks inside a fenced block, which is the most likely place for this step to break rendering.
+  Match indented fences too: the nested inner blocks sit two spaces in, so a pattern anchored at
+  column zero would skip exactly the ones this check exists to count:
 
   ```bash
-  awk '/^```/{n++} END{print n" fence markers — must be even"}' skill/session/references/github.md
+  awk '/^ *`{3,}/{n++} END{print n" fence lines — must be even"}' skill/session/references/github.md
   ```
 
   Expected: an even count.
@@ -390,14 +392,21 @@ Expected: at least one hit in each of the three files.
   the behavior this skill had before hierarchy existed.
   ```
 
-  Extend the `excluded` contract in Phase 4 so the new exclusion reason is machine-readable. The
-  existing key already maps issue-number strings to a reason; `Epic` joins `In Progress` and `Done`:
+  Extend the `excluded` contract in Phase 4 so the new exclusion reason is machine-readable. Replace
+  the paragraph at `skill/group-issues/SKILL.md:131` in full — both of its current sentences become
+  false once epics can populate the key:
 
   ```markdown
   `excluded` maps issue number strings to the reason that caused the exclusion — a board status
-  (`In Progress`, `Done`) or `Epic` for a parent dropped by Step 1. **Omit the key entirely when
-  nothing was excluded.**
+  (`In Progress`, `Done`) or `Epic` for a parent dropped by Phase 3 Step 1. **Omit the key entirely
+  when nothing was excluded.** Its presence means something was filtered; it no longer implies that
+  the board filter specifically ran, because an epic is excluded whether or not a board is
+  configured.
   ```
+
+  **Widen the emission trigger too.** `:127` currently reads *"When Phase 2 excluded issues, add the
+  `excluded` key"* — but epic exclusion happens in **Phase 3** Step 1, so under the current wording it
+  never reaches the JSON. Change it to *"When Phase 2 or Phase 3 excluded issues"*.
 
 - [ ] **Task 2.2 — `score-issues`: exclude epics**
 
@@ -412,6 +421,45 @@ Expected: at least one hit in each of the three files.
   Skip this entirely when `issues.hierarchy` is disabled or absent. If the hierarchy query fails,
   warn and score every issue — the same fallback as an unconfigured board. Losing the filter
   degrades the result; aborting destroys it.
+  ```
+
+  **Then rewrite the `excluded` contract, exactly as Task 2.1 does for `group-issues`.** This is not
+  optional cleanup: `score-issues` and `group-issues` emit the same `excluded` shape in their
+  `RESULT_JSON`, and adding `Epic` to one skill's values while leaving the other skill's contract text
+  untouched is how the two silently diverge. `skill/score-issues/SKILL.md:110` currently reads:
+
+  > `excluded` maps issue number strings to the **board status** that caused the exclusion. **Omit the
+  > key entirely when nothing was excluded** — including when no board is configured — so **its
+  > presence always means the board filter actually ran**.
+
+  Both bolded claims become false — the values are no longer only board statuses, and the key can now
+  appear on a repo with no board at all. A dispatcher reading presence-implies-board-ran would get a
+  correct answer from `group-issues` and a wrong one from `score-issues`. Replace it with the same
+  wording used in Task 2.1, changing only the phase reference:
+
+  ```markdown
+  `excluded` maps issue number strings to the reason that caused the exclusion — a board status
+  (`In Progress`, `Done`) or `Epic` for a parent with children. **Omit the key entirely when nothing
+  was excluded.** Its presence means something was filtered; it no longer implies that the board
+  filter specifically ran, because an epic is excluded whether or not a board is configured.
+  ```
+
+  The two paragraphs must stay byte-identical apart from that phase reference. If they drift again,
+  the duplication check from the verify-extraction plan is the mechanism that would catch it.
+
+  **Finally, fix the display label in both skills.** `skill/score-issues/SKILL.md:48` and
+  `skill/group-issues/SKILL.md:47` both print:
+
+  ```
+  Excluded (board): #123 In Progress, #456 Done
+  ```
+
+  Once epics populate the same list the `(board)` parenthetical misreports the reason on screen even
+  where the JSON is right. Drop it and carry the reason per entry, which the `excluded` map already
+  holds:
+
+  ```
+  Excluded: #123 In Progress, #456 Done, #789 Epic
   ```
 
 - [ ] **Task 2.3 — `work-issue`: warn when handed an epic**
@@ -694,6 +742,12 @@ Recorded so they are not mistaken for oversights:
 - **Nesting beyond one level.** GitHub supports nesting, but every consumer here treats hierarchy as exactly two levels — epic and child. Deeper trees are not read and not created.
 - **`wave`.** It receives an ordered issue list from its caller and never fetches relationships itself, so it needs no change. Sibling grouping happens upstream in `group-issues`.
 - **The two `init` gaps** in the Context section — the missing `issueTracker` override in `.hivrr.json`, and this repo's `verify` values being `null` against a README that defines real checks. Gap 1 will suppress hierarchy on this repo until it is fixed; it is a prerequisite in practice, and deliberately not bundled here.
+- **Coordinating with the worktree plan.** `docs/plans/2026-08-21-worktree-isolation.md` Step 3 adds a
+  `worktree` key to the same three anchors this plan's Step 1 touches: the `config.md` schema block,
+  the field table, and a `### {key}` subsection after `### project`. It also adds a row to the
+  `README.md` config table and a paragraph to `CLAUDE.md`. The two are independent in substance and
+  can land in either order, but **whichever lands second appends after the key the first one added**,
+  not after `project` — read the file before inserting rather than trusting the anchor named here.
 
 ---
 

@@ -13,7 +13,17 @@
 
 ## Context: what was measured
 
-`work-issue` and `work-pr` share **19 byte-identical substantial lines**, verified with `grep -Fxf`. The verify block is nearly all of them.
+`work-issue` and `work-pr` share identical lines, measured with `grep -Fxf`. State the threshold with
+the count, because the plan verifies at a different one than it headlines with:
+
+| Threshold | Shared lines | Of those, verify-block |
+|---|---|---|
+| `length > 40` | 19 | 7 |
+| `length > 60` — **the threshold the shipped check uses** | 13 | 6 |
+
+So the raw check sees 13 lines, six of which the extraction removes and **seven of which it does
+not** — those seven are correctly shared and go in an allowlist, which is what lets the check reach
+green. Task 1 sets that up; Task 5 asserts it.
 
 Identical in both files today:
 
@@ -85,7 +95,8 @@ An issue has acceptance criteria; a PR has review feedback. Merging these into o
 | Create | `skill/init/references/verify.md` | The shared verify procedure — the single definition |
 | Modify | `skill/work-issue/SKILL.md:216-253` | Link to the reference; keep issue-specific review questions |
 | Modify | `skill/work-pr/SKILL.md:130-160` | Link to the reference; keep feedback-specific review questions |
-| Modify | `README.md` | Third structural check: assert the block is not duplicated |
+| Create | `docs/shared-lines-allowlist.txt` | The seven lines the two skills are meant to share — data, not a script |
+| Modify | `README.md` | Third structural check: assert nothing outside the allowlist is duplicated |
 
 ---
 
@@ -96,16 +107,48 @@ An issue has acceptance criteria; a PR has review feedback. Merging these into o
 The repo's product is Markdown, so the "failing test" is a `grep` that proves the duplication exists. Writing it first means the extraction has something to satisfy rather than something to claim.
 
 **Files:**
+- Create: `docs/shared-lines-allowlist.txt`
 - Modify: `README.md` (Verification section, after the existing two checks)
 
-- [ ] **Step 1: Add the check to the README**
+**A bare `grep -Fxf` can never go green, so the check needs an allowlist.** Six of the thirteen
+shared lines over 60 characters are the verify block; the other seven are the `--auto` handling, the
+dirty-tree warning, the simple-task skip, and two framing lines. Those seven are *correctly* shared —
+the two skills genuinely take the same flag and give the same warning — and no length threshold
+separates them from the verify block, because the dirty-tree warning is longer than most verify
+lines. A check that counts them as failures would report `DUPLICATED` forever and be ignored within
+a week, which is worse than no check.
+
+So the allowlist holds the seven reviewed lines and nothing else. The verify block is deliberately
+**not** in it, which is what makes the check fail in Step 2 and pass in Task 5.
+
+- [ ] **Step 1: Write the allowlist**
+
+  Create `docs/shared-lines-allowlist.txt` with exactly these seven lines — each one a line that both
+  skills carry today and should keep carrying:
+
+  ```
+  Before starting: read this entire skill, then create a focused todo list, then execute.
+  - An optional `--auto` flag to skip the user approval checkpoint
+  If `--auto` is set and you're unsure, default to `medium` and continue.
+  If `--auto` is not set and you're genuinely unsure, ask the user one focused question.
+  If it reports anything, display `WARNING: Working tree has uncommitted changes — continuing anyway` and continue. This is a warning, not a guard — do not stash, reset, or discard the changes.
+  For **simple** tasks: skip this phase, go straight to implementing.
+  Emit the completion JSON as defined in the command's Output section.
+  ```
+
+  It is data, not a script — no shebang, no logic. Adding a line to it is a reviewable act that says
+  "these two skills should say this same thing," which is the judgment the check exists to force.
+
+- [ ] **Step 2: Add the check to the README**
 
   In `README.md`, inside the Verification section's `bash` block, after the two existing checks:
 
   ```bash
   # no skill duplicates another skill's procedure verbatim
   grep -Fxf skill/work-pr/SKILL.md skill/work-issue/SKILL.md \
-    | awk 'length > 60' | grep . && echo "DUPLICATED — extract to a shared reference" || true
+    | awk 'length > 60' \
+    | grep -vFxf docs/shared-lines-allowlist.txt \
+    | grep . && echo "DUPLICATED — extract to a shared reference" || true
   ```
 
   Add this sentence beneath the block:
@@ -113,24 +156,28 @@ The repo's product is Markdown, so the "failing test" is a `grep` that proves th
   ```markdown
   The third check guards against the failure the first two cannot see: two skills carrying the same
   procedure in prose. Markdown that parses and resolves is still wrong if it says the same thing
-  twice and the two copies disagree.
+  twice and the two copies disagree. `docs/shared-lines-allowlist.txt` holds the lines the two
+  execution skills are *meant* to share — a flag, a warning, a framing sentence. Adding a line to it
+  is a deliberate claim that the duplication is correct; if you cannot make that claim, extract the
+  line into a reference instead.
   ```
 
-- [ ] **Step 2: Run it and confirm it FAILS**
+- [ ] **Step 3: Run it and confirm it FAILS**
 
   Run:
   ```bash
-  grep -Fxf skill/work-pr/SKILL.md skill/work-issue/SKILL.md | awk 'length > 60' | grep . \
+  grep -Fxf skill/work-pr/SKILL.md skill/work-issue/SKILL.md | awk 'length > 60' \
+    | grep -vFxf docs/shared-lines-allowlist.txt | grep . \
     && echo "DUPLICATED" || echo "clean"
   ```
 
-  Expected: `DUPLICATED`, preceded by the shared lines — the verify paragraphs among them.
-  This is the failing state the rest of the plan removes.
+  Expected: `DUPLICATED`, preceded by **six** lines — the verify block, and nothing else. If a
+  seventh line appears, the allowlist and the skills have drifted; reconcile before continuing.
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 4: Commit**
 
   ```bash
-  git add README.md
+  git add README.md docs/shared-lines-allowlist.txt
   git commit -m "test: add duplication check for shared skill procedures"
   ```
 
@@ -226,7 +273,7 @@ The repo's product is Markdown, so the "failing test" is a `grep` that proves th
   Run:
   ```bash
   test -f skill/init/references/verify.md && wc -l skill/init/references/verify.md
-  awk '/^ *```/{n++} END{print n" fence markers — must be even"}' skill/init/references/verify.md
+  awk '/^ *`{3,}/{n++} END{print n" fence lines — must be even"}' skill/init/references/verify.md
   ```
 
   Expected: the file exists, and an even fence count.
@@ -335,12 +382,29 @@ The repo's product is Markdown, so the "failing test" is a `grep` that proves th
     && echo "DUPLICATED" || echo "clean"
   ```
 
-  Expected: `clean`.
+  Expected: `clean`. This is reachable only because the seven correctly-shared lines are allowlisted
+  in Task 1 — without that file the check would report the `--auto` handling and the dirty-tree
+  warning forever.
 
-  **If any long shared lines remain**, read them before deleting anything. A line shared by both
-  skills is not automatically duplication — a genuinely common instruction that belongs in both is
-  fine. Judge each survivor; if it is shared procedure, move it into `verify.md`, and if it is
-  coincidental phrasing, raise the `awk` length threshold and record why in the README sentence.
+  Assert the two halves separately, so a green result cannot come from an over-broad allowlist:
+
+  ```bash
+  # a) no verify-block line survives in either skill
+  grep -Fxf skill/work-pr/SKILL.md skill/work-issue/SKILL.md \
+    | grep -c "show its real output\|verify\.\|3 attempts\|pass|fail|skipped"
+
+  # b) the allowlist did not grow
+  wc -l < docs/shared-lines-allowlist.txt
+  ```
+
+  Expected: `0` for (a), `7` for (b).
+
+  **If an unexpected line appears**, read it before deleting anything. A line shared by both skills is
+  not automatically duplication — a genuinely common instruction that belongs in both is fine. Judge
+  each survivor; if it is shared procedure, move it into `verify.md`, and if it is a deliberate
+  commonality, add it to the allowlist and say why in the same commit. Never widen the `awk`
+  threshold to make the check pass: that hides future duplication silently, which is the failure the
+  check exists to catch.
 
 - [ ] **Step 2: Repo structural verification**
 
@@ -380,7 +444,8 @@ The repo's product is Markdown, so the "failing test" is a `grep` that proves th
 
 | Check | Command | Expected |
 |---|---|---|
-| Duplication gone | `grep -Fxf skill/work-pr/SKILL.md skill/work-issue/SKILL.md \| awk 'length>60'` | no output |
+| Duplication gone | `grep -Fxf skill/work-pr/SKILL.md skill/work-issue/SKILL.md \| awk 'length>60' \| grep -vFxf docs/shared-lines-allowlist.txt` | no output |
+| Allowlist did not grow | `wc -l < docs/shared-lines-allowlist.txt` | `7` |
 | Links resolve | `test -e skill/work-issue/../init/references/verify.md` | exit 0 |
 | JSON parses | `jq empty .hivrr.json .claude-plugin/marketplace.json` | no output |
 | Registered paths exist | the `marketplace.json` loop | no output |
@@ -390,10 +455,12 @@ The repo's product is Markdown, so the "failing test" is a `grep` that proves th
 
 ## Out of scope
 
-- **Extracting anything else.** The other 13 shared lines between the two skills — the `--auto`
-  handling, the uncommitted-changes warning, the "skip this phase for simple tasks" line — are
-  individually short and contextual. They are worth a second look *after* this lands and the check is
-  in place, not bundled into it.
+- **Extracting anything else.** The **seven** remaining shared lines over 60 characters — the
+  `--auto` handling, the uncommitted-changes warning, the "skip this phase for simple tasks" line,
+  and two framing sentences — are contextual rather than procedural: each is a single sentence that
+  reads correctly in both skills and has no body to diverge from. They are not *short* (all seven
+  trip the 60-character threshold, which is why they need the allowlist rather than a length tweak),
+  and they are worth a second look *after* this lands and the check is in place, not bundled into it.
 - **`merge-pr`'s inline "Branch Deletion Safety" block** (`merge-pr:37`). It is a strong extraction
   candidate for the same reasons and is already cross-linked from `github.md`, but it has one
   consumer, so it is refactoring rather than de-duplication.
@@ -408,9 +475,9 @@ The repo's product is Markdown, so the "failing test" is a `grep` that proves th
 
 | Check | Result |
 |---|---|
-| Spec coverage | The shared block is defined once and consumed twice; the check proves it. |
+| Spec coverage | The shared block is defined once and consumed twice; the check proves it, and reaches green rather than reporting a permanent known failure. |
 | Placeholder scan | No TBD/TODO. Every command is literal; the reference content is given in full, not described. |
 | Name consistency | `verify.md`, `verify.test`, `verify.lint` used identically throughout. Phase numbers match each skill's actual numbering — `work-issue` Phase 8, `work-pr` Phase 7. |
-| Allowed APIs | `grep -Fxf`, `awk`, `jq`, `test -e` only. The 19-line duplication count and the four consumer sites were measured, not estimated. |
-| Commit coverage | Five tasks, five commits, each staging only its own files. |
+| Allowed APIs | `grep -Fxf`, `grep -vFxf`, `awk`, `jq`, `wc`, `test -e` only. Both duplication counts were measured at their stated thresholds — 19 at `>40`, 13 at `>60` — as were the four consumer sites. |
+| Commit coverage | Five tasks, five commits, each staging only its own files. Task 1 stages two: the README and the allowlist it depends on. |
 | Ordering | Task 1 must precede Tasks 3–4 so the check exists in its failing state first. Task 2 must precede 3 and 4 so the link target exists. |
