@@ -106,6 +106,11 @@ session/{SESSION_UUID}/decisions   architectural choices made during decompositi
 **Local file fallback:** `.ai/session/{SESSION_UUID}/plan.md`, written by the `planning` skill when
 memory was unavailable to it. See Phase 12 of the `planning` skill for what writes these.
 
+The fallback is not lossless. `planning` writes the three keys above separately to memory but
+collapses its file fallback into a single `plan.md` holding the plan and PRD content, so
+`decisions` may be absent when reading from disk. Treat that as a missing key — the warn-and-continue
+rule below already covers it — rather than as a read failure.
+
 Hold the result as `session_context` and carry it through Phase 6 planning and Phase 7
 implementation. It is context, not instruction: where `session_context` and the issue body conflict,
 the issue body wins — it is the more recent statement of intent.
@@ -399,19 +404,30 @@ once per issue in the group, using the same `task_id` resolved in Phase 3:
 ```
 session/{SESSION_UUID}/task/{task_id}/status = "complete"
 session/{SESSION_UUID}/task/{task_id}/result = {
-  pr_url,          the PR/MR URL from Phase 11
+  pr_url,          the PR/MR that closed this issue — see the pairing rule below
   pr_number,
   summary,         what changed and why, a few sentences
-  files_changed,   the paths, from git diff --name-only against the base
+  files_changed,   git diff --name-only origin/{integration}...HEAD
   key_decisions    choices made during implementation that the issue did not specify
 }
 ```
 
+`files_changed` needs the explicit range. By this phase the work is committed and pushed, so a bare
+`git diff --name-only` compares the working tree against `HEAD` and reports nothing — an empty list
+that reads as a successful write rather than a failed one.
+
 **Local file fallback:** `.ai/session/{SESSION_UUID}/task/{task_id}/result.json`
 
-On a wave, every issue in the group gets `status = "complete"` and the same `pr_url` — one PR closes
-them all. Give each its own `summary` and `key_decisions` covering that issue's slice of the change;
-a shared summary repeated N times tells the session nothing it did not already know from the plan.
+**Pair each task with the PR that actually closed it.** The two multi-issue strategies differ here:
+
+- **Unified (wave)** — one PR closes the whole group, so every task shares the same `pr_url`.
+- **Sequential** — each issue went through Phase 11 separately and has its own PR. Pair each
+  `task_id` with that issue's PR, **not** with the most recently created one. Writing the last URL
+  across all of them would mark every task complete against a PR that does not contain its work,
+  and nothing downstream could detect that.
+
+Give each issue its own `summary` and `key_decisions` covering that issue's slice of the change; a
+shared summary repeated N times tells the session nothing it did not already know from the plan.
 
 `key_decisions` is the field worth care. Phase 7 resolves style, naming, and test-shape questions
 autonomously and does not otherwise record that it did. This is where those resolutions become
