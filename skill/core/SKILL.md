@@ -60,6 +60,13 @@ Every staged path must be one this run touched. **If an unexpected path appears,
 it** — it means another session is writing to this checkout, which is the exact condition worktree
 isolation exists to prevent. Do not unstage and continue silently.
 
+**Read the untracked entries too, not just the staged ones.** `git status --short` marks them `??`,
+and they are the only signal left once staging is explicit: a path this run never named cannot reach
+the index, so an unexpected `??` is what a concurrent session now looks like. This is what makes a
+repo that adopts worktrees without gitignoring `.claude/` stop here — the worktree it just created
+is an untracked directory. Treat an unexpected `??` the same as an unexpected staged path: stop and
+report, do not delete it and do not commit around it.
+
 Staging one file is not the same as committing one file. A bare `git commit` commits the **whole
 index**, including anything staged before this run started, so a phase that commits a single known
 path must pass that path as a pathspec too:

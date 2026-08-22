@@ -9,7 +9,9 @@ compatibility: opencode
 
 Ensure provider config, labels, repo config, and verify commands are in place before any workflow runs. Called once per command.
 
-**Phase contract — read this before anything else.** The five phases run **in order, every time**. A phase that finds its work already done reports and **continues to the next phase**; it does not end the skill. Only an unrecoverable error stops `init`.
+**Phase contract — read this before anything else.** The seven phases run **in order, every time**. A phase that finds its work already done reports and **continues to the next phase**; it does not end the skill. Only an unrecoverable error stops `init`.
+
+**The count in that sentence is load-bearing.** It is what tells you the run is not finished, so a wrong number truncates the skill silently — stopping after Phase 5 would skip Phase 6, which is what commits `.hivrr.json`. Nothing verifies it. If you add or remove a phase here, update this line, the `init` row in `README.md`, and the `init` bullet under **Shared setup skills** in `CLAUDE.md` in the same commit.
 
 "Idempotent" here means each phase is cheap and safe to re-run, not that the skill exits early. Phase 4 in particular exists to catch repo drift and is worthless if an earlier phase short-circuits past it.
 
@@ -400,9 +402,9 @@ git branch -vv | grep ': gone]'
 ```
 
 **Do not use `git branch --merged` here.** Under squash merges — this plugin's default strategy, and
-what `merge-pr` Phase 9 Step 2 documents at length — a merged branch shares no commit with the base,
-so `--merged` returns nothing for exactly the branches this phase most needs to find. The failure is
-silent: an empty result is indistinguishable from "no merged orphans".
+what `merge-pr` documents at length where it cleans up branches — a merged branch shares no commit
+with the base, so `--merged` returns nothing for exactly the branches this phase most needs to find.
+The failure is silent: an empty result is indistinguishable from "no merged orphans".
 
 `: gone]` means the remote ref disappeared, **not** that the work landed — a closed-unmerged PR and a
 force-pushed rename produce the same signature. `merge-pr` treats that ambiguity as a reason to

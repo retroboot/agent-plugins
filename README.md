@@ -27,7 +27,7 @@ The plugin is split into five focused packages:
 
 | Skill | Description |
 |-------|-------------|
-| `init` | One-time setup — provider config, repo labels, `.hivrr.json` scaffold, verify commands, project board IDs |
+| `init` | One-time setup — provider config, repo labels, `.hivrr.json` scaffold, verify commands, project board IDs, config reconciliation, orphan-worktree reporting |
 | `session` | Loads config and the active provider reference for the session |
 | `core` | Coding philosophy — quality gates, git safety, script policy, and task completion standards |
 | `work-issue` | Implement an issue end-to-end and open a PR/MR |
@@ -244,7 +244,9 @@ of them — `planner` and `dispatcher` — do not carry `core`. **Load order is 
 inline.** A plugin install contains only the skills its `marketplace.json` entry names, so
 reordering the bootstrap to load `core` before `init` would still leave `../core/SKILL.md`
 unresolvable in two installs out of three. Do not "fix" either copy into a link; the way to remove
-one is to add `./skill/core` to the plugin that needs it.
+one is to add `./skill/core` to the plugin that needs it — and, if the rule has to be *in context*
+rather than merely reachable, to load it before the skill that cites it. Packaging is what makes the
+link resolve; bootstrap order is what makes it free.
 
 Where those inline copies point at other skills, keep the reference **phase-agnostic** — "the commit
 phases of `work-issue` and `work-pr`", not "Phase 10 and Phase 9". Phase numbers are hand-maintained

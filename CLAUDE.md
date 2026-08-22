@@ -92,7 +92,7 @@ Full data platform — data science, engineering, analysis, AI engineering, Snow
 
 `init` and `session` are included by `dev`, `planner`, and `dispatcher`, and every command loads them before its main skill.
 
-- **`init`** — five ordered phases: provider config, repo labels, `.hivrr.json` scaffold, verify-command detection, and project board ID resolution. The phases run **in order, every time**; a phase with nothing to do reports and continues rather than ending the skill.
+- **`init`** — seven ordered phases: provider config, repo labels, `.hivrr.json` scaffold, verify-command detection, project board ID resolution, config reconciliation, and orphan-worktree reporting. The phases run **in order, every time**; a phase with nothing to do reports and continues rather than ending the skill. Keep the count and the list here matching the `## Phase` headings in `skill/init/SKILL.md` and the `init` row in `README.md` — nothing checks them, and a count that reads low tells an agent the run is over before it is.
 - **`session`** — reads config and loads the active provider reference for the session.
 
 ## Repo configuration
@@ -112,7 +112,8 @@ Full schema, defaults, board operations, and Projects v2 ID resolution: `skill/i
 ### This repo has no project board — deliberately
 
 `.hivrr.json` has no `project` key, and that is a decision rather than an oversight. Do not add one,
-and do not treat `init` Phase 5 skipping or `merge-pr` skipping its board update as something to fix.
+and do not treat `init` skipping project-board resolution or `merge-pr` skipping its board update as
+something to fix.
 
 Board operations are documented as silent no-ops when `project` is absent, which is the correct
 behavior and the one this repo relies on. The consequence worth knowing: any feature whose output is
@@ -130,8 +131,9 @@ each other's changes. It is opt-in per repo and needs two things: `worktree.enab
 tool. One without the other silently does nothing.
 
 Worktrees live under `.claude/worktrees/`, so an adopting repo needs `.claude/` in its `.gitignore`
-as well — otherwise the worktree shows up as an untracked path and the commit phase of `work-issue`
-stops on it, reporting a concurrent session that is not there. This repo already ignores `.claude/`.
+as well — otherwise the worktree shows up as an untracked `??` entry in the pre-commit
+`git status --short` check, and the commit phase of `work-issue` stops on it, reporting a concurrent
+session that is not there. This repo already ignores `.claude/`.
 
 They are **not** free — untracked files do not travel, and they must be cleaned up. See
 `skill/init/references/config.md`.
