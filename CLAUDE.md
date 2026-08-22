@@ -108,8 +108,12 @@ each other's changes. It is opt-in per repo and needs two things: `worktree.enab
 `.hivrr.json`, and a line in the repo's own `CLAUDE.md` authorizing the harness `EnterWorktree`
 tool. One without the other silently does nothing.
 
-Worktrees live under `.claude/worktrees/`, which is already gitignored. They are **not** free —
-untracked files do not travel, and they must be cleaned up. See `skill/init/references/config.md`.
+Worktrees live under `.claude/worktrees/`, so an adopting repo needs `.claude/` in its `.gitignore`
+as well — otherwise the worktree shows up as an untracked path and `work-issue` Phase 10 stops on
+it, reporting a concurrent session that is not there. This repo already ignores `.claude/`.
+
+They are **not** free — untracked files do not travel, and they must be cleaned up. See
+`skill/init/references/config.md`.
 
 **This repo does not enable it.** `agent-plugins` has no dependencies, no `.env`, and its sessions
 edit Markdown rather than running a stack, so the setup cost buys nothing here. Do not add the key

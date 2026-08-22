@@ -64,10 +64,10 @@ Every top-level key is optional. A file containing only `{}` is valid and resolv
 | `project.id` | string (`PVT_…`) | — | `gh project item-edit --project-id` |
 | `project.statusFieldId` | string (`PVTSSF_…`) | — | board status transitions |
 | `project.status.todo` \| `.inProgress` \| `.done` | string (option id) | — | board status transitions |
-| `worktree` | object \| absent | absent — no worktree behavior | `work-issue`, `wave`, `merge-pr`, `init` |
-| `worktree.enabled` | boolean | `false` | `work-issue`, `wave` |
-| `worktree.carry` | string[] | `[]` | `work-issue`, `wave` |
-| `worktree.setup` | string \| `null` | `null` | `work-issue`, `wave` |
+| `worktree` | object \| absent | absent — no worktree behavior | `work-issue`, `wave`, `merge-pr`, `init` *(once #137, #138 land)* |
+| `worktree.enabled` | boolean | `false` | `work-issue`, `wave` *(once #137 lands)* |
+| `worktree.carry` | string[] | `[]` | `work-issue`, `wave` *(once #137 lands)* |
+| `worktree.setup` | string \| `null` | `null` | `work-issue`, `wave` *(once #137 lands)* |
 | `verify.test` | string \| `null` | model detects, then offers to record | `work-issue`, `work-pr` |
 | `verify.lint` | string \| `null` | model detects, then offers to record | `work-issue`, `work-pr` |
 | `verify.detectedFrom` | string[] | — | `init` Phase 4 (staleness check) |
@@ -154,7 +154,17 @@ A repo opts in with **both** of these:
    > Mutating agent work (`/work-issue`, `/wave`) runs in a git worktree. Use `EnterWorktree` at
    > the start of those workflows and clean up per `merge-pr`.
 
-The `.hivrr.json` key carries the settings; the CLAUDE.md line is what authorizes the tool.
+3. `.claude/` in the repo's `.gitignore`. Worktrees are created under `.claude/worktrees/`, and if
+   that path is not ignored it shows up as an untracked directory — which `work-issue` Phase 10 and
+   `work-pr` Phase 9 treat as evidence of a concurrent session and **stop on**. The workflow then
+   halts on its own worktree and reports the wrong cause.
+
+The `.hivrr.json` key carries the settings; the CLAUDE.md line is what authorizes the tool; the
+`.gitignore` entry is what keeps the worktree invisible to the staging check.
+
+Do not assume the third is already true. `.claude/` being gitignored is a convention, not a
+guarantee — and `carry`'s default list names `.claude/settings.local.json`, so an adopting repo is
+expected to have files under `.claude/` it cares about. Check rather than infer.
 
 ### `verify`
 
