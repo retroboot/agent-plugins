@@ -9,9 +9,9 @@
 | GPT-4o | General reasoning, multimodal, function calling | 128K | Best balance of capability/cost |
 | GPT-4o-mini | High-volume, latency-sensitive tasks | 128K | ~15× cheaper than GPT-4o |
 | o1 / o1-mini | Complex multi-step reasoning, math, code | 128K | High latency, no streaming |
-| Claude Sonnet 4.5 | Long context, instruction following, tool use | 200K | Strong for agents and coding |
+| Claude Opus 5 | Hardest reasoning tasks, research, long-horizon agents | 1M | Highest capability, highest cost |
+| Claude Sonnet 5 | Long context, instruction following, tool use | 1M | Strong for agents and coding |
 | Claude Haiku 4.5 | Fast, cheap, classification, extraction | 200K | Best cost/latency in class |
-| Claude Opus 4.6 | Hardest reasoning tasks, research | 200K | Highest capability, highest cost |
 | Llama 3.1 70B | Private data, on-prem, fine-tuning | 128K | Open weights, strong open-source |
 | Mixtral 8x7B | MoE, good at reasoning, lower cost | 32K | Fast on multi-GPU |
 
@@ -247,6 +247,11 @@ def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
         "claude-sonnet-5":  (0.003, 0.015),    # $3 / $15 per 1M
         "claude-haiku-4-5": (0.001, 0.005),    # $1 / $5 per 1M
     }
-    in_price, out_price = PRICING.get(model, (0, 0))
+    # Fail loudly on an unpriced model. Defaulting to (0, 0) reports a free
+    # request, which is indistinguishable from a genuinely cheap one and
+    # survives every dashboard downstream.
+    if model not in PRICING:
+        raise KeyError(f"No pricing for {model} — add it before routing traffic there.")
+    in_price, out_price = PRICING[model]
     return (input_tokens * in_price + output_tokens * out_price) / 1000
 ```
