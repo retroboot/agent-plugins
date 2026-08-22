@@ -1,6 +1,6 @@
 ---
 name: work-issue
-description: Work an issue end-to-end — fetch, implement, test, commit, PR
+description: Work an issue end-to-end — fetch, implement, test, commit, PR/MR
 license: MIT
 compatibility: opencode
 ---

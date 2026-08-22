@@ -1,6 +1,6 @@
 ---
 name: promote
-description: Promote one ladder rung to the next — open the PR, verify CI, merge with a merge commit
+description: Promote one ladder rung to the next (dev to staging to main) — open the PR/MR, verify CI, merge with a merge commit
 license: MIT
 compatibility: opencode
 ---
