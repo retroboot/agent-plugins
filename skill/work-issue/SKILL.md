@@ -299,39 +299,13 @@ When done, display: `Implement: complete | files changed: {count}`
 
 ## Phase 8 — Verify
 
-Read `verify.test` and `verify.lint` from `.hivrr.json` and run each command directly. See [`config.md`](../init/references/config.md) for the read steps and per-key precedence.
+Follow [`verify.md`](../init/references/verify.md) — it has the command resolution, the
+run-and-show-real-output rule, the skip criteria, and the reporting format.
 
-**If `verify` is absent from config** (or there is no `.hivrr.json`), detect the commands yourself using the detection tables in `init` Phase 4, run them, and then offer to record what you found so the next run does not repeat the guesswork.
-
-**If a key is recorded as `null`**, that repo genuinely has no such command — report `skipped`, and do not go looking.
-
-### Running the commands
-
-Run each command and **show its real output**. Never reduce a failure to a bare status word: "tests fail" with no output tells you nothing about what to fix and forces another round trip. Do not pipe through `--silent`, do not capture into a variable you then discard, and do not swallow stderr.
-
-On failure, fix the cause and retry — up to 3 attempts. If it still fails, stop and report the actual output.
-
-### When to skip tests
-
-Skip tests only when the changed files **cannot affect behavior**. Judge this by what each file does, not by its extension.
-
-```bash
-git diff --name-only HEAD
-```
-
-Extension is not the test. In this repo, `.json` and `.md` *are* the product — `marketplace.json` defines which skills load, and a skill's `SKILL.md` is its implementation. Treating them as docs is how a change to either ships unverified.
-
-- **Affects behavior** — source files, configuration that programs read, CI workflow definitions, schema and manifest files, and any markdown a tool consumes as instructions
-- **Does not affect behavior** — prose documentation, `README`, `CHANGELOG`, `LICENSE`, comments
-
-When in doubt, run the tests. The cost of running them unnecessarily is far below the cost of skipping them when they mattered.
-
-**Review your own changes:**
+**Review your own changes** once the commands have run:
 - Do the changes actually satisfy the acceptance criteria from the issue(s)?
 - Is there anything obviously wrong, missing, or broken?
 - Fix what you find.
-
-Display: `Verify: tests {pass|fail|skipped} | lint {pass|fail|skipped}`
 
 ---
 
