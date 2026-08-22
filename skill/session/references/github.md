@@ -96,16 +96,40 @@ gh api graphql -f query='
 `parent` is `null` for a top-level issue. `subIssuesSummary.total` is `0` for a leaf.
 These two facts are how every consumer distinguishes an epic from a workable issue.
 
+**`subIssues` is capped at 100.** Compare `totalCount` against the length of `nodes`; if they
+differ, the list is truncated — page with `after`, or warn and say the list is partial. Never treat
+the short list as complete. This is the same trap `gh project item-list` sets with its default of
+30, documented in [`config.md`](../../init/references/config.md), and it fails the same way: silently,
+looking exactly like an issue that was never a child.
+
 ### Link a child to a parent
 
 **Check first — this is not idempotent.** Re-adding an already-linked child returns `422`
 (`Issue may not contain duplicate sub-issues and Sub issue may only have one parent`), unlike
-`gh project item-add`, which is safe to repeat. Read the child's `parent` before adding:
+`gh project item-add`, which is safe to repeat. Assuming idempotence produces spurious failures on
+every resume path.
 
-- `parent` is `null` → add it.
-- `parent` is already the intended parent → **already linked, skip.** Not an error.
-- `parent` is a *different* issue → warn and skip. A sub-issue has exactly one parent;
+**Linking is three calls, in this order.**
+
+**1 — Read the child's current parent.** Use this minimal query rather than **Read hierarchy**; the
+children list and summary are not needed here:
+
+```
+gh api graphql -f query='
+  query($o:String!,$r:String!,$n:Int!){
+    repository(owner:$o,name:$r){ issue(number:$n){ parent { number } } } }' \
+  -f o={OWNER} -f r={REPO} -F n={CHILD}
+```
+
+**2 — Branch on the result.** Only the first case continues to step 3:
+
+- `parent` is `null` → not linked. Continue.
+- `parent.number` is already the intended parent → **already linked, skip.** Not an error, and the
+  normal outcome on a resumed run.
+- `parent.number` is a *different* issue → warn and skip. A sub-issue has exactly one parent;
   re-parenting is an explicit remove-then-add, never an implicit overwrite.
+
+**3 — Resolve both node IDs** with **Resolve node IDs** above, then mutate:
 
 ```
 gh api graphql -f query='
@@ -118,6 +142,9 @@ gh api graphql -f query='
 
 The response names both issues and the updated summary — use it as the confirmation. Do not
 re-query to verify.
+
+Linking several children to one parent: do step 1 per child, then **one** aliased **Resolve node
+IDs** query covering the parent and every child that reached step 3, then one mutation each.
 
 ### Unlink a child
 
