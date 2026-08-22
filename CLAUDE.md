@@ -90,6 +90,10 @@ Issue hierarchy (GitHub sub-issues) is opt-in via `issues.hierarchy` and is GitH
 off, `planning` emits a flat issue set and `group-issues` falls back to parsing `Depends on #N` from
 issue bodies. See `skill/init/references/config.md`.
 
+**This repo does not enable it** — the `issues` key is absent from `.hivrr.json`, so the fallback
+above is the behavior here rather than a hypothetical. Like the absent project board and the
+unadopted worktrees below, that is a decision.
+
 Full schema, defaults, board operations, and Projects v2 ID resolution: `skill/init/references/config.md`.
 
 ### This repo has no project board — deliberately
