@@ -464,29 +464,33 @@ Wait for the answer before proceeding. If "adjust", revise and re-post. If "canc
 
 Skip if `--plan-only` mode.
 
-**When an epic was approved, create it first.** Its number is needed to attach the children, and a
-child created before its parent cannot be linked without a second pass.
+Create every approved issue in this order. **There is exactly one creation path here** whether or
+not hierarchy is enabled — the epic steps wrap the loop rather than preceding a second copy of it.
 
-1. Create the epic using the **Create issue** command from the loaded reference.
-2. Create each child issue as normal.
-3. Resolve the epic's and every child's node ID in **one** aliased query using the
+1. **When an epic was approved, create it first**, using the **Create issue** command from the
+   loaded reference. Its number is needed to attach the children, and a child created before its
+   parent cannot be linked without a second pass. The epic is **not** part of the loop in step 2.
+
+2. **Create each remaining approved issue** with the **Create issue** command. Collect the created
+   issue numbers/identifiers and URLs, and display each as it is created:
+   `Created: #{number} — {title}`
+
+3. **Resolve node IDs** for the epic and every child in **one** aliased query, using the
    **Resolve node IDs** command from the loaded reference.
-4. Attach each child using the **Link a child to a parent** command — which is check-then-add, not
+
+4. **Attach each child** using the **Link a child to a parent** command — check-then-add, not
    blind-add. A child that already reports the intended parent is already linked; skip it silently.
 
+**When no epic was approved, run step 2 only.** Steps 1, 3, and 4 are skipped, and step 2 alone is
+this phase's behavior before hierarchy existed — unchanged.
+
 **Each attach warns and continues on failure.** The issues are the deliverable and they already
-exist by this point; a hierarchy outage must not lose a planning session's output. This is the same
+exist by step 4; a hierarchy outage must not lose a planning session's output. This is the same
 rule the board operations follow.
 
 Track how many children attached for the Phase 13 summary.
 
 Display: `Hierarchy: {n}/{total} children attached to #{epic}` or nothing when disabled.
-
-For each approved issue, use the **Create issue** command from the loaded reference.
-
-Collect the created issue numbers/identifiers and URLs.
-
-Display each as it's created: `Created: #{number} — {title}`
 
 **Then add it to the project board.** Issues that never reach the board are invisible to anyone working from the project view, which defeats the point of planning them.
 

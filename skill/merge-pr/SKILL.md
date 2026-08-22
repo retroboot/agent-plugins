@@ -267,7 +267,7 @@ Display: `Merged: PR/MR #{pr_number} → {base_branch} ({strategy})`
 
 ## Phase 7 — Close Linked Issues
 
-**Skip this phase entirely when `is_promotion` is true** — both the closing loop and the board update below. Report `Issues: skipped (promotion PR) | Board: unchanged` and continue to Phase 8. Those issues closed and were marked Done at their feature merge; see Phase 2b for why re-checking them is pure cost.
+**Skip this phase entirely when `is_promotion` is true** — the closing loop, the parent-closing step, and the board update below. Report `Issues: skipped (promotion PR) | Board: unchanged` and continue to Phase 8. Those issues closed and were marked Done at their feature merge; see Phase 2b for why re-checking them is pure cost.
 
 For every other merge:
 
@@ -315,18 +315,16 @@ For each reference in `issues_closed`:
 
 1. Read its `parent` using the **Read hierarchy** command from the loaded reference. No parent —
    which is the common case — means nothing to do.
-2. Read the parent's `subIssuesSummary`. Close the parent with the **Close** command **only** when
-   `completed == total` and `total > 0`.
+2. Read the parent's `subIssuesSummary` — **after** the children above were closed, never before.
+   `completed` reflects state at query time, so a summary read taken before the closing loop reports
+   the parent as unsatisfied for every child including the last, and no parent is ever closed. Close
+   the parent with the **Close** command **only** when `completed == total` and `total > 0`.
 3. Deduplicate by parent **before** step 2, not after. Several children of one epic closing in a
    single merge must produce one close attempt, not one per child — and deduplicating after the
    summary read would still issue one query per child.
 
 A parent that is already closed needs no action. A parent with open children is left open —
 **never** close a parent with unfinished children, and never reopen one.
-
-Read the summary **after** the children are closed, not before. `completed` reflects the state at
-query time, so a read taken before the closing loop reports the parent as unsatisfied and the last
-child never triggers it.
 
 Then mark the closed parent Done on the board using the same rules as its children: if the parent
 is not on the board, warn and skip rather than adding it at merge time.
