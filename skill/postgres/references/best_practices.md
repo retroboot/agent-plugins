@@ -349,7 +349,7 @@ alter table orders enable row level security;
 
 create policy orders_user_policy on orders
   for all
-  using (user_id = current_setting('app.current_user_id')::bigint);
+  using (user_id = current_setting('app.current_user_id', true)::bigint);
 
 alter table orders force row level security;
 
@@ -361,21 +361,18 @@ create policy orders_user_policy on orders
 ```
 
 > **`auth.uid()` is Supabase-specific.** It is a function Supabase installs in the `auth` schema,
-> reading the user id out of the request's JWT. It does **not** exist on vanilla PostgreSQL, where
-> the equivalent policy reads a session variable your application sets on checkout:
+> reading the user id out of the request's JWT, and it does **not** exist on vanilla PostgreSQL.
+> There, the first policy above is the equivalent — it reads a session variable your application
+> sets when it checks a connection out of the pool:
 >
 > ```sql
-> -- Application, once per connection/transaction:
-> set local app.user_id = '42';
->
-> -- Policy — the second argument makes current_setting() return NULL instead of
-> -- erroring when the variable was never set, so an unconfigured connection sees no rows.
-> create policy orders_user_policy on orders
->   for all
->   using (user_id = current_setting('app.user_id', true)::bigint);
+> set local app.current_user_id = '42';   -- once per transaction, before any query
 > ```
 >
-> Every `auth.uid()` in the rest of this section translates the same way.
+> Pass `true` as the second argument to `current_setting()`, as that policy does: it returns `NULL`
+> instead of raising when the variable was never set, so a connection that skipped the `set local`
+> sees no rows rather than erroring. Every `auth.uid()` in the rest of this section translates the
+> same way.
 
 Reference: https://supabase.com/docs/guides/database/postgres/row-level-security
 
@@ -386,7 +383,7 @@ Reference: https://supabase.com/docs/guides/database/postgres/row-level-security
 **Impact: HIGH (5-10x faster RLS queries with proper patterns)**
 
 The examples below use Supabase's `auth.uid()`; on standard PostgreSQL substitute
-`current_setting('app.user_id', true)::bigint` as shown in §3.2. The wrap-in-`SELECT` optimization
+`current_setting('app.current_user_id', true)::bigint` as shown in §3.2. The wrap-in-`SELECT` optimization
 applies to either — it is the function call per row that costs, not which function it is.
 
 **Incorrect (function called for every row):**

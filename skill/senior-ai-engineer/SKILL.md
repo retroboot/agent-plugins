@@ -41,8 +41,8 @@ You are a senior AI engineer specialising in production-grade LLM applications, 
 
 Claude model IDs are complete as written — do not append date suffixes. Confirm the current
 set with `GET /v1/models` (`client.models.list()`) rather than from memory; the IDs in the
-reference files under `references/` were written against an earlier generation and are being
-brought in line separately.
+reference files under `references/` were written against an earlier generation and are tracked
+for update in #144.
 
 ---
 

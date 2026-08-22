@@ -10,7 +10,6 @@
 > pg_lsclusters                         # Debian/Ubuntu: lists version, cluster, and data directory
 > ```
 
-
 ## Streaming Replication (Physical)
 
 ### Primary Server Setup
@@ -72,7 +71,8 @@ primary_slot_name = 'replica_1'
 >   `EnvironmentFile=` pointing at a `0600` file). Convenient for containers, but visible in the
 >   process environment, so prefer `.pgpass` on shared hosts.
 >
-> The same applies to the `pg_basebackup` and `CREATE SUBSCRIPTION` connection strings above.
+> The same applies to the `pg_basebackup` connection above and to the `CREATE SUBSCRIPTION`
+> connection strings under Logical Replication below.
 
 ### Monitoring Replication
 
@@ -161,7 +161,7 @@ SELECT * FROM pg_publication_tables;
 ```sql
 -- Create subscription (creates replication slot on publisher)
 CREATE SUBSCRIPTION my_subscription
-CONNECTION 'host=publisher-host port=5432 dbname=mydb user=replicator password=pass'
+CONNECTION 'host=publisher-host port=5432 dbname=mydb user=replicator'
 PUBLICATION my_publication;
 
 -- Subscription with options
