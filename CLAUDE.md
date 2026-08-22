@@ -15,6 +15,13 @@ Skills and commands for implementation, brainstorming, planning, and code review
 
 `.claude-plugin/marketplace.json` is the source of truth for what ships. Keep this list in sync with it.
 
+**In sync means verbatim.** Each `### plugin` heading below is followed by that plugin's
+`marketplace.json` `description`, character for character apart from the trailing period this file
+adds. Say it once and copy it, rather than writing a second description here — the two drifted
+before precisely because each read as reasonable prose on its own, and nothing compares them. When
+you change one, change the other in the same commit; a description is what a user reads when
+deciding whether to install, so an understated one ships a narrower plugin than the one that exists.
+
 ### Path resolution
 
 Skills and commands are registered with different path shapes, and getting one wrong fails silently
@@ -51,7 +58,7 @@ Code audit skills — security, accessibility, performance, and tech debt.
 ---
 
 ### `planner`
-Planning and brainstorming — open-ended thinking sessions through to sized issues, blueprints, and plan documents.
+Planning and brainstorming — open-ended thinking sessions through to sized issues, then implementation plans with TDD tasks, complexity-aware blueprints, and an automated plan review.
 
 **Skills:** `init`, `session`, `brainstorm`, `planning`
 
@@ -60,7 +67,7 @@ Planning and brainstorming — open-ended thinking sessions through to sized iss
 ---
 
 ### `dispatcher`
-Manager utility skills for automated work allocation — scoring, grouping, and failure diagnosis.
+Manager utility skills for automated work allocation — issue scoring, wave grouping, and failure diagnosis.
 
 **Skills:** `init`, `session`, `score-issues`, `group-issues`, `diagnose-failure`
 
@@ -69,7 +76,7 @@ Manager utility skills for automated work allocation — scoring, grouping, and 
 ---
 
 ### `data-platform`
-Full data platform skills — covers the complete stack from ingestion and pipelines to ML, LLMs, dashboards, and database administration.
+Full data platform skills — data science, engineering, analysis, AI engineering, Snowflake, and PostgreSQL. Covers the complete stack from ingestion and pipelines to ML, LLMs, dashboards, and database administration.
 
 **Skills:** `senior-data-scientist`, `senior-data-engineer`, `senior-data-analyst`, `senior-ai-engineer`, `snowflake`, `postgres`, `postgres-query`
 
