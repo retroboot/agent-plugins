@@ -715,8 +715,11 @@ Expected: the warning, and work proceeding in the main checkout.
 
   **Then cover Step 2 of the same phase.** Step 2 prunes stale local branches with `git branch -D` in
   a loop, and any candidate may be held by *another* session's worktree — that session is still
-  working, so its worktree must not be touched. Add a fourth check to the ordered candidate list,
-  before the delete:
+  working, so its worktree must not be touched. The ordered candidate list has two checks today —
+  `1 — Is it protected?` and `2 — Did it actually merge?` — so this appends as **check 3**, leaving
+  their numbering alone. It is a local command and the checks short-circuit on the first `keep`, so
+  running it ahead of check 2 would save a network call; that is a fair optimization but renumbers an
+  existing check, so it is not bundled here:
 
   ````markdown
   **3 — Is it held by a worktree?** A branch checked out in any worktree cannot be deleted, and the
