@@ -157,7 +157,7 @@ unconventional — structural checks defined in a `README`, a bespoke harness, a
 detection tables have no row for. Phase 4 then leaves the block alone. Without it, detection
 correctly finds nothing and writes `null`, which means "checked, there is nothing" — so the
 execution skills report `skipped` and an unattended run skips verification on a repo that has it.
-**This repo uses the sentinel**, because its own checks are the four in **Verification** below, and
+**This repo uses the sentinel**, because its own checks are the five in **Verification** below, and
 `verify.test` holds the runnable form of them.
 
 Run `init` to scaffold the file from detected repo state. It never overwrites an existing one.
@@ -216,10 +216,26 @@ grep -Fxf skill/work-pr/SKILL.md skill/work-issue/SKILL.md \
   | awk 'length > 60' \
   | grep -vFxf docs/shared-lines-allowlist.txt \
   | grep . && echo "DUPLICATED — extract to a shared reference" || true
+
+# CLAUDE.md plugin descriptions match marketplace.json verbatim
+jq -r '.plugins[] | select(.description | endswith(".")) | "DESC TERMINAL PERIOD \(.name)"' \
+  .claude-plugin/marketplace.json
+jq -r '.plugins[] | "\(.name)\t\(.description)"' .claude-plugin/marketplace.json \
+  | while IFS="$(printf '\t')" read -r name desc; do
+      line=$(awk -v h="### \`$name\`" 'p { print; exit } $0 == h { p = 1 }' CLAUDE.md)
+      [ -n "$line" ] || { echo "DESC NO HEADING $name"; continue; }
+      [ "$line" = "$desc." ] || echo "DESC DRIFT $name"
+    done
+grep -oE '^### `[^`]+`' CLAUDE.md | tr -d '#` ' \
+  | while read -r name; do
+      jq -e --arg n "$name" 'any(.plugins[]; .name == $n)' .claude-plugin/marketplace.json \
+        >/dev/null || echo "DESC NO PLUGIN $name"
+    done
 ```
 
-Silence from all four means everything registered resolves and nothing is duplicated. See **Path
-resolution** in `CLAUDE.md` for the contract the first three commands enforce.
+Silence from all five means everything registered resolves, nothing is duplicated, and the two
+places that describe the plugins agree. See **Path resolution** in `CLAUDE.md` for the contract the
+first three commands enforce.
 
 The fourth check guards against the failure the others cannot see: two skills carrying the same
 procedure in prose. Markdown that parses and resolves is still wrong if it says the same thing
@@ -229,6 +245,32 @@ execution skills are *meant* to share — a flag, a warning, a framing sentence,
 correct; if you cannot make that claim, extract the line instead. Never raise the `length > 60`
 threshold to make the check pass — that hides future duplication silently, which is the failure the
 check exists to catch.
+
+The fifth check does the same job one level up, for the one piece of prose that is duplicated *on
+purpose*. `.claude-plugin/marketplace.json` is the source of truth for what ships, and `CLAUDE.md`
+repeats each plugin's `description` verbatim under its `### plugin` heading. Both files stay valid
+however far apart they drift, and the first four checks cannot see prose disagreement across two
+files — which is how the descriptions drifted twice, reconciled by hand in #162 and again in #166.
+
+It reports four distinct failures rather than one, because they call for different fixes:
+
+| Output | Meaning |
+|---|---|
+| `DESC DRIFT {name}` | The `CLAUDE.md` line and the `marketplace.json` description disagree |
+| `DESC NO HEADING {name}` | A plugin ships with no matching `###` section in `CLAUDE.md` |
+| `DESC NO PLUGIN {name}` | `CLAUDE.md` documents a plugin `marketplace.json` no longer lists |
+| `DESC TERMINAL PERIOD {name}` | A `marketplace.json` description ends in `.` — see below |
+
+The last one is not a style rule. The invariant the check compares is `claude_line == description +
+"."`, which only holds because every description is a single sentence with no terminal period. A
+two-sentence description ends in its own period, `CLAUDE.md` then adds nothing, and the comparison
+reports drift on a row that is correct. Catching the period directly turns that into a message that
+names the real cause instead of a confusing `DESC DRIFT`. `CLAUDE.md` states the single-sentence
+rule; this is what holds it.
+
+`DESC NO PLUGIN` is the direction the description loop structurally cannot see: it iterates
+`marketplace.json`, so a section left behind for a plugin that no longer ships is invisible to it.
+That leaves `CLAUDE.md` instructing every agent about a plugin nobody can install.
 
 **Extracting does not always mean a new reference file.** The blanket-staging prohibition was
 allowlisted and then extracted to the **Git Safety** section of `skill/core/SKILL.md`, because every
@@ -253,15 +295,15 @@ phases of `work-issue` and `work-pr`", not "Phase 10 and Phase 9". Phase numbers
 and no check reads prose, so a skill that gains or loses a phase leaves every citation of it silently
 wrong.
 
-**`.hivrr.json` `verify.test` is the runnable form of these four checks.** It runs them from the
+**`.hivrr.json` `verify.test` is the runnable form of these five checks.** It runs them from the
 repo root, prints only findings, and exits non-zero when there are any — which is what makes
 `work-issue` and `work-pr` report `tests pass` here instead of `tests skipped`. **Adding or changing
 a check above means changing it there too.** Nothing enforces that: both files stay valid Markdown
 and JSON however far apart they drift, and `verify.detectedFrom: ["manual"]` stops `init` from
-re-deriving the command. A fifth check added here and not there is simply never run.
+re-deriving the command. A sixth check added here and not there is simply never run.
 
-**The check covers one pair, deliberately.** Other same-named skills share lines over the same
-threshold today — `planning` and `brainstorm` share the session-UUID bootstrap and its fallback
+**The duplication check covers one pair, deliberately.** Other same-named skills share lines over
+the same threshold today — `planning` and `brainstorm` share the session-UUID bootstrap and its fallback
 warning, `score-issues` and `group-issues` share their `excluded` contract. Widening the check to
 every pair needs a **per-pair** allowlist first, because some of that sharing is required rather
 than accidental: the `excluded` contract paragraphs are specified to be byte-identical, so a
