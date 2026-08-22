@@ -339,6 +339,61 @@ Display: `{base_branch}: updated`
 
 Skip entirely if a deletion rule tripped in Phase 6.
 
+**Worktree cleanup runs before branch deletion — the order is enforced by git, not chosen.**
+
+Skip this sub-step entirely when `worktree` is absent from `.hivrr.json`, and when the merged PR is
+a promotion (`is_promotion` true) — promotion branches are long-lived rungs and never have
+worktrees.
+
+Check whether a worktree holds the head branch:
+
+```bash
+git worktree list --porcelain
+```
+
+When one does, work in this order. Skipping a step makes the next one fail:
+
+1. **Leave it.** If this session is inside that worktree, exit with `ExitWorktree` using
+   `action: "remove"`. A session cannot remove the worktree it is standing in.
+
+2. **Remove it.** For a worktree this session did not create:
+
+   ```bash
+   git worktree remove {path}
+   ```
+
+   This **refuses when the worktree has uncommitted or untracked files**:
+
+   ```
+   fatal: '{path}' contains modified or untracked files, use --force to delete it
+   ```
+
+   That refusal is a safety feature. **Stop and ask** — report the path and what is uncommitted, and
+   force only on an explicit answer. Never pass `--force` automatically: the PR merged, so anything
+   still uncommitted there is work that never reached it.
+
+3. **Prune.** A worktree whose directory was deleted by hand leaves a `prunable` entry that keeps
+   blocking branch deletion:
+
+   ```bash
+   git worktree prune
+   ```
+
+4. **Then delete the branch,** applying the existing `branches.protected` rules unchanged.
+
+Attempting deletion before this sequence produces:
+
+```
+error: cannot delete branch '{branch}' used by worktree at '{path}'
+```
+
+Every step warns and continues on failure. The PR has already merged; cleanup failing must not be
+reported as a failed merge. Report what was left behind so it can be cleaned by hand.
+
+Display: `Worktree: removed {path}` | `Worktree: left in place — uncommitted work` | nothing when none.
+
+Then delete the branch:
+
 ```bash
 git show-ref --verify --quiet refs/heads/{head_branch}   # exists locally?
 git branch -D {head_branch}
@@ -386,6 +441,18 @@ If the query fails, keep the branch — the same rule as Rule 3. A check that co
   ```bash
   git log origin/{base_branch}..{branch} --oneline | wc -l
   ```
+
+**3 — Is it held by a worktree?** Skipped along with the rest of this phase's worktree handling when
+`worktree` is absent from `.hivrr.json`. A branch checked out in any worktree cannot be deleted, and
+the worktree may belong to a live session:
+
+```bash
+git worktree list --porcelain
+```
+
+Held → **keep it** and report as `kept: {branch} (held by worktree at {path})`. Never remove a
+worktree this skill did not create in order to delete a branch; the head branch handled in Step 1 is
+the only worktree this phase acts on.
 
 Report skipped branches as `kept: {branch} ({n} unmerged commits)`.
 

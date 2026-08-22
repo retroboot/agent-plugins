@@ -64,7 +64,7 @@ Every top-level key is optional. A file containing only `{}` is valid and resolv
 | `project.id` | string (`PVT_…`) | — | `gh project item-edit --project-id` |
 | `project.statusFieldId` | string (`PVTSSF_…`) | — | board status transitions |
 | `project.status.todo` \| `.inProgress` \| `.done` | string (option id) | — | board status transitions |
-| `worktree` | object \| absent | absent — no worktree behavior | `work-issue`, `wave`; `merge-pr` and `init` *(once #138 lands)* |
+| `worktree` | object \| absent | absent — no worktree behavior | `work-issue`, `wave`, `merge-pr`, `init` |
 | `worktree.enabled` | boolean | `false` | `work-issue`, `wave` |
 | `worktree.carry` | string[] | `[]` | `work-issue`, `wave` |
 | `worktree.setup` | string \| `null` | `null` | `work-issue`, `wave` |

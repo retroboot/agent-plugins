@@ -360,3 +360,40 @@ Emit one of:
 - `INIT: .hivrr.json committed on {branch}`
 - `INIT: .hivrr.json staged — {branch} is protected, commit deliberately`
 - `INIT: .hivrr.json unchanged`
+
+---
+
+## Phase 7 — Report Orphan Worktrees
+
+**Skip when `worktree` is absent from `.hivrr.json`.** This is the phase's only gate.
+
+Like Phase 6, this is a **sibling of Phase 5, not a step inside it.** Phase 5 skips entirely when
+`project` is absent, and a repo that configures `worktree` without a board would then never hear
+about its orphans. The two keys are independent.
+
+An abandoned or crashed session leaves a worktree that nothing else will notice, and each one holds
+a branch that cannot be deleted while it exists. `init` runs on every command, which makes it the
+cheapest place to surface them.
+
+```bash
+git worktree list --porcelain
+```
+
+For each worktree other than the main checkout, report those that are **prunable** (directory gone,
+metadata stale) or whose branch is already merged into `branches.integration`:
+
+```bash
+git branch --merged origin/{integration} --format='%(refname:short)'
+```
+
+```
+INIT: 2 orphan worktree(s)
+      .claude/worktrees/issue/41  [issue/41]  branch merged
+      .claude/worktrees/issue/38  [issue/38]  prunable
+      Clean up: git worktree prune, or git worktree remove {path}
+```
+
+**Report only — never remove.** An orphan may hold the only copy of unfinished work, and `init` is
+setup, not cleanup. Offer the commands and let the user run them.
+
+Emit `INIT: worktrees ok` when there are none, and nothing at all when `worktree` is absent.
