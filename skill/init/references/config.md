@@ -32,6 +32,11 @@ Global `providerConfig` survives for values that genuinely are user-shaped: `git
     "statusFieldId": "PVTSSF_xxx",
     "status": { "todo": "<option id>", "inProgress": "<option id>", "done": "<option id>" }
   },
+  "worktree": {
+    "enabled": true,
+    "carry": [".env", ".claude/settings.local.json"],
+    "setup": "npm ci"
+  },
   "verify": {
     "test": "npm test",
     "lint": "npx eslint .",
@@ -59,6 +64,10 @@ Every top-level key is optional. A file containing only `{}` is valid and resolv
 | `project.id` | string (`PVT_…`) | — | `gh project item-edit --project-id` |
 | `project.statusFieldId` | string (`PVTSSF_…`) | — | board status transitions |
 | `project.status.todo` \| `.inProgress` \| `.done` | string (option id) | — | board status transitions |
+| `worktree` | object \| absent | absent — no worktree behavior | `work-issue`, `wave`, `merge-pr`, `init` |
+| `worktree.enabled` | boolean | `false` | `work-issue`, `wave` |
+| `worktree.carry` | string[] | `[]` | `work-issue`, `wave` |
+| `worktree.setup` | string \| `null` | `null` | `work-issue`, `wave` |
 | `verify.test` | string \| `null` | model detects, then offers to record | `work-issue`, `work-pr` |
 | `verify.lint` | string \| `null` | model detects, then offers to record | `work-issue`, `work-pr` |
 | `verify.detectedFrom` | string[] | — | `init` Phase 4 (staleness check) |
@@ -101,6 +110,51 @@ Branches that must never be deleted or force-pushed. Entries may use a trailing 
 ### `project`
 
 GitHub Projects v2 board wiring. Field mutations on Projects v2 are GraphQL-only and need opaque IDs, so they are resolved once and cached here rather than looked up per call. When `project` is absent, every board operation is a silent no-op — never an error.
+
+### `worktree`
+
+Isolation for mutating sessions. When `enabled` is true, `work-issue` and `wave` run inside a git
+worktree instead of the shared checkout, so two concurrent sessions cannot stage or commit each
+other's changes. Absent or `false` means every worktree operation is a **silent no-op**.
+
+Only mutating skills use this. `review-pr`, `audit`, `score-issues`, `group-issues`, and
+`diagnose-failure` are read-only — they cannot collide, so a worktree there is setup cost for no
+benefit.
+
+**`enabled` alone is not sufficient.** The harness `EnterWorktree` tool acts only when the user says
+"worktree" explicitly or when the repo's own `CLAUDE.md` instructs it. A repo that sets `enabled`
+without adding the CLAUDE.md line gets no worktree, silently. Both are required; see
+**Adopting worktrees** below.
+
+#### `carry`
+
+A worktree receives **tracked files only**. Untracked and ignored files — `.env`, `node_modules`,
+`.claude/settings.local.json` — do not come along. `carry` names the paths to bring in, relative to
+the repo root. Each is copied when small, or symlinked when it is a large directory.
+
+Losing `.claude/settings.local.json` resets the permission allowlist, so the operator re-approves
+prompts they already dismissed. Losing `.env` breaks anything that reads configuration at startup.
+Both are quiet failures that look like something else, which is why the list is explicit rather
+than inferred.
+
+#### `setup`
+
+A single command run once inside a fresh worktree after `carry` completes — typically a dependency
+install. Runs only on creation, never on resume. A non-zero exit is a **warning**: report it and
+continue, because a worktree with missing dependencies is still recoverable by hand, while aborting
+loses the session's context.
+
+#### Adopting worktrees
+
+A repo opts in with **both** of these:
+
+1. `worktree.enabled: true` in `.hivrr.json`, plus whatever `carry` and `setup` it needs.
+2. This line in the repo's own `CLAUDE.md`:
+
+   > Mutating agent work (`/work-issue`, `/wave`) runs in a git worktree. Use `EnterWorktree` at
+   > the start of those workflows and clean up per `merge-pr`.
+
+The `.hivrr.json` key carries the settings; the CLAUDE.md line is what authorizes the tool.
 
 ### `verify`
 
@@ -184,6 +238,9 @@ These are deliberately different, and conflating them is a bug:
 | File present, `jq` itself is not installed (exit 127) | **Not an error.** The validator is missing, not the config. Note it once and read the file anyway. |
 | File present, valid JSON, key missing | **Normal.** Fall through to the next source for that key. |
 | File present, key has the wrong type (e.g. `ladder` is a string) | **Hard error.** Report the key and the expected type. |
+| `worktree.enabled` true, no CLAUDE.md authorization | **Warn once and continue without a worktree.** Name the missing line. Never fail the workflow — the work is the deliverable. |
+| `worktree.carry` names a path that does not exist | **Warn and continue.** A repo without a `.env` is normal, not an error. |
+| `worktree.setup` exits non-zero | **Warn and continue.** Report the exit code and the command. |
 
 ---
 
