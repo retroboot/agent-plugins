@@ -161,19 +161,11 @@ Wait for their response before continuing.
 
 ## Phase 9 — Commit
 
-**Stage only the files this work touched.** Never `git add -A` or `git add .` — both stage
-unrelated edits from any other work sharing this checkout, and `-A` does it repo-wide regardless of
-the current directory.
+Staging follows [**Staging**](../core/SKILL.md#staging) in the `core` skill: the blanket-staging
+prohibition, the explicit `git add`, and the `git status --short` check all apply to a feedback
+commit unchanged.
 
-Build the list from the feedback items you addressed in this run, then stage explicitly:
-
-```bash
-git add {file} {file} …
-git status --short
-```
-
-Every staged path must be one you touched while addressing feedback. **If an unexpected path
-appears, stop and report it** rather than unstaging and continuing.
+The file list is this skill's to build: take it from the feedback items you addressed in this run.
 
 Write a conventional commit message:
 - Format: `{type}({scope}): {description}`
