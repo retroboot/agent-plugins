@@ -38,6 +38,7 @@ This command is machine-executed. When the workflow completes, your **entire fin
   "status": "WORKFLOW COMPLETE",
   "pr": {pr_number},
   "issues_closed": [issue_numbers],
+  "parents_closed": [issue_numbers],
   "branch_deleted": "{branch_name}",
   "followup_issues": [issue_numbers]
 }
