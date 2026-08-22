@@ -86,6 +86,10 @@ Full data platform skills — covers the complete stack from ingestion and pipel
 
 Per-repo settings live in a committed `.hivrr.json`. The file is optional — a repo without one gets documented defaults, not errors. Precedence resolves **per key**: `.hivrr.json` → global `providerConfig` → hardcoded default. `provider` and `issueTracker` resolve independently, so state both here rather than assuming one implies the other.
 
+Issue hierarchy (GitHub sub-issues) is opt-in via `issues.hierarchy` and is GitHub-only. When it is
+off, `planning` emits a flat issue set and `group-issues` falls back to parsing `Depends on #N` from
+issue bodies. See `skill/init/references/config.md`.
+
 Full schema, defaults, board operations, and Projects v2 ID resolution: `skill/init/references/config.md`.
 
 ### This repo has no project board — deliberately
