@@ -39,12 +39,13 @@ It reports a `DESC …` message naming the plugin and the specific disagreement;
 full table, kept there so adding a message does not leave a stale list here. Fix the disagreement —
 never edit around the check.
 
-For that to be one rule rather than one special case per plugin, **keep every `marketplace.json` description
-a single sentence with no terminal period.** A two-sentence description ends in a period of its
-own, and then this file adds nothing — so `{description}.` stops describing the line here, and the
-check reports that row as drifted when it is not. The check catches the cause directly and reports
-`DESC TERMINAL PERIOD {name}`, so read that as "shorten the description", not "add a period here".
-If a description needs a second clause, join it with a comma rather than starting a new sentence.
+For that to be one rule rather than one special case per plugin, **keep every `marketplace.json`
+description a single sentence with no terminal period.** A two-sentence description ends in a period
+of its own, and then this file adds nothing — so `{description}.` stops describing the line here,
+and the check reports that row as drifted when it is not. The check catches the cause directly and
+reports `DESC TERMINAL PERIOD {name}`, so read that as "shorten the description", not "add a period
+here". If a description needs a second clause, join it with a comma rather than starting a new
+sentence.
 
 Two things about the shape of this file are load-bearing, because they are what the check reads:
 
