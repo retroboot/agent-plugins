@@ -9,7 +9,7 @@ The agent plugin ships two artifact types:
 - **Skills** — reusable prompts loaded by name (e.g., `work-issue`, `review-pr`). Used by Claude to execute well-defined tasks with consistent behavior.
 - **Commands** — slash commands exposed in the Claude Code UI (e.g., `/work-issue 123`, `/audit security`).
 
-The plugin is split into five focused packages:
+The plugin is split into focused packages:
 
 | Plugin | Purpose |
 |--------|---------|
@@ -269,11 +269,31 @@ for f in skill/*/SKILL.md; do
 n=$(awk '/^## Verification/ { v = 1; next } v && /^## / { exit } v' README.md | grep -c '^# ')
 said=$(sed -n 's/.*[^A-Za-z]\([A-Za-z][a-z]*\) checks:.*/\1/p' CLAUDE.md | head -1 | tr 'A-Z' 'a-z')
 [ "$(w2n "$said")" = "$n" ] || echo "CHECK COUNT DRIFT CLAUDE.md says $said, README has $n"
+
+# README's command usage block names exactly the registered commands
+reg_c=$(jq -r '.plugins[] | (.commands // [])[]' .claude-plugin/marketplace.json \
+          | sed 's|.*/||; s|\.md$||' | sort -u)
+doc_c=$(awk '/^## Commands/ { v = 1; next } v && /^## / { exit } v' README.md \
+          | sed -n 's|^/\([A-Za-z0-9_-][A-Za-z0-9_-]*\).*|\1|p' | sort -u)
+for c in $reg_c; do
+    printf '%s\n' "$doc_c" | grep -qxF "$c" || echo "COMMAND UNDOCUMENTED $c"
+  done
+for c in $doc_c; do
+    printf '%s\n' "$reg_c" | grep -qxF "$c" || echo "COMMAND NOT REGISTERED $c"
+  done
+
+# CLAUDE.md's init phase count matches skill/init/SKILL.md's phase headings
+ip_n=$(grep '^## Phase [0-9]' skill/init/SKILL.md \
+         | sed 's/^## Phase *\([0-9][0-9]*\).*/\1/' | sort -n -u | grep -c .)
+ip_said=$(sed -n 's/.*[^A-Za-z]\([a-z][a-z]*\) ordered phases.*/\1/p' CLAUDE.md | head -1)
+[ "$(w2n "$ip_said")" = "$ip_n" ] \
+  || echo "INIT PHASE COUNT DRIFT CLAUDE.md says $ip_said, skill/init/SKILL.md has $ip_n"
 ```
 
 Silence from all of them means everything registered resolves, nothing is duplicated, the phase
-numbering holds, and the three places that describe the plugins agree. See **Path resolution** in
-`CLAUDE.md` for the contract the first three commands enforce.
+numbering holds, every count in `CLAUDE.md` matches what it counts, and the three places that
+describe the plugins agree. See **Path resolution** in `CLAUDE.md` for the contract the first three
+commands enforce.
 
 The fourth check guards against the failure the others cannot see: two skills carrying the same
 procedure in prose. Markdown that parses and resolves is still wrong if it says the same thing
@@ -290,7 +310,7 @@ repeats each plugin's `description` verbatim under its `### plugin` heading. Bot
 however far apart they drift, and the first four checks cannot see prose disagreement across two
 files — which is how the descriptions drifted twice, reconciled by hand in #162 and again in #166.
 
-It reports five distinct failures rather than one, because they call for different fixes:
+It reports a distinct failure for each, rather than one, because they call for different fixes:
 
 | Output | Meaning |
 |---|---|
@@ -348,8 +368,8 @@ its own fix:
 | `COMMANDS DRIFT {plugin} claude` | The `**Commands:**` line disagrees with `marketplace.json` |
 
 There is no `COMMANDS DRIFT {plugin} readme`, because `README.md` lists commands as a flat usage
-block under **Commands** rather than per plugin. That is a real gap, not an oversight — the commands
-in that block are unguarded.
+block under **Commands** rather than per plugin, so there is no per-plugin set for this check to
+compare. The **ninth** check covers that block repo-wide instead, in both directions — see below.
 
 Three properties of the two Markdown files are load-bearing here, all three recorded in advance by
 #172 from what the fifth check cost to get right. The section extractor stops at the next heading of
@@ -410,6 +430,72 @@ The digit anchor needs a fixture, because no skill in the repo can currently tri
 `## Phase Contract` heading above the numbered ones in any `SKILL.md`, confirm the check stays
 **silent**, then drop the `[0-9]` from the match and confirm it reports `PHASE SEQUENCE` naming that
 heading as a phase number. Revert both.
+
+The ninth check closes the gap the sixth left open. `README.md` documents commands as a flat usage
+block under **Commands** — `/audit security --mode deep`, arguments and all — written to show each
+command's *shape* rather than to inventory what ships. Restructuring it into per-plugin tables would
+buy a symmetric `COMMANDS DRIFT {plugin} readme`, at the cost of the argument examples that are the
+reason the block reads well. So the check takes the block as it is: it reads the first
+whitespace-delimited token of every line starting with `/` and compares that set against every
+`commands` entry in `marketplace.json`. The comparison is therefore **repo-wide, not per plugin** —
+the block carries no plugin attribution, and inventing one would mean restructuring it after all.
+
+It is **bidirectional**, which is a deliberate choice rather than the cheaper direction, and each
+message names its own fix:
+
+| Output | Meaning |
+|---|---|
+| `COMMAND UNDOCUMENTED {name}` | `marketplace.json` registers a command the usage block never shows |
+| `COMMAND NOT REGISTERED {name}` | The usage block names a command that no longer ships |
+
+`COMMAND NOT REGISTERED` is the direction #176 was filed for: a command removed from
+`marketplace.json` leaves its example sitting in the README indefinitely, and the first three checks
+cannot see it — they verify that registered commands *resolve to files*, never that the docs
+describe the registered set. `COMMAND UNDOCUMENTED` is the stricter half, and demanding a usage
+example for every command that ships is a stronger rule than "no example names a command that does
+not ship". It was adopted because the repo already satisfied it — every registered command appears
+in the block — so it costs nothing today and makes shipping an undocumented command fail rather than
+pass quietly.
+
+Two properties of the block are load-bearing. The extractor starts at `## Commands` and stops at the
+next heading of **any** level, because the fence is the whole content of that section rather than
+one item inside it. And it takes the **leading token only**, so `/write-plan "add SSE to insight"`
+yields `write-plan`; comparing whole lines would report drift every time an example's arguments were
+reworded.
+
+The tenth check is the seventh one file over. The seventh holds `skill/init/SKILL.md`'s own stated
+phase count against its own headings — but `init` states that count in `CLAUDE.md` as well, and
+`CLAUDE.md` is loaded verbatim as project instructions for every session in this repo. A count that
+reads low *there* tells an agent the run is over before it is, which is the failure #170 was about,
+in the file with the widest blast radius. So the tenth reads the number word before `ordered phases`
+in `CLAUDE.md` and compares it against the distinct `## Phase N` headings in `skill/init/SKILL.md`,
+reusing `w2n` from the seventh — so the same warning applies: do not move one without the other.
+
+It checks the **count, not the list**. `CLAUDE.md` names the seven phases in order, and comparing a
+comma-separated prose list against seven `## Phase N — Title` headings needs a normalization nobody
+will trust — the heading reads ``## Phase 3 — Scaffold `.hivrr.json` `` while the prose reads
+``.hivrr.json scaffold``. A check that reports drift which does not exist gets switched off, which
+costs more than never having written it. Deleting the sentence does not disable the check: an absent
+number word yields `0` from `w2n`, `0` never matches, and the failure reports as
+`INIT PHASE COUNT DRIFT CLAUDE.md says , …` with the number missing.
+
+**`README.md`'s `init` row needs no equivalent**, which is worth stating rather than leaving as a
+silent asymmetry. That row enumerates the same phases — *"provider config, repo labels,
+`.hivrr.json` scaffold, …"* — but states no count, so it carries no bare number to drift. Do not add
+one for symmetry with `CLAUDE.md`; the enumeration is the useful part and the number in front of it
+is what drifts.
+
+The same reasoning cleared the last two unverified counts in `README.md` — **a different pair from
+the check counts above**, and the ones #175 was filed for. The overview read *"split into **five**
+focused packages"*, and the fifth check's message table was introduced as *"It reports **five**
+distinct failures"*; both now read without a number. Neither sentence *named* what it counted, which
+is the test `CLAUDE.md`'s surviving count passes and these two did not — so rewording was the right
+answer rather than two more checks, and the table or list each one introduces still tells a reader
+everything the number did.
+
+To re-run the two: rename a command in the usage block, remove one from `marketplace.json`, state
+the wrong number before `ordered phases` in `CLAUDE.md`, and delete that number entirely. Each must
+produce its own message, and a clean tree must still print `structural checks pass`.
 
 **Extracting does not always mean a new reference file.** The blanket-staging prohibition was
 allowlisted and then extracted to the **Git Safety** section of `skill/core/SKILL.md`, because every
