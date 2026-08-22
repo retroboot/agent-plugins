@@ -309,18 +309,36 @@ git branch --show-current
 
 ```bash
 git add .hivrr.json
-git commit -m "chore(config): record .hivrr.json settings"
+git commit -m "chore(config): record .hivrr.json settings" -- .hivrr.json
 ```
 
-Stage nothing else. This commit exists to carry one file, and sweeping in a working tree's other
-changes is the bug Phase 10 of `work-issue` and Phase 9 of `work-pr` no longer permit.
+**The trailing pathspec is required, not decoration.** `git add .hivrr.json` stages one file, but a
+bare `git commit` commits the **whole index** — including anything staged before `init` ran, by the
+user or by an interrupted workflow. `init` runs as the first bootstrap step of every command, so it
+routinely executes mid-workflow in a checkout with a populated index. Without the pathspec this
+commit sweeps a feature's staged files in under a config message, which is the exact bug Phase 10 of
+`work-issue` and Phase 9 of `work-pr` no longer permit.
 
-**On a protected branch** — do not commit. Stage it and report, leaving the decision to the user:
+Keep the `git add` as well: `git commit -- {path}` fails on a never-tracked file, and a freshly
+scaffolded `.hivrr.json` is exactly that.
 
+Then confirm the commit carries one path and no more:
+
+```bash
+git show --stat --oneline HEAD
 ```
-INIT: .hivrr.json written but not committed — {branch} is protected.
-      Stage-only. Commit it from a feature branch, or run `git commit .hivrr.json` deliberately.
+
+If anything but `.hivrr.json` is listed, report it and stop. Do not report a clean config commit.
+
+**On a protected branch** — do not commit. Stage it and report:
+
+```bash
+git add .hivrr.json
 ```
+
+`core` forbids committing directly to a protected branch, so the decision is the user's: commit it
+from a feature branch, or run `git commit -m "chore(config): record .hivrr.json settings" --
+.hivrr.json` deliberately.
 
 **Never push.** `init` is setup, not delivery, and a push from a setup phase is a surprise.
 
