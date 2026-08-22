@@ -18,15 +18,32 @@ Skills and commands for implementation, brainstorming, planning, and code review
 **In sync means verbatim.** Each `### plugin` heading below is followed by that plugin's
 `marketplace.json` `description`, character for character apart from the trailing period this file
 adds. Say it once and copy it, rather than writing a second description here — the two drifted
-before precisely because each read as reasonable prose on its own, and nothing compares them. When
-you change one, change the other in the same commit; a description is what a user reads when
-deciding whether to install, so an understated one ships a narrower plugin than the one that exists.
+before precisely because each read as reasonable prose on its own. When you change one, change the
+other in the same commit; a description is what a user reads when deciding whether to install, so an
+understated one ships a narrower plugin than the one that exists.
+
+**The fifth structural check enforces this**, so a mismatch fails verification rather than shipping.
+It reports a `DESC …` message naming the plugin and the specific disagreement; `README.md` has the
+full table, kept there so adding a message does not leave a stale list here. Fix the disagreement —
+never edit around the check.
 
 For that to be one rule rather than five special cases, **keep every `marketplace.json` description
 a single sentence with no terminal period.** A two-sentence description ends in a period of its
-own, and then this file adds nothing — so `{description}.` stops describing the line here, and any
-check written against the rule reports that row as drifted when it is not. If a description needs a
-second clause, join it with a comma rather than starting a new sentence.
+own, and then this file adds nothing — so `{description}.` stops describing the line here, and the
+check reports that row as drifted when it is not. The check catches the cause directly and reports
+`DESC TERMINAL PERIOD {name}`, so read that as "shorten the description", not "add a period here".
+If a description needs a second clause, join it with a comma rather than starting a new sentence.
+
+Two things about the shape of this file are load-bearing, because they are what the check reads:
+
+- **The description stays on the single line immediately after the heading**, with no blank line
+  between them. A blank line reports as `DESC BLANK AFTER HEADING {name}` — the heading is fine, the
+  gap is not, and a blank line is invisible in rendered Markdown.
+- **A backticked `###` heading in this file means a plugin.** The check reads every one of them as a
+  plugin claim and reports `DESC NO PLUGIN` for any that `marketplace.json` does not list. Document
+  anything else — skills, sections, notes — at a different heading level or without backticks. The
+  `init` and `session` entries under **Shared setup skills** are bullets for this reason, not
+  headings.
 
 ### Path resolution
 
@@ -150,7 +167,7 @@ The full rule, and the reasoning behind it, is in `skill/core/SKILL.md`.
 
 ## Verification
 
-The product here is JSON and Markdown, so verification is structural — validate that every JSON file parses, that every registered skill is a directory holding a `SKILL.md`, and that every registered command is an existing `.md` file. All three commands are in the README.
+The product here is JSON and Markdown, so verification is structural. Five checks: every JSON file parses; every registered skill is a directory holding a `SKILL.md`; every registered command is an existing `.md` file; `work-issue` and `work-pr` do not duplicate each other's verify procedure; and the plugin descriptions in this file match `marketplace.json` verbatim. All five are in the README, and `.hivrr.json` `verify.test` is the runnable form of them — **keep the count here matching both.**
 
 Because JSON and Markdown *are* the product in this repo, a change to `marketplace.json` or any `SKILL.md` is a behavior change, not a docs change. Do not skip verification on it.
 
