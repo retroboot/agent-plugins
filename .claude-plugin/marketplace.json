@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "dev",
-      "description": "Implementation and code review skills",
+      "description": "Implementation and code review \u2014 issues, PRs, waves, merges, and environment promotions",
       "source": "./",
       "strict": true,
       "skills": [
@@ -37,7 +37,7 @@
     },
     {
       "name": "auditor",
-      "description": "Code audit skills \u2014 security, accessibility, performance, and tech debt",
+      "description": "Code audit \u2014 security, accessibility, performance, and tech debt",
       "source": "./",
       "strict": true,
       "skills": [
@@ -53,7 +53,7 @@
     },
     {
       "name": "planner",
-      "description": "Planning and brainstorming skills \u2014 from open-ended thinking sessions to comprehensive implementation plans with TDD tasks, blueprints, and automated plan review",
+      "description": "Planning and brainstorming \u2014 open-ended thinking sessions through to sized issues, then implementation plans with TDD tasks, complexity-aware blueprints, and an automated plan review",
       "source": "./",
       "strict": true,
       "skills": [
@@ -70,7 +70,7 @@
     },
     {
       "name": "dispatcher",
-      "description": "Manager utility skills \u2014 score, group, and diagnose issues for automated work allocation",
+      "description": "Manager utilities for automated work allocation \u2014 issue scoring, wave grouping, and failure diagnosis",
       "source": "./",
       "strict": true,
       "skills": [
@@ -88,7 +88,7 @@
     },
     {
       "name": "data-platform",
-      "description": "Full data platform skills \u2014 data science, engineering, analysis, AI engineering, Snowflake, and PostgreSQL. Covers the complete stack from ingestion and pipelines to ML, LLMs, dashboards, and database administration.",
+      "description": "Full data platform \u2014 data science, engineering, analysis, AI engineering, Snowflake, and PostgreSQL, covering the complete stack from ingestion and pipelines to ML, LLMs, dashboards, and database administration",
       "source": "./",
       "strict": true,
       "skills": [

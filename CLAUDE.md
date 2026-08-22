@@ -15,6 +15,19 @@ Skills and commands for implementation, brainstorming, planning, and code review
 
 `.claude-plugin/marketplace.json` is the source of truth for what ships. Keep this list in sync with it.
 
+**In sync means verbatim.** Each `### plugin` heading below is followed by that plugin's
+`marketplace.json` `description`, character for character apart from the trailing period this file
+adds. Say it once and copy it, rather than writing a second description here — the two drifted
+before precisely because each read as reasonable prose on its own, and nothing compares them. When
+you change one, change the other in the same commit; a description is what a user reads when
+deciding whether to install, so an understated one ships a narrower plugin than the one that exists.
+
+For that to be one rule rather than five special cases, **keep every `marketplace.json` description
+a single sentence with no terminal period.** A two-sentence description ends in a period of its
+own, and then this file adds nothing — so `{description}.` stops describing the line here, and any
+check written against the rule reports that row as drifted when it is not. If a description needs a
+second clause, join it with a comma rather than starting a new sentence.
+
 ### Path resolution
 
 Skills and commands are registered with different path shapes, and getting one wrong fails silently
@@ -42,7 +55,7 @@ Implementation and code review — issues, PRs, waves, merges, and environment p
 ---
 
 ### `auditor`
-Code audit skills — security, accessibility, performance, and tech debt.
+Code audit — security, accessibility, performance, and tech debt.
 
 **Skills:** `audit`, `audit-accessibility`, `audit-performance`, `audit-security`, `audit-tech-debt`
 
@@ -51,7 +64,7 @@ Code audit skills — security, accessibility, performance, and tech debt.
 ---
 
 ### `planner`
-Planning and brainstorming — open-ended thinking sessions through to sized issues, blueprints, and plan documents.
+Planning and brainstorming — open-ended thinking sessions through to sized issues, then implementation plans with TDD tasks, complexity-aware blueprints, and an automated plan review.
 
 **Skills:** `init`, `session`, `brainstorm`, `planning`
 
@@ -60,7 +73,7 @@ Planning and brainstorming — open-ended thinking sessions through to sized iss
 ---
 
 ### `dispatcher`
-Manager utility skills for automated work allocation — scoring, grouping, and failure diagnosis.
+Manager utilities for automated work allocation — issue scoring, wave grouping, and failure diagnosis.
 
 **Skills:** `init`, `session`, `score-issues`, `group-issues`, `diagnose-failure`
 
@@ -69,7 +82,7 @@ Manager utility skills for automated work allocation — scoring, grouping, and 
 ---
 
 ### `data-platform`
-Full data platform skills — covers the complete stack from ingestion and pipelines to ML, LLMs, dashboards, and database administration.
+Full data platform — data science, engineering, analysis, AI engineering, Snowflake, and PostgreSQL, covering the complete stack from ingestion and pipelines to ML, LLMs, dashboards, and database administration.
 
 **Skills:** `senior-data-scientist`, `senior-data-engineer`, `senior-data-analyst`, `senior-ai-engineer`, `snowflake`, `postgres`, `postgres-query`
 
