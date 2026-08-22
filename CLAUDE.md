@@ -132,8 +132,8 @@ tool. One without the other silently does nothing.
 
 Worktrees live under `.claude/worktrees/`, so an adopting repo needs `.claude/` in its `.gitignore`
 as well — otherwise the worktree shows up as an untracked `??` entry in the pre-commit
-`git status --short` check, and the commit phase of `work-issue` stops on it, reporting a concurrent
-session that is not there. This repo already ignores `.claude/`.
+`git status --short` check, where it has to be told apart from a real concurrent session on every
+commit for the rest of the run. This repo already ignores `.claude/`.
 
 They are **not** free — untracked files do not travel, and they must be cleaned up. See
 `skill/init/references/config.md`.
