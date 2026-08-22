@@ -14,6 +14,10 @@ Skills and commands for implementation, brainstorming, planning, and code review
 ## Plugins
 
 `.claude-plugin/marketplace.json` is the source of truth for what ships. Keep this list in sync with it.
+**The sixth structural check enforces that**, for the `**Skills:**` and `**Commands:**` lines below as
+well as for `README.md`'s per-plugin table, and reports `SKILLS DRIFT {plugin} {file}` or
+`COMMANDS DRIFT {plugin} {file}` naming which file disagrees. So the sentence above is now a checked
+rule rather than a hopeful one — add a skill to a plugin and three files have to say so.
 
 **In sync means verbatim.** Each `### plugin` heading below is followed by that plugin's
 `marketplace.json` `description`, character for character apart from the trailing period this file
@@ -109,7 +113,7 @@ Full data platform — data science, engineering, analysis, AI engineering, Snow
 
 `init` and `session` are included by `dev`, `planner`, and `dispatcher`, and every command loads them before its main skill.
 
-- **`init`** — seven ordered phases: provider config, repo labels, `.hivrr.json` scaffold, verify-command detection, project board ID resolution, config reconciliation, and orphan-worktree reporting. The phases run **in order, every time**; a phase with nothing to do reports and continues rather than ending the skill. Keep the count and the list here matching the `## Phase` headings in `skill/init/SKILL.md` and the `init` row in `README.md` — nothing checks them, and a count that reads low tells an agent the run is over before it is.
+- **`init`** — seven ordered phases: provider config, repo labels, `.hivrr.json` scaffold, verify-command detection, project board ID resolution, config reconciliation, and orphan-worktree reporting. The phases run **in order, every time**; a phase with nothing to do reports and continues rather than ending the skill. Keep the count and the list here matching the `## Phase` headings in `skill/init/SKILL.md` and the `init` row in `README.md`. A count that reads low tells an agent the run is over before it is — which is exactly what happened, when that skill said `five` against seven headings. **The seventh structural check now holds `skill/init/SKILL.md`'s own count** against its own headings, so that specific failure cannot recur silently. It does not read *this* sentence: the count here is still hand-maintained, and the `init` row in `README.md` is too.
 - **`session`** — reads config and loads the active provider reference for the session.
 
 ## Repo configuration
@@ -167,7 +171,9 @@ The full rule, and the reasoning behind it, is in `skill/core/SKILL.md`.
 
 ## Verification
 
-The product here is JSON and Markdown, so verification is structural. Five checks: every JSON file parses; every registered skill is a directory holding a `SKILL.md`; every registered command is an existing `.md` file; `work-issue` and `work-pr` do not duplicate each other's verify procedure; and the plugin descriptions in this file match `marketplace.json` verbatim. All five are in the README, and `.hivrr.json` `verify.test` is the runnable form of them — **keep the count here matching both.**
+The product here is JSON and Markdown, so verification is structural. Eight checks: every JSON file parses; every registered skill is a directory holding a `SKILL.md`; every registered command is an existing `.md` file; `work-issue` and `work-pr` do not duplicate each other's verify procedure; the plugin descriptions in this file match `marketplace.json` verbatim; the skill and command lists beside those descriptions match it too; every skill's phase headings run `1..N` with any stated count matching; and the count opening this sentence matches the number of checks in the README block. All of them are in the README, and `.hivrr.json` `verify.test` is the runnable form of them.
+
+**That opening count is itself the eighth check**, so it can no longer drift silently — it is compared against the `# ` comments at column 0 in the README **Verification** block. It is the only check count left in the repo; `README.md` carried two more, and those were reworded away rather than checked, because a bare number tells a reader nothing they can act on while this sentence has to *name* what it counts. Adding a check means extending this sentence, and the check will say so if you forget.
 
 Because JSON and Markdown *are* the product in this repo, a change to `marketplace.json` or any `SKILL.md` is a behavior change, not a docs change. Do not skip verification on it.
 
