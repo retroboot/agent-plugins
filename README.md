@@ -157,7 +157,7 @@ unconventional — structural checks defined in a `README`, a bespoke harness, a
 detection tables have no row for. Phase 4 then leaves the block alone. Without it, detection
 correctly finds nothing and writes `null`, which means "checked, there is nothing" — so the
 execution skills report `skipped` and an unattended run skips verification on a repo that has it.
-**This repo uses the sentinel**, because its own checks are the five in **Verification** below, and
+**This repo uses the sentinel**, because its own checks are the ones in **Verification** below, and
 `verify.test` holds the runnable form of them.
 
 Run `init` to scaffold the file from detected repo state. It never overwrites an existing one.
@@ -232,11 +232,48 @@ grep -oE '^### `[^`]+`' CLAUDE.md | tr -d '#` ' \
       jq -e --arg n "$name" 'any(.plugins[]; .name == $n)' .claude-plugin/marketplace.json \
         >/dev/null || echo "DESC NO PLUGIN $name"
     done
+
+# README and CLAUDE.md skill and command lists match marketplace.json
+jq -r '.plugins[].name' .claude-plugin/marketplace.json | while read -r p; do
+    h="### \`$p\`"
+    mk_s=$(jq -r --arg p "$p" '.plugins[] | select(.name == $p) | (.skills // [])[]' \
+             .claude-plugin/marketplace.json | sed 's|.*/||' | sort -u)
+    mk_c=$(jq -r --arg p "$p" '.plugins[] | select(.name == $p) | (.commands // [])[]' \
+             .claude-plugin/marketplace.json | sed 's|.*/||; s|\.md$||' | sort -u)
+    sec_c=$(awk -v h="$h" '$0 == h { p = 1; next } p && /^#/ { exit } p' CLAUDE.md)
+    sec_r=$(awk -v h="$h" '$0 == h { p = 1; next } p && /^#/ { exit } p' README.md)
+    cl_s=$(printf '%s\n' "$sec_c" | sed -n 's/^\*\*Skills:\*\* *//p'   | tr ',' '\n' | tr -d '` ' | grep . | sort -u)
+    cl_c=$(printf '%s\n' "$sec_c" | sed -n 's/^\*\*Commands:\*\* *//p' | tr ',' '\n' | tr -d '` ' | grep . | sort -u)
+    rd_s=$(printf '%s\n' "$sec_r" | sed -n 's/^| *`\([^`]*\)` *|.*/\1/p' | sort -u)
+    [ "$mk_s" = "$cl_s" ] || echo "SKILLS DRIFT $p claude"
+    [ "$mk_s" = "$rd_s" ] || echo "SKILLS DRIFT $p readme"
+    [ "$mk_c" = "$cl_c" ] || echo "COMMANDS DRIFT $p claude"
+  done
+
+# every skill's phase headings run 1..N, and any stated count matches them
+w2n() { case "$1" in one) echo 1;; two) echo 2;; three) echo 3;; four) echo 4;; five) echo 5;;
+        six) echo 6;; seven) echo 7;; eight) echo 8;; nine) echo 9;; ten) echo 10;;
+        eleven) echo 11;; twelve) echo 12;; thirteen) echo 13;; *) echo 0;; esac; }
+for f in skill/*/SKILL.md; do
+    nums=$(grep '^## Phase [0-9]' "$f" | sed 's/^## Phase *\([0-9][0-9]*\).*/\1/' | sort -n -u)
+    cnt=$(printf '%s\n' "$nums" | grep -c .)
+    [ "$cnt" -eq 0 ] && continue
+    [ "$nums" = "$(seq 1 "$cnt")" ] \
+      || echo "PHASE SEQUENCE $f (numbered $(echo $nums | tr '\n' ' ')- expected 1 to $cnt)"
+    said=$(sed -n 's/.*[Tt]he \**\(one\|two\|three\|four\|five\|six\|seven\|eight\|nine\|ten\|eleven\|twelve\|thirteen\)\** phases.*/\1/p' "$f" | head -1)
+    [ -n "$said" ] || continue
+    [ "$(w2n "$said")" = "$cnt" ] || echo "PHASE COUNT DRIFT $f (says $said, has $cnt)"
+  done
+
+# CLAUDE.md's stated check count matches the number of checks in this block
+n=$(awk '/^## Verification/ { v = 1; next } v && /^## / { exit } v' README.md | grep -c '^# ')
+said=$(sed -n 's/.*[^A-Za-z]\([A-Za-z][a-z]*\) checks:.*/\1/p' CLAUDE.md | head -1 | tr 'A-Z' 'a-z')
+[ "$(w2n "$said")" = "$n" ] || echo "CHECK COUNT DRIFT CLAUDE.md says $said, README has $n"
 ```
 
-Silence from all five means everything registered resolves, nothing is duplicated, and the two
-places that describe the plugins agree. See **Path resolution** in `CLAUDE.md` for the contract the
-first three commands enforce.
+Silence from all of them means everything registered resolves, nothing is duplicated, the phase
+numbering holds, and the three places that describe the plugins agree. See **Path resolution** in
+`CLAUDE.md` for the contract the first three commands enforce.
 
 The fourth check guards against the failure the others cannot see: two skills carrying the same
 procedure in prose. Markdown that parses and resolves is still wrong if it says the same thing
@@ -283,7 +320,7 @@ That leaves `CLAUDE.md` instructing every agent about a plugin nobody can instal
 backticked `###` heading as a plugin claim, which is why `CLAUDE.md` reserves that heading shape for
 plugins and documents everything else at another level.
 
-**The `verify.test` form of this check is not a copy of the text above.** It is wrapped in
+**The `verify.test` form of these checks is not a copy of the text above.** It is wrapped in
 `bash -c '…'`, so it can contain no single quote, and a bare backtick would be command substitution
 to the inner shell — it builds one with `printf "\140"` instead, and reads the plugin names once
 into a variable rather than calling `jq --arg` per heading. Transcribe the **behavior** between the
@@ -295,6 +332,84 @@ To re-run them: edit one `CLAUDE.md` description, edit one `marketplace.json` de
 period to one, insert a blank line under one heading, rename one heading, and replace one em dash
 with a hyphen. Each must produce its own message and exit non-zero, and a clean tree must print
 `structural checks pass`.
+
+The sixth check finishes the job the fifth started. `CLAUDE.md` repeats each plugin's *description*
+and the fifth check now holds that; the `**Skills:**` and `**Commands:**` lines beside it, and
+`README.md`'s per-plugin table under **Skills**, restate `marketplace.json`'s `skills` and `commands`
+and nothing held those. `CLAUDE.md` states the rule — *"keep this list in sync with it"* — which is a
+directive with no check behind it, one level down from the one the fifth check replaced. It compares
+three sets per plugin on basenames, and reports per plugin and per direction so each message names
+its own fix:
+
+| Output | Meaning |
+|---|---|
+| `SKILLS DRIFT {plugin} claude` | The `**Skills:**` line disagrees with `marketplace.json` |
+| `SKILLS DRIFT {plugin} readme` | The plugin's table under **Skills** disagrees with `marketplace.json` |
+| `COMMANDS DRIFT {plugin} claude` | The `**Commands:**` line disagrees with `marketplace.json` |
+
+There is no `COMMANDS DRIFT {plugin} readme`, because `README.md` lists commands as a flat usage
+block under **Commands** rather than per plugin. That is a real gap, not an oversight — the commands
+in that block are unguarded.
+
+Three properties of the two Markdown files are load-bearing here, all three recorded in advance by
+#172 from what the fifth check cost to get right. The section extractor stops at the next heading of
+**any** level, because `data-platform`'s table is the last one under **Skills** and an extractor that
+stops only at `^### ` runs straight on into the configuration tables. `README.md` lists the shared setup skills as
+``| `init` | Shared setup skill — see `dev` |`` under `planner` and `dispatcher`, and that is a row
+like any other, so it compares equal. And `data-platform` has no `commands` key at all, so
+`(.commands // [])` must yield an empty set that compares equal to an absent `**Commands:**` line.
+All three are confirmed by observation rather than assumption: with the sets printed, every plugin
+extracts a non-empty skill set from all three files.
+
+The seventh check reads each skill's phase headings. Two properties, and the first is nearly free:
+the distinct phase numbers must run `1..N` with no gap, and a skill that *states* a count in prose
+must state the right one. Only `init` states one today — *"The seven phases run in order, every
+time"* — and that sentence is not descriptive. It is the mechanism that stops an agent exiting
+early, and it was **already wrong**, reading `five` against seven headings, for as long as `init`
+had seven. An agent that finished Phase 5 had satisfied the contract exactly as written and could
+stop before **Phase 6 — Reconcile the Config**, the phase that commits `.hivrr.json`, in the skill
+that is bootstrap step 1 of every command in `dev`, `planner`, and `dispatcher`.
+
+`merge-pr` has a `## Phase 2b`, deliberately. The check counts **distinct** numbers, so `2b` folds
+into `2` and twelve headings yield eleven contiguous phases. Do not renumber the skill to satisfy
+the check. A skill that states no count is not required to — thirteen of the fourteen state none and
+the check is silent on all of them.
+
+**The heading match is anchored to a digit — `^## Phase [0-9]`, not `^## Phase` — and must stay that
+way.** The `sed` after it only rewrites lines containing a number, so an unanchored match passes a
+heading like `## Phase Contract` through whole, into the list of phase *numbers*, where it inflates
+the count and reports a sequence failure against a file that has none. That heading is not
+hypothetical: `skill/init/SKILL.md` opens with a bolded **"Phase contract"** paragraph, and promoting
+it to a heading is an ordinary edit. A check that reports drift which does not exist gets switched
+off, which costs more than never having written it.
+
+The eighth check is the smallest and the most self-referential: it counts the `# ` comments at
+column 0 in the block above and compares that against the number word before `checks:` in
+`CLAUDE.md`. **One column-0 `# ` comment per check** is therefore the convention the block is
+written to; comments *inside* a check are indented so they do not inflate the count. It counts
+itself, which is correct — it is a check, and it lives in the block.
+
+It reads the number word with `w2n`, **the helper defined in the seventh check above** — which is
+why #173 wanted the two done in one pass. Deleting or reordering the seventh breaks the eighth. That
+fails loudly rather than silently, since `w2n: command not found` is caught by the `2>&1` and exits
+non-zero, but do not move one without the other.
+
+This replaced three hand-maintained counts, one of which was already wrong: `CLAUDE.md` read
+*"All three commands are in the README"* when there were four, and had since the duplication check
+was added. Nobody noticed, because nothing reads a number in prose. `README.md`'s two bare counts
+were **reworded away** rather than checked — *"the checks in **Verification** below"* carries the
+same meaning and cannot drift. `CLAUDE.md`'s count survives because it earns it: the sentence *names*
+the checks, so adding one forces the sentence to describe it.
+
+To re-run the three: remove a skill from a plugin in `marketplace.json`, delete a `README.md` table
+row, delete an entry from a `**Skills:**` line, state the wrong phase count in `skill/init/SKILL.md`,
+renumber a phase heading to leave a gap, and change the number word in `CLAUDE.md`. Each must produce
+its own message.
+
+The digit anchor needs a fixture, because no skill in the repo can currently trip it. Add a
+`## Phase Contract` heading above the numbered ones in any `SKILL.md`, confirm the check stays
+**silent**, then drop the `[0-9]` from the match and confirm it reports `PHASE SEQUENCE` naming that
+heading as a phase number. Revert both.
 
 **Extracting does not always mean a new reference file.** The blanket-staging prohibition was
 allowlisted and then extracted to the **Git Safety** section of `skill/core/SKILL.md`, because every
@@ -315,16 +430,17 @@ rather than merely reachable, to load it before the skill that cites it. Packagi
 link resolve; bootstrap order is what makes it free.
 
 Where those inline copies point at other skills, keep the reference **phase-agnostic** — "the commit
-phases of `work-issue` and `work-pr`", not "Phase 10 and Phase 9". Phase numbers are hand-maintained
-and no check reads prose, so a skill that gains or loses a phase leaves every citation of it silently
-wrong.
+phases of `work-issue` and `work-pr`", not "Phase 10 and Phase 9". The seventh check reads a skill's
+count of its *own* phases; it cannot read a citation of someone else's, and no check reads prose. A
+skill that gains or loses a phase still leaves every cross-skill citation of it silently wrong, which
+is why #169 removed the last two rather than renumbering them.
 
-**`.hivrr.json` `verify.test` is the runnable form of these five checks.** It runs them from the
+**`.hivrr.json` `verify.test` is the runnable form of the checks above.** It runs them from the
 repo root, prints only findings, and exits non-zero when there are any — which is what makes
 `work-issue` and `work-pr` report `tests pass` here instead of `tests skipped`. **Adding or changing
 a check above means changing it there too.** Nothing enforces that: both files stay valid Markdown
 and JSON however far apart they drift, and `verify.detectedFrom: ["manual"]` stops `init` from
-re-deriving the command. A sixth check added here and not there is simply never run.
+re-deriving the command. A check added here and not there is simply never run.
 
 **The duplication check covers one pair, deliberately.** Other same-named skills share lines over
 the same threshold today — `planning` and `brainstorm` share the session-UUID bootstrap and its fallback

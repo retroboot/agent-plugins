@@ -139,7 +139,8 @@ rather than issues, so there is no task graph to match this issue against. Read 
 reasoning, take the task-id fallback below, and continue — do not warn about a missing plan.
 
 **Local file fallback:** `.ai/session/{SESSION_UUID}/plan.md`, written by the `planning` skill when
-memory was unavailable to it. See Phase 12 of the `planning` skill for what writes these.
+memory was unavailable to it. `planning` ships in `planner`, so a `dev`-only install has no
+`skill/planning/` to read — the keys below are the whole contract, and the file is self-describing.
 
 The fallback is not lossless. `planning` writes the keys above separately to memory but
 collapses its file fallback into a single `plan.md`, so `decisions` may be absent when reading from
@@ -453,7 +454,7 @@ Use the **Create PR** command from the loaded reference with:
 - Body: what was done, why, how to test it, and a `Closes #N` line for every issue in the group (use Linear identifiers like `ENG-123` if `ISSUE_TRACKER=linear`)
 - Link it to all relevant issues
 
-**When the base is not the repository default branch**, GitHub will not honor the `Closes #N` keywords on merge. That is expected — `merge-pr` Phase 7 closes them explicitly. Keep the lines in the body regardless; they are what `merge-pr` parses.
+**When the base is not the repository default branch**, GitHub will not honor the `Closes #N` keywords on merge. That is expected — `merge-pr` closes them explicitly where it closes linked issues. Keep the lines in the body regardless; they are what `merge-pr` parses.
 
 Display: `PR: {url} (base: {integration})`
 
