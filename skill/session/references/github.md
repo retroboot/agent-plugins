@@ -43,6 +43,127 @@ gh issue close {N} --repo {OWNER}/{REPO}
 
 ---
 
+## Sub-Issues
+
+`gh` has **no** first-class support for sub-issues — there is no `gh issue` subcommand, no
+`--parent` flag on `gh issue create`, and `parent`/`subIssues` are absent from the
+`gh issue view --json` field list. Every operation here is `gh api`.
+
+**GraphQL is the canonical path.** It resolves every identifier in one query and returns the
+updated summary from each mutation, so a successful call is self-verifying. REST is documented at
+the end as a fallback.
+
+### The three identifiers
+
+One issue carries three. Using the wrong one is the most common failure here:
+
+| Kind | Example | Used by |
+|---|---|---|
+| number | `126` | `gh issue` commands, issue bodies |
+| `databaseId` | `5218577347` | REST `sub_issue_id`, `before_id`, `after_id` |
+| node `id` | `I_kwDORlvmmc8AAAABNw0r_g` | GraphQL `issueId`, `subIssueId` |
+
+Passing a **number** where REST wants a `databaseId` returns a bare `404 Not Found` — it does not
+say the identifier was the wrong kind. The GraphQL path avoids `databaseId` entirely.
+
+### Resolve node IDs
+
+Resolve every issue you intend to link in **one** query using aliases, rather than one query per
+issue:
+
+```
+gh api graphql -f query='
+  query($o:String!,$r:String!,$p:Int!,$c:Int!){
+    repository(owner:$o,name:$r){
+      parent: issue(number:$p){ id }
+      child:  issue(number:$c){ id }
+    } }' -f o={OWNER} -f r={REPO} -F p={PARENT} -F c={CHILD}
+```
+
+### Read hierarchy
+
+```
+gh api graphql -f query='
+  query($o:String!,$r:String!,$n:Int!){
+    repository(owner:$o,name:$r){
+      issue(number:$n){
+        parent { number title state }
+        subIssues(first:100){ totalCount nodes{ number title state } }
+        subIssuesSummary { total completed percentCompleted }
+      } } }' -f o={OWNER} -f r={REPO} -F n={N}
+```
+
+`parent` is `null` for a top-level issue. `subIssuesSummary.total` is `0` for a leaf.
+These two facts are how every consumer distinguishes an epic from a workable issue.
+
+### Link a child to a parent
+
+**Check first — this is not idempotent.** Re-adding an already-linked child returns `422`
+(`Issue may not contain duplicate sub-issues and Sub issue may only have one parent`), unlike
+`gh project item-add`, which is safe to repeat. Read the child's `parent` before adding:
+
+- `parent` is `null` → add it.
+- `parent` is already the intended parent → **already linked, skip.** Not an error.
+- `parent` is a *different* issue → warn and skip. A sub-issue has exactly one parent;
+  re-parenting is an explicit remove-then-add, never an implicit overwrite.
+
+```
+gh api graphql -f query='
+  mutation($p:ID!,$c:ID!){
+    addSubIssue(input:{issueId:$p, subIssueId:$c}){
+      issue { number subIssuesSummary { total completed } }
+      subIssue { number title }
+    } }' -f p={PARENT_NODE_ID} -f c={CHILD_NODE_ID}
+```
+
+The response names both issues and the updated summary — use it as the confirmation. Do not
+re-query to verify.
+
+### Unlink a child
+
+```
+gh api graphql -f query='
+  mutation($p:ID!,$c:ID!){
+    removeSubIssue(input:{issueId:$p, subIssueId:$c}){
+      issue { number subIssuesSummary { total completed } }
+    } }' -f p={PARENT_NODE_ID} -f c={CHILD_NODE_ID}
+```
+
+### Reorder children
+
+`reprioritizeSubIssue` moves one child relative to another. Order is display-only — it does not
+imply dependency, and no skill should read it as one.
+
+### Closing behavior
+
+**Closing every child does not close the parent.** Verified: with both children closed the parent
+reported `{total:2, completed:2, percentCompleted:100}` and remained `state: OPEN` with
+`stateReason: null`. The rollup is a display value; nothing acts on it. A skill that wants the
+parent closed must close it explicitly with the **Close** command in `## Issues` above.
+
+### REST fallback
+
+Use only when GraphQL is unavailable. These take `databaseId`, not numbers:
+
+```
+gh api repos/{OWNER}/{REPO}/issues/{N}/sub_issues                                  # list
+gh api --method POST repos/{OWNER}/{REPO}/issues/{N}/sub_issues -F sub_issue_id={DB_ID}
+gh api --method DELETE repos/{OWNER}/{REPO}/issues/{N}/sub_issue -F sub_issue_id={DB_ID}
+```
+
+Note the asymmetry: `GET`/`POST` use plural `sub_issues`; `DELETE` uses **singular** `sub_issue`.
+A typo there returns the same bare `404` as a wrong identifier. `POST` returns the **parent**
+issue, not the child, so it cannot confirm which child was linked.
+
+### Gating
+
+Every operation in this section is gated on `issues.hierarchy` in `.hivrr.json`. When it is
+`false` or absent, these commands are **not run at all** and the calling skill continues silently.
+Every failure here warns and continues — hierarchy is a reporting surface, and the issue or PR is
+the deliverable.
+
+---
+
 ## Pull Requests
 
 **Get diff**

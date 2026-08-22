@@ -42,3 +42,14 @@ linear issue update {ID} --state Done
 - Linear identifiers follow the pattern `[A-Z]+-[0-9]+` (e.g. `ENG-123`). Include them in PR/MR descriptions to link issues.
 - Linear does not support PR/MR operations — branch and merge via the repo provider.
 - To list the workflow states for a team: `linear team states --team {TEAM}`.
+
+---
+
+## Sub-Issues
+
+Linear has a **native** parent/sub-issue model. It does not route through the GitHub commands in
+`github.md`, and `issues.hierarchy` does not govern it.
+
+Wiring Linear hierarchy into the hierarchy-consuming skills is deliberately out of scope. Until it
+is done, treat `issues.hierarchy` as `false` when `ISSUE_TRACKER=linear` so that no skill emits
+GitHub-shaped commands against a Linear tracker.
