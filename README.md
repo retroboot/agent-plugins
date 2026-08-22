@@ -190,10 +190,33 @@ jq -r '.plugins[] | (.commands // [])[]' .claude-plugin/marketplace.json | sort 
       case "$p" in *.md) ;; *) echo "NO .md EXTENSION $p"; continue ;; esac
       [ -f "$p" ] || echo "MISSING $p"
     done
+
+# work-issue and work-pr do not duplicate each other's verify procedure
+grep -Fxf skill/work-pr/SKILL.md skill/work-issue/SKILL.md \
+  | awk 'length > 60' \
+  | grep -vFxf docs/shared-lines-allowlist.txt \
+  | grep . && echo "DUPLICATED — extract to a shared reference" || true
 ```
 
-Silence from all three means everything registered resolves. See **Path resolution** in `CLAUDE.md`
-for the contract these commands enforce.
+Silence from all four means everything registered resolves and nothing is duplicated. See **Path
+resolution** in `CLAUDE.md` for the contract the first three commands enforce.
+
+The fourth check guards against the failure the others cannot see: two skills carrying the same
+procedure in prose. Markdown that parses and resolves is still wrong if it says the same thing
+twice and the two copies disagree. `docs/shared-lines-allowlist.txt` holds the lines the two
+execution skills are *meant* to share — a flag, a warning, a framing sentence, and the two-line
+pointer at `skill/init/references/verify.md` itself. Adding a line to it is a deliberate claim that
+the duplication is correct; if you cannot make that claim, extract the line into a reference
+instead. Never raise the `length > 60` threshold to make the check pass — that hides future
+duplication silently, which is the failure the check exists to catch.
+
+**The check covers one pair, deliberately.** Other same-named skills share lines over the same
+threshold today — `planning` and `brainstorm` share the session-UUID bootstrap and its fallback
+warning, `score-issues` and `group-issues` share their `excluded` contract. Widening the check to
+every pair needs a **per-pair** allowlist first, because some of that sharing is required rather
+than accidental: the `excluded` contract paragraphs are specified to be byte-identical, so a
+repo-wide check with one shared allowlist would report a mandated duplication as a defect. Treat
+the uncovered pairs as known and unguarded, not as verified.
 
 ## License
 

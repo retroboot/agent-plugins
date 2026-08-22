@@ -1,0 +1,9 @@
+Before starting: read this entire skill, then create a focused todo list, then execute.
+- An optional `--auto` flag to skip the user approval checkpoint
+If `--auto` is set and you're unsure, default to `medium` and continue.
+If `--auto` is not set and you're genuinely unsure, ask the user one focused question.
+If it reports anything, display `WARNING: Working tree has uncommitted changes — continuing anyway` and continue. This is a warning, not a guard — do not stash, reset, or discard the changes.
+For **simple** tasks: skip this phase, go straight to implementing.
+Emit the completion JSON as defined in the command's Output section.
+Follow [`verify.md`](../init/references/verify.md) — it has the command resolution, the
+run-and-show-real-output rule, the skip criteria, and the reporting format.
