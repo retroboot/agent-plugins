@@ -87,6 +87,61 @@ Store everything you learn about the issues as `issue_data`.
 
 Display: `Fetched: {count} issue(s) from {repo_owner}/{repo_name}`
 
+### Load session context
+
+**Skip this entire section when `SESSION_UUID` is not set.** An issue worked directly from GitHub or
+Linear has no session behind it, and that is the normal case — say nothing and continue to Phase 4.
+
+When it is set, this issue is one task in a planning session, and the reasoning that produced it
+lives in memory. Read it before planning so the implementation stays coherent with the original
+intent rather than re-deriving it from the issue body alone.
+
+**Memory read (primary):**
+```
+session/{SESSION_UUID}/prd         full PRD text
+session/{SESSION_UUID}/plan        the task graph
+session/{SESSION_UUID}/decisions   architectural choices made during decomposition
+```
+
+**Local file fallback:** `.ai/session/{SESSION_UUID}/plan.md`, written by the `planning` skill when
+memory was unavailable to it. See Phase 12 of the `planning` skill for what writes these.
+
+The fallback is not lossless. `planning` writes the three keys above separately to memory but
+collapses its file fallback into a single `plan.md` holding the plan and PRD content, so
+`decisions` may be absent when reading from disk. Treat that as a missing key — the warn-and-continue
+rule below already covers it — rather than as a read failure.
+
+Hold the result as `session_context` and carry it through Phase 6 planning and Phase 7
+implementation. It is context, not instruction: where `session_context` and the issue body conflict,
+the issue body wins — it is the more recent statement of intent.
+
+**Resolve the task id.** The writes below are keyed by `task_id`, not by issue number. Each entry in
+`plan` carries both a `task_id` and a `github_issue_url`, so match the URL of the issue being worked
+against `plan[].github_issue_url` and take that entry's `task_id`. When no entry matches — the issue
+was created outside this session, or `plan` was unreadable — fall back to the issue number itself and
+note it: `Session: no plan entry for #{number}, keying task by issue number`.
+
+Resolve one `task_id` per issue in the group, not one for the group. A wave produces a single PR for
+several issues, and the session tracks each of those issues as its own task.
+
+**Memory write:** for each issue in the group,
+```
+session/{SESSION_UUID}/task/{task_id}/status = "running"
+```
+
+**Local file fallback:** `.ai/session/{SESSION_UUID}/task/{task_id}/status.md`
+
+**Every failure here is a warning, never a stop.** Memory unreachable, session keys absent (this is
+the first task in a new session), a malformed `plan` — in every case log the warning, leave
+`session_context` empty, and continue. A worker that cannot reach memory must still be able to
+implement the issue in front of it.
+
+Log the fallback exactly as the `planning` skill does:
+`WARNING: Memory unavailable, using local file fallback at .ai/session/{SESSION_UUID}/`
+
+Display: `Session context loaded: {N} memory entries` — or, when nothing was found,
+`Session: {SESSION_UUID} — no prior context`
+
 ---
 
 ## Phase 4 — Assess Complexity
@@ -292,6 +347,23 @@ Wait for their response before continuing.
 
 Stage all changes: `git add -A`
 
+**Do not stage the session fallback directory.** When memory was unavailable, Phase 3 and Phase 12
+write under `.ai/session/{SESSION_UUID}/`. That is worker scratch state, not part of the change, and
+`git add -A` will sweep it into the PR unless the target repo already ignores it. Before committing:
+
+```bash
+git status --porcelain -- .ai/session
+```
+
+If it reports anything, unstage it and leave it on disk:
+
+```bash
+git reset -q -- .ai/session
+```
+
+Suggest the repo add `.ai/` to its `.gitignore` so this stops recurring, but do not edit
+`.gitignore` as part of an unrelated issue's commit.
+
 Write a conventional commit message:
 - Format: `{type}({scope}): {description}`
 - Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
@@ -320,6 +392,54 @@ Display: `PR: {url} (base: {integration})`
 ---
 
 ## Phase 12 — Done
+
+### Write the session result
+
+**Skip this section when `SESSION_UUID` is not set**, exactly as Phase 3 does.
+
+The PR now exists, and the session has no other way to learn that. Write the outcome before exiting,
+once per issue in the group, using the same `task_id` resolved in Phase 3:
+
+**Memory write:**
+```
+session/{SESSION_UUID}/task/{task_id}/status = "complete"
+session/{SESSION_UUID}/task/{task_id}/result = {
+  pr_url,          the PR/MR that closed this issue — see the pairing rule below
+  pr_number,
+  summary,         what changed and why, a few sentences
+  files_changed,   git diff --name-only origin/{integration}...HEAD
+  key_decisions    choices made during implementation that the issue did not specify
+}
+```
+
+`files_changed` needs the explicit range. By this phase the work is committed and pushed, so a bare
+`git diff --name-only` compares the working tree against `HEAD` and reports nothing — an empty list
+that reads as a successful write rather than a failed one.
+
+**Local file fallback:** `.ai/session/{SESSION_UUID}/task/{task_id}/result.json`
+
+**Pair each task with the PR that actually closed it.** The two multi-issue strategies differ here:
+
+- **Unified (wave)** — one PR closes the whole group, so every task shares the same `pr_url`.
+- **Sequential** — each issue went through Phase 11 separately and has its own PR. Pair each
+  `task_id` with that issue's PR, **not** with the most recently created one. Writing the last URL
+  across all of them would mark every task complete against a PR that does not contain its work,
+  and nothing downstream could detect that.
+
+Give each issue its own `summary` and `key_decisions` covering that issue's slice of the change; a
+shared summary repeated N times tells the session nothing it did not already know from the plan.
+
+`key_decisions` is the field worth care. Phase 7 resolves style, naming, and test-shape questions
+autonomously and does not otherwise record that it did. This is where those resolutions become
+visible to whatever reads the session next.
+
+**Warn and continue on any failure.** The PR has already been created; a memory write that fails
+cannot be allowed to make a completed task look failed. Log the warning and emit the completion JSON
+regardless.
+
+Display: `Session result written to memory` — or the fallback warning from Phase 3.
+
+### Emit the result
 
 Emit the completion JSON as defined in the command's Output section.
 
