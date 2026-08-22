@@ -130,7 +130,7 @@ Per-repo settings live in a committed `.hivrr.json` at the repository root, so t
 
 | Key | What it does | Default when absent |
 |---|---|---|
-| `provider` | Where the repo is hosted | global `providerConfig.repoProvider` |
+| `provider` | Where the repo is hosted | global `providerConfig.repoProvider`, then the host in `git remote get-url origin` |
 | `issueTracker` | Where this repo's issues live — independent of `provider` | global `providerConfig.issueTracker`, then the resolved `provider` |
 | `branches.integration` | Branch that feature work forks from and targets | repo default branch |
 | `branches.ladder` | Environment rungs, lowest first. Drives `/promote` and promotion detection in `merge-pr` | `[default branch]` — promotion no-ops |

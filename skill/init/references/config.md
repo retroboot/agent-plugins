@@ -48,7 +48,7 @@ Every top-level key is optional. A file containing only `{}` is valid and resolv
 
 | Key | Type | Default when absent | Read by |
 |---|---|---|---|
-| `provider` | `"github"` \| `"gitlab"` | global `providerConfig.repoProvider` | `session` |
+| `provider` | `"github"` \| `"gitlab"` | global `providerConfig.repoProvider`, then the host in `git remote get-url origin` | `session` |
 | `issueTracker` | `"github"` \| `"gitlab"` \| `"linear"` | global `providerConfig.issueTracker`, then the resolved `provider` | `session` |
 | `branches.integration` | string | repo default branch | `work-issue`, `wave` |
 | `branches.ladder` | string[] | `[default branch]` | `merge-pr`, `promote` |

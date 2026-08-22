@@ -24,7 +24,7 @@ Then resolve each key by taking the first source that defines it:
 
 | Variable | `.hivrr.json` | then global `providerConfig` | then |
 |---|---|---|---|
-| `REPO_PROVIDER` | `provider` | `repoProvider` | repo's own host |
+| `REPO_PROVIDER` | `provider` | `repoProvider` | the host in `git remote get-url origin` |
 | `ISSUE_TRACKER` | `issueTracker` | `issueTracker` | the resolved `REPO_PROVIDER` |
 
 **Resolve the two separately.** They are independent facts, and a repo that overrides one without

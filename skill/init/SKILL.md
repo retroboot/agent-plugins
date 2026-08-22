@@ -159,6 +159,11 @@ git branch -r --format='%(refname:short)' | sed 's|^origin/||'
 From the results, derive proposed values:
 
 - `provider` — the resolved `repoProvider`
+- `issueTracker` — the resolved `issueTracker`. Where it disagrees with the repo's own host, propose
+  the **repo's host** and say so in the Step 4 confirmation. A config written *for this repo* is the
+  one place that disagreement is most likely a stale global setting, and writing `provider` without
+  `issueTracker` reproduces the exact defect `.hivrr.json` exists to prevent — a repo resolving to
+  one provider and reading its issues from another.
 - `branches.integration` — the default branch, unless a `dev` branch exists on the remote, in which case propose `dev`
 - `branches.ladder` — the subset of `["dev", "staging", "main"]` (or `master`) that actually exists on the remote, ordered lowest environment first. A single existing branch yields a single-rung ladder, which is correct.
 - `branches.protected` — omit this key unless the ladder or default branch adds a name the documented default does not already cover. Because precedence resolves per key, writing the key at all *replaces* the default set rather than extending it, so a scaffold that writes a narrow list leaves the repo less protected than one with no config at all. When you do write it, write the **union** of the documented default set (`main, master, dev, develop, staging, release/*`), the ladder, and the default branch — never a subset.
