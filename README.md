@@ -120,6 +120,11 @@ Per-repo settings live in a committed `.hivrr.json` at the repository root, so t
     "statusFieldId": "PVTSSF_xxx",
     "status": { "todo": "...", "inProgress": "...", "done": "..." }
   },
+  "worktree": {
+    "enabled": true,
+    "carry": [".env", ".claude/settings.local.json"],
+    "setup": "npm ci"
+  },
   "verify": {
     "test": "npm test",
     "lint": "npx eslint .",
@@ -136,6 +141,7 @@ Per-repo settings live in a committed `.hivrr.json` at the repository root, so t
 | `branches.ladder` | Environment rungs, lowest first. Drives `/promote` and promotion detection in `merge-pr` | `[default branch]` — promotion no-ops |
 | `branches.protected` | Branches that are never deleted or force-pushed | `main, master, dev, develop, staging, release/*` |
 | `project` | GitHub Projects v2 board wiring | absent — all board operations are silent no-ops |
+| `worktree` | Isolation for mutating sessions — needs a `CLAUDE.md` authorization line as well as this key | absent — every worktree operation is a silent no-op |
 | `verify` | Test and lint commands, plus the files that justified them | model detects and offers to record |
 | `verify.detectedFrom` | The files that justified each command — or `["manual"]`, which pins the block and stops `init` re-detecting it | model records what it matched |
 

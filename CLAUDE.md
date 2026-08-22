@@ -101,6 +101,24 @@ still real and still readable through the tracker; there is simply no board for 
 If a board is wanted later, `skill/init/references/config.md` has the full sequence: create it, add
 `project.owner` and `project.number`, and run `init` to resolve and cache the IDs.
 
+## Worktree isolation
+
+Mutating workflows can run in a git worktree so concurrent sessions in one checkout cannot commit
+each other's changes. It is opt-in per repo and needs two things: `worktree.enabled` in
+`.hivrr.json`, and a line in the repo's own `CLAUDE.md` authorizing the harness `EnterWorktree`
+tool. One without the other silently does nothing.
+
+Worktrees live under `.claude/worktrees/`, so an adopting repo needs `.claude/` in its `.gitignore`
+as well — otherwise the worktree shows up as an untracked path and `work-issue` Phase 10 stops on
+it, reporting a concurrent session that is not there. This repo already ignores `.claude/`.
+
+They are **not** free — untracked files do not travel, and they must be cleaned up. See
+`skill/init/references/config.md`.
+
+**This repo does not enable it.** `agent-plugins` has no dependencies, no `.env`, and its sessions
+edit Markdown rather than running a stack, so the setup cost buys nothing here. Do not add the key
+or the authorization line — like the absent project board above, the absence is a decision.
+
 ## Script policy
 
 **This repo ships no shell scripts.** A script earns its place only when it is read-only or trivially reversible, non-interactive, single-purpose, and performs deterministic computation the model cannot reliably do in prose. Workflow logic goes in skills as explicit steps, where each command is visible and each real output is read.
