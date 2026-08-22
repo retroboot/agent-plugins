@@ -222,8 +222,9 @@ jq -r '.plugins[] | select(.description | endswith(".")) | "DESC TERMINAL PERIOD
   .claude-plugin/marketplace.json
 jq -r '.plugins[] | "\(.name)\t\(.description)"' .claude-plugin/marketplace.json \
   | while IFS="$(printf '\t')" read -r name desc; do
+      grep -qxF "### \`$name\`" CLAUDE.md || { echo "DESC NO HEADING $name"; continue; }
       line=$(awk -v h="### \`$name\`" 'p { print; exit } $0 == h { p = 1 }' CLAUDE.md)
-      [ -n "$line" ] || { echo "DESC NO HEADING $name"; continue; }
+      [ -n "$line" ] || { echo "DESC BLANK AFTER HEADING $name"; continue; }
       [ "$line" = "$desc." ] || echo "DESC DRIFT $name"
     done
 grep -oE '^### `[^`]+`' CLAUDE.md | tr -d '#` ' \
@@ -252,14 +253,21 @@ repeats each plugin's `description` verbatim under its `### plugin` heading. Bot
 however far apart they drift, and the first four checks cannot see prose disagreement across two
 files — which is how the descriptions drifted twice, reconciled by hand in #162 and again in #166.
 
-It reports four distinct failures rather than one, because they call for different fixes:
+It reports five distinct failures rather than one, because they call for different fixes:
 
 | Output | Meaning |
 |---|---|
 | `DESC DRIFT {name}` | The `CLAUDE.md` line and the `marketplace.json` description disagree |
 | `DESC NO HEADING {name}` | A plugin ships with no matching `###` section in `CLAUDE.md` |
+| `DESC BLANK AFTER HEADING {name}` | The section exists but nothing follows the heading |
 | `DESC NO PLUGIN {name}` | `CLAUDE.md` documents a plugin `marketplace.json` no longer lists |
 | `DESC TERMINAL PERIOD {name}` | A `marketplace.json` description ends in `.` — see below |
+
+`DESC BLANK AFTER HEADING` is separate from `DESC NO HEADING` on purpose. The comparison reads the
+line **immediately after** the heading, so a blank line between them breaks it — and a blank line is
+invisible in rendered Markdown, so a reader told the heading is missing would look straight at it and
+have nowhere to go. Testing for the heading and for the line under it as two conditions costs one
+`grep` and keeps each message pointing at its own fix.
 
 The last one is not a style rule. The invariant the check compares is `claude_line == description +
 "."`, which only holds because every description is a single sentence with no terminal period. A
@@ -270,7 +278,22 @@ rule; this is what holds it.
 
 `DESC NO PLUGIN` is the direction the description loop structurally cannot see: it iterates
 `marketplace.json`, so a section left behind for a plugin that no longer ships is invisible to it.
-That leaves `CLAUDE.md` instructing every agent about a plugin nobody can install.
+That leaves `CLAUDE.md` instructing every agent about a plugin nobody can install. It reads a
+backticked `###` heading as a plugin claim, which is why `CLAUDE.md` reserves that heading shape for
+plugins and documents everything else at another level.
+
+**The `verify.test` form of this check is not a copy of the text above.** It is wrapped in
+`bash -c '…'`, so it can contain no single quote, and a bare backtick would be command substitution
+to the inner shell — it builds one with `printf "\140"` instead, and reads the plugin names once
+into a variable rather than calling `jq --arg` per heading. Transcribe the **behavior** between the
+two forms, not the characters, and re-run the drift cases below after editing either. This is the
+same warning as "adding a check here means changing it there too", one level finer: a check that
+survives transcription as text but not as behavior passes silently for both files.
+
+To re-run them: edit one `CLAUDE.md` description, edit one `marketplace.json` description, append a
+period to one, insert a blank line under one heading, rename one heading, and replace one em dash
+with a hyphen. Each must produce its own message and exit non-zero, and a clean tree must print
+`structural checks pass`.
 
 **Extracting does not always mean a new reference file.** The blanket-staging prohibition was
 allowlisted and then extracted to the **Git Safety** section of `skill/core/SKILL.md`, because every

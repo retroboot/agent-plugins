@@ -34,8 +34,16 @@ check reports that row as drifted when it is not. The check catches the cause di
 `DESC TERMINAL PERIOD {name}`, so read that as "shorten the description", not "add a period here".
 If a description needs a second clause, join it with a comma rather than starting a new sentence.
 
-The description must also stay on the **single line immediately after** the heading, with no blank
-line between them — that adjacency is what the check reads.
+Two things about the shape of this file are load-bearing, because they are what the check reads:
+
+- **The description stays on the single line immediately after the heading**, with no blank line
+  between them. A blank line reports as `DESC BLANK AFTER HEADING {name}` — the heading is fine, the
+  gap is not, and a blank line is invisible in rendered Markdown.
+- **A backticked `###` heading in this file means a plugin.** The check reads every one of them as a
+  plugin claim and reports `DESC NO PLUGIN` for any that `marketplace.json` does not list. Document
+  anything else — skills, sections, notes — at a different heading level or without backticks. The
+  `init` and `session` entries under **Shared setup skills** are bullets for this reason, not
+  headings.
 
 ### Path resolution
 
