@@ -44,10 +44,14 @@ An issue that is not on the board has no status; keep it.
 **Surface the exclusion** before Phase 3:
 
 ```
-Excluded: #123 In Progress, #456 Done, #789 Epic
+Excluded (board): #123 In Progress, #456 Done
 ```
 
-This skill is machine-executed, so a display line is not enough — record the excluded issues as `excluded` and emit them in Phase 4 alongside `groups`. Store it as `{issue_number_string: status_name}`.
+This line covers board exclusions only, because it runs before Phase 3 has identified any epic.
+Phase 3 Step 1 emits its own line for those. Do not add `Epic` entries here — nothing has been
+classified as one yet.
+
+This skill is machine-executed, so a display line is not enough — record the excluded issues as `excluded` and emit them in Phase 4 alongside `groups`. Store it as `{issue_number_string: reason}`, where the reason is a board status name or `Epic`.
 
 If the board query fails, warn and group every issue — the same fallback as an unconfigured board.
 
@@ -66,7 +70,7 @@ issues that merely share a file may be entirely unrelated.
 
 **Step 1 — Build the dependency edges.** Use structured hierarchy first, prose second.
 
-When `issues.hierarchy` is enabled, read each candidate's `parent` and `subIssues` using the
+When `issues.hierarchy` is enabled, read each candidate's `parent`, `subIssues`, and `subIssuesSummary` using the
 **Read hierarchy** command from the loaded reference. This yields edges that are *data*, not
 inference:
 
@@ -83,6 +87,15 @@ one from topic similarity.
 When `issues.hierarchy` is disabled, absent, or the provider is not `github`, use prose only —
 the behavior this skill had before hierarchy existed. If the hierarchy query fails, warn and fall
 back to prose for that run: losing the structured edges degrades the result, aborting destroys it.
+
+**Surface any epics dropped here**, the same way Phase 2 surfaces board exclusions — this is the
+only place they can be reported, since Phase 2's line runs before they are identified:
+
+```
+Excluded (epic): #789 Epic
+```
+
+Add them to the same `excluded` map Phase 2 populates.
 
 **Step 2 — Measure file overlap.** Collect the file paths each body mentions. Two issues overlap
 when they name the same file, not merely the same directory or product area. Overlap makes grouping

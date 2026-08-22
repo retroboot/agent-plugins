@@ -85,10 +85,20 @@ Do these together:
 
 Store everything you learn about the issues as `issue_data`.
 
-**Check for hierarchy.** When `issues.hierarchy` is enabled, read `parent` and `subIssuesSummary`
-for each issue using the **Read hierarchy** command from the loaded reference. Skip this entirely
-when `issues.hierarchy` is disabled or absent; if the query fails, warn and continue treating every
-issue as workable — losing the check degrades the run, aborting destroys it.
+**Check for hierarchy.** When `issues.hierarchy` is enabled, run the **Read hierarchy** command
+from the loaded reference for each issue and keep all three fields it returns — they answer
+different questions:
+
+- `subIssuesSummary.total` — *is this an epic?*
+- `subIssues.nodes[].state` — *which children are still open?* The summary cannot answer this; it
+  carries counts, not per-child state.
+- `subIssues.nodes[].number` — *which children to name and, under `--auto`, to substitute.*
+
+`subIssues` is capped at 100. Compare `totalCount` against the number of nodes returned, and if
+they differ, say the child list is partial rather than substituting a truncated set.
+
+Skip this entirely when `issues.hierarchy` is disabled or absent; if the query fails, warn and
+continue treating every issue as workable — losing the check degrades the run, aborting destroys it.
 
 If an issue has `subIssuesSummary.total > 0` with at least one child still open, it is an epic.
 Implementing it directly produces one oversized PR that closes a container rather than its
