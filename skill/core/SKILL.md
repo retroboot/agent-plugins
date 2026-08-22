@@ -41,6 +41,36 @@ ladder, `dev` and `staging` are long-lived environments and are exactly as prote
 - Never force push to a branch in the protected set
 - Never delete a branch in the protected set
 
+### Staging
+
+**Stage only the files this work touched.** Never `git add -A` or `git add .` — both stage
+unrelated edits from any other work sharing this checkout, and `-A` does it repo-wide regardless of
+the current directory. A commit that sweeps in someone else's half-finished change is far more
+expensive to unpick than an extra staging command is to write.
+
+Derive the file list from what this run actually changed, stage those paths by name, then read the
+index back before committing:
+
+```bash
+git add {file} {file} …
+git status --short
+```
+
+Every staged path must be one this run touched. **If an unexpected path appears, stop and report
+it** — it means another session is writing to this checkout, which is the exact condition worktree
+isolation exists to prevent. Do not unstage and continue silently.
+
+Staging one file is not the same as committing one file. A bare `git commit` commits the **whole
+index**, including anything staged before this run started, so a phase that commits a single known
+path must pass that path as a pathspec too:
+
+```bash
+git commit -m "{message}" -- {path}
+```
+
+Each skill derives its own file list — that part is not shared, and this section does not specify
+it.
+
 ## Code Review Standards
 
 Rate findings by severity:

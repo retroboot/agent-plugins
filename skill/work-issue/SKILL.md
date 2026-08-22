@@ -417,31 +417,14 @@ Wait for their response before continuing.
 
 ## Phase 10 — Commit
 
-**Stage only the files this work touched.** Never `git add -A` or `git add .` — both stage
-unrelated edits from any other work sharing this checkout, and `-A` does it repo-wide regardless of
-the current directory. A commit that sweeps in someone else's half-finished change is far more
-expensive to unpick than an extra staging command is to write.
+Staging is governed by [**Staging**](../core/SKILL.md#staging) in the `core` skill, which the
+command's bootstrap has already loaded. It carries the prohibition on blanket staging, the explicit
+`git add`, and the `git status --short` check that must come back clean before you commit.
 
-Build the file list from what you actually changed:
+What `core` leaves to this skill is the file list. Build it from what you actually changed:
 
 - **Wave runs:** use the per-issue file lists recorded in Step 3 of the `wave` skill.
 - **Single-issue runs:** use the files you edited, plus any you created.
-
-Then stage them explicitly:
-
-```bash
-git add {file} {file} …
-```
-
-Before committing, confirm nothing unexpected is staged:
-
-```bash
-git status --short
-```
-
-Every staged path must be one you touched for this issue. **If an unexpected path appears, stop and
-report it** — it means another session is writing to this checkout, which is the exact condition
-worktree isolation exists to prevent. Do not unstage and continue silently.
 
 **Never name the session fallback directory in that list.** When memory was unavailable, Phase 3 and
 Phase 12 write under `.ai/session/{SESSION_UUID}/`. That is worker scratch state, not part of the
