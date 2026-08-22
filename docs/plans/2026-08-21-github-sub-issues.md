@@ -36,6 +36,12 @@ Consequence: every operation is raw `gh api`. That diverges from `github.md`, wh
 | **A** | **GraphQL is the canonical path.** REST is documented only as a fallback. | One aliased query resolves every ID needed; mutations return the updated `subIssuesSummary`, so verification is free. REST `POST` returns the *parent*, so you cannot confirm which child you linked from the response. |
 | **B** | **Linking is check-then-add, never blind-add.** | Re-adding an already-linked child returns **`422`**, not a no-op. This breaks the `project item-add` convention ("adding an item that is already on the board is harmless"). Assuming idempotence here produces spurious failures on every resume path. |
 | **C** | **`merge-pr` closes the parent explicitly when the last child closes.** | Verified: with both children closed, the parent sat at `{total:2, completed:2, percentCompleted:100}` and `state: OPEN`, `stateReason: null`. GitHub does **not** auto-close parents. The rollup is display-only. |
+
+**Note on this repo:** the epic rollup is display-only here in a second sense. This repo has no
+Projects v2 board — see **Repo configuration** in `CLAUDE.md`, where the absence is recorded as a
+decision — so there is no board for a rollup to surface on. The hierarchy itself is unaffected:
+parents, children, and `subIssuesSummary` are all real and readable through the tracker, and
+`merge-pr` still closes a satisfied parent. Only the board view is missing.
 | **D** | **`issues` absent from `.hivrr.json` ⇒ silent no-op.** Not a warning. | Mirrors the `project` key exactly. Most repos will not adopt hierarchy; announcing that on every invocation is noise. |
 | **E** | **Epics are created only at Complex tier, or at ≥ `epicThreshold` issues.** | A parent wrapping two issues is bookkeeping overhead with no board benefit. |
 | **F** | **A sub-issue has exactly one parent.** Re-parenting is remove-then-add. | Enforced by the API — the `422` message states it outright. |
