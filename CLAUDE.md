@@ -22,6 +22,12 @@ before precisely because each read as reasonable prose on its own, and nothing c
 you change one, change the other in the same commit; a description is what a user reads when
 deciding whether to install, so an understated one ships a narrower plugin than the one that exists.
 
+For that to be one rule rather than five special cases, **keep every `marketplace.json` description
+a single sentence with no terminal period.** A two-sentence description ends in a period of its
+own, and then this file adds nothing — so `{description}.` stops describing the line here, and any
+check written against the rule reports that row as drifted when it is not. If a description needs a
+second clause, join it with a comma rather than starting a new sentence.
+
 ### Path resolution
 
 Skills and commands are registered with different path shapes, and getting one wrong fails silently
@@ -49,7 +55,7 @@ Implementation and code review — issues, PRs, waves, merges, and environment p
 ---
 
 ### `auditor`
-Code audit skills — security, accessibility, performance, and tech debt.
+Code audit — security, accessibility, performance, and tech debt.
 
 **Skills:** `audit`, `audit-accessibility`, `audit-performance`, `audit-security`, `audit-tech-debt`
 
@@ -67,7 +73,7 @@ Planning and brainstorming — open-ended thinking sessions through to sized iss
 ---
 
 ### `dispatcher`
-Manager utility skills for automated work allocation — issue scoring, wave grouping, and failure diagnosis.
+Manager utilities for automated work allocation — issue scoring, wave grouping, and failure diagnosis.
 
 **Skills:** `init`, `session`, `score-issues`, `group-issues`, `diagnose-failure`
 
@@ -76,7 +82,7 @@ Manager utility skills for automated work allocation — issue scoring, wave gro
 ---
 
 ### `data-platform`
-Full data platform skills — data science, engineering, analysis, AI engineering, Snowflake, and PostgreSQL. Covers the complete stack from ingestion and pipelines to ML, LLMs, dashboards, and database administration.
+Full data platform — data science, engineering, analysis, AI engineering, Snowflake, and PostgreSQL, covering the complete stack from ingestion and pipelines to ML, LLMs, dashboards, and database administration.
 
 **Skills:** `senior-data-scientist`, `senior-data-engineer`, `senior-data-analyst`, `senior-ai-engineer`, `snowflake`, `postgres`, `postgres-query`
 
