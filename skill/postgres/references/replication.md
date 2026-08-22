@@ -1,5 +1,16 @@
 # PostgreSQL Replication
 
+> **Paths use a `<PG_VERSION>` placeholder.** Substitute your installed major version
+> (`15`, `16`, `17`, …) everywhere `<PG_VERSION>` appears — the data and log directories are
+> version-scoped, and copying a path for the wrong version silently targets a different cluster
+> or a directory that does not exist. Confirm yours with:
+>
+> ```bash
+> psql -Atc 'SHOW server_version_num'   # e.g. 170004 -> major version 17
+> pg_lsclusters                         # Debian/Ubuntu: lists version, cluster, and data directory
+> ```
+
+
 ## Streaming Replication (Physical)
 
 ### Primary Server Setup
@@ -35,21 +46,33 @@ SELECT * FROM pg_create_physical_replication_slot('replica_1');
 systemctl stop postgresql
 
 # Remove data directory
-rm -rf /var/lib/postgresql/14/main/*
+rm -rf /var/lib/postgresql/<PG_VERSION>/main/*
 
 # Base backup from primary
 # -R creates standby.signal and recovery config
 # -X stream: stream WAL during backup
 # -S replica_1: use replication slot
-pg_basebackup -h primary-host -D /var/lib/postgresql/14/main \
+pg_basebackup -h primary-host -D /var/lib/postgresql/<PG_VERSION>/main \
   -U replicator -P -v -R -X stream -S replica_1
 ```
 
 ```ini
 # recovery parameters in postgresql.auto.conf (created by pg_basebackup -R):
-primary_conninfo = 'host=primary-host port=5432 user=replicator password=secure_password'
+primary_conninfo = 'host=primary-host port=5432 user=replicator'
 primary_slot_name = 'replica_1'
 ```
+
+> **Do not inline the replication password.** `postgresql.auto.conf` is world-readable in many
+> packagings and is copied verbatim by `pg_basebackup -R`, so a `password=` in `primary_conninfo`
+> leaks to anyone who can read the data directory or a base backup. Supply it out of band instead:
+>
+> - **`.pgpass`** — a `~/.pgpass` line (`primary-host:5432:replication:replicator:<secret>`) owned by
+>   the `postgres` user with mode `0600`. Read automatically, nothing to configure in the conninfo.
+> - **`PGPASSWORD`** — set in the service environment (e.g. a systemd unit's
+>   `EnvironmentFile=` pointing at a `0600` file). Convenient for containers, but visible in the
+>   process environment, so prefer `.pgpass` on shared hosts.
+>
+> The same applies to the `pg_basebackup` and `CREATE SUBSCRIPTION` connection strings above.
 
 ### Monitoring Replication
 
@@ -236,7 +259,7 @@ SELECT now() - pg_last_xact_replay_timestamp() AS current_delay;
 
 ```bash
 # On standby server — promote standby to primary
-pg_ctl promote -D /var/lib/postgresql/14/main
+pg_ctl promote -D /var/lib/postgresql/<PG_VERSION>/main
 
 # Or use SQL
 SELECT pg_promote();
@@ -257,13 +280,13 @@ pg_autoctl create monitor --hostname monitor-host --pgdata /var/lib/monitor
 # Setup primary
 pg_autoctl create postgres \
   --hostname primary-host \
-  --pgdata /var/lib/postgresql/14/main \
+  --pgdata /var/lib/postgresql/<PG_VERSION>/main \
   --monitor postgres://monitor-host/pg_auto_failover
 
 # Setup standby
 pg_autoctl create postgres \
   --hostname standby-host \
-  --pgdata /var/lib/postgresql/14/main \
+  --pgdata /var/lib/postgresql/<PG_VERSION>/main \
   --monitor postgres://monitor-host/pg_auto_failover
 
 # Check status
@@ -300,15 +323,27 @@ bootstrap:
 postgresql:
   listen: 0.0.0.0:5432
   connect_address: node1:5432
-  data_dir: /var/lib/postgresql/14/main
+  data_dir: /var/lib/postgresql/<PG_VERSION>/main
   authentication:
     replication:
       username: replicator
-      password: repl_password
+      password: repl_password        # placeholder — see the note below
     superuser:
       username: postgres
-      password: postgres_password
+      password: postgres_password    # placeholder — see the note below
 ```
+
+> **The passwords above are placeholders, not a recommended pattern.** A committed `patroni.yml`
+> with literal credentials spreads them to every node and to version control. Patroni supports
+> several alternatives:
+>
+> - **Environment overrides** — any setting maps to a `PATRONI_*` variable
+>   (`PATRONI_REPLICATION_PASSWORD`, `PATRONI_SUPERUSER_PASSWORD`), so the file can ship with no
+>   secrets at all and the values arrive from the service environment.
+> - **DCS-backed configuration** — the dynamic configuration stored in etcd/Consul/ZooKeeper, with
+>   the DCS itself secured by TLS and ACLs so only cluster members can read it.
+> - **Vault integration** — a secrets manager (HashiCorp Vault, AWS Secrets Manager) templating the
+>   config or injecting the environment at start-up, which also gives you rotation.
 
 ---
 
@@ -385,11 +420,11 @@ pg_basebackup -h localhost -U postgres \
 systemctl stop postgresql
 
 # Restore base backup
-rm -rf /var/lib/postgresql/14/main/*
-tar -xzf /backup/base/20241201/base.tar.gz -C /var/lib/postgresql/14/main
+rm -rf /var/lib/postgresql/<PG_VERSION>/main/*
+tar -xzf /backup/base/20241201/base.tar.gz -C /var/lib/postgresql/<PG_VERSION>/main
 
 # Create recovery.signal
-touch /var/lib/postgresql/14/main/recovery.signal
+touch /var/lib/postgresql/<PG_VERSION>/main/recovery.signal
 ```
 
 ```ini
@@ -458,8 +493,8 @@ SELECT pg_create_physical_replication_slot('replica_1');
 
 ```bash
 # Check PostgreSQL logs on standby
-tail -f /var/log/postgresql/postgresql-14-main.log
+tail -f /var/log/postgresql/postgresql-<PG_VERSION>-main.log
 
 # Check WAL files available on primary
-ls -lh /var/lib/postgresql/14/main/pg_wal/
+ls -lh /var/lib/postgresql/<PG_VERSION>/main/pg_wal/
 ```

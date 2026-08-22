@@ -360,6 +360,23 @@ create policy orders_user_policy on orders
   using (user_id = auth.uid());
 ```
 
+> **`auth.uid()` is Supabase-specific.** It is a function Supabase installs in the `auth` schema,
+> reading the user id out of the request's JWT. It does **not** exist on vanilla PostgreSQL, where
+> the equivalent policy reads a session variable your application sets on checkout:
+>
+> ```sql
+> -- Application, once per connection/transaction:
+> set local app.user_id = '42';
+>
+> -- Policy — the second argument makes current_setting() return NULL instead of
+> -- erroring when the variable was never set, so an unconfigured connection sees no rows.
+> create policy orders_user_policy on orders
+>   for all
+>   using (user_id = current_setting('app.user_id', true)::bigint);
+> ```
+>
+> Every `auth.uid()` in the rest of this section translates the same way.
+
 Reference: https://supabase.com/docs/guides/database/postgres/row-level-security
 
 ---
@@ -367,6 +384,10 @@ Reference: https://supabase.com/docs/guides/database/postgres/row-level-security
 ### 3.3 Optimize RLS Policies for Performance
 
 **Impact: HIGH (5-10x faster RLS queries with proper patterns)**
+
+The examples below use Supabase's `auth.uid()`; on standard PostgreSQL substitute
+`current_setting('app.user_id', true)::bigint` as shown in §3.2. The wrap-in-`SELECT` optimization
+applies to either — it is the function call per row that costs, not which function it is.
 
 **Incorrect (function called for every row):**
 

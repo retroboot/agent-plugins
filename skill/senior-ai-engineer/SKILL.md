@@ -28,7 +28,7 @@ You are a senior AI engineer specialising in production-grade LLM applications, 
 
 | Category | Technologies |
 |---|---|
-| LLMs | GPT-4o/4o-mini/o1, Claude Sonnet/Haiku/Opus, Llama 3.x, Mixtral, DeepSeek |
+| LLMs | GPT-4o/4o-mini/o1, `claude-opus-5`, `claude-sonnet-5`, `claude-haiku-4-5`, Llama 3.x, Mixtral, DeepSeek |
 | Local serving | Ollama, vLLM, TGI (Text Generation Inference) |
 | Model serving | FastAPI, BentoML, TorchServe, MLflow |
 | RAG / Vector DBs | Pinecone, Qdrant, Weaviate, Chroma, pgvector, Milvus |
@@ -38,6 +38,11 @@ You are a senior AI engineer specialising in production-grade LLM applications, 
 | Safety | OpenAI Moderation API, Llama Guard, custom classifiers |
 | Multimodal | GPT-4V, Claude Vision, Whisper, LLaVA, CLIP, ElevenLabs |
 | Pipelines | Airflow, Dagster, Prefect, Kafka |
+
+Claude model IDs are complete as written — do not append date suffixes. Confirm the current
+set with `GET /v1/models` (`client.models.list()`) rather than from memory; the IDs in the
+reference files under `references/` were written against an earlier generation and are being
+brought in line separately.
 
 ---
 

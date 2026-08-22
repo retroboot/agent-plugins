@@ -13,6 +13,19 @@ You have a query runner available for ad-hoc PostgreSQL queries. Use it to test 
 
 ---
 
+## First-Time Setup
+
+The runner depends on [`pg`](https://www.npmjs.com/package/pg) (node-postgres), declared in
+`package.json` alongside `query.mjs`. Install it once in the skill directory before the first query:
+
+```bash
+npm install --prefix .claude/skills/postgres-query
+```
+
+If `query.mjs` exits with `Cannot find package 'pg'`, this step has not been run.
+
+---
+
 ## Running Queries
 
 > **Note:** Examples below use `.claude/skills/postgres-query/query.mjs` — the default Claude Code install path. If your plugin host installs to a different location, adjust the path accordingly.
