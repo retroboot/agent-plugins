@@ -313,17 +313,27 @@ Expected: at least `1` in each file.
 
   ```bash
   git add .hivrr.json
-  git commit -m "chore(config): record .hivrr.json settings"
+  git commit -m "chore(config): record .hivrr.json settings" -- .hivrr.json
   ```
 
-  Stage nothing else. This commit exists to carry one file, and sweeping in a working tree's other
-  changes is the bug Step 1 of this plan removed.
+  **The trailing pathspec is required.** `git add .hivrr.json` stages one file, but a bare
+  `git commit` commits the whole index — including anything staged before `init` ran. `init` is the
+  first bootstrap step of every command, so it routinely runs mid-workflow with a populated index.
+  Without the pathspec this commit sweeps a feature's staged files in under a config message, which
+  is the bug Step 1 of this plan removed. Keep the `git add` too: `git commit -- {path}` fails on a
+  never-tracked file, and a freshly scaffolded config is exactly that.
 
-  **On a protected branch** — do not commit. Stage it and report, leaving the decision to the user:
+  Then confirm the commit carries one path and no more, and stop if it does not:
 
+  ```bash
+  git show --stat --oneline HEAD
   ```
-  INIT: .hivrr.json written but not committed — {branch} is protected.
-        Stage-only. Commit it from a feature branch, or run `git commit .hivrr.json` deliberately.
+
+  **On a protected branch** — do not commit. Stage it and report, leaving the decision to the user.
+  Emit only the line from the list below; do not invent a second wording for the same outcome.
+
+  ```bash
+  git add .hivrr.json
   ```
 
   **Never push.** `init` is setup, not delivery, and a push from a setup phase is a surprise.

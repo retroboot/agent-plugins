@@ -166,6 +166,14 @@ These are deliberately different, and conflating them is a bug:
 
 `init` Phase 3 offers to write a `.hivrr.json` derived from detected repo state. It **never overwrites an existing file** — if one is present, init reports it and moves on. Editing an existing config is the user's job.
 
+`init` Phase 6 stages and commits `.hivrr.json` whenever a phase changed it — but **only on a
+non-protected branch**. On a protected branch it stages the file and reports, because `core` forbids
+committing directly to protected branches and a setup phase is the wrong place to break that rule.
+
+This is what makes the "is committed" claim at the top of this document true rather than aspirational.
+A repo whose `.hivrr.json` is untracked resolves every key to its default for every other teammate,
+agent, and CI runner — silently, and looking exactly like a repo that chose those defaults.
+
 ---
 
 ## Resolving GitHub Project v2 IDs

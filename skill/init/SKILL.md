@@ -277,3 +277,72 @@ Emit one of:
 - `INIT: project IDs resolved ({project.owner}/#{project.number})`
 - `INIT: project IDs already cached`
 - `INIT: project resolution failed — {reason}` (warning only)
+
+---
+
+## Phase 6 — Reconcile the Config
+
+`.hivrr.json` is only useful if it travels with the code — an untracked config resolves to defaults
+for every teammate, agent, and CI runner, which is the failure this file exists to prevent. Phases
+3, 4, and 5 may all have written it, so reconcile once here rather than per phase.
+
+This phase is gated on nothing but the file itself. It runs whether or not the repo has a project
+board, a verify command, or a worktree.
+
+**Skip silently** when the file is unchanged:
+
+```bash
+git status --porcelain .hivrr.json
+```
+
+Empty output means nothing to do.
+
+Otherwise resolve the current branch and the protected set — `branches.protected` from
+`.hivrr.json`, falling back to the documented default (`main`, `master`, `dev`, `develop`,
+`staging`, `release/*`):
+
+```bash
+git branch --show-current
+```
+
+**On a branch that is not protected** — stage and commit it alone:
+
+```bash
+git add .hivrr.json
+git commit -m "chore(config): record .hivrr.json settings" -- .hivrr.json
+```
+
+**The trailing pathspec is required, not decoration.** `git add .hivrr.json` stages one file, but a
+bare `git commit` commits the **whole index** — including anything staged before `init` ran, by the
+user or by an interrupted workflow. `init` runs as the first bootstrap step of every command, so it
+routinely executes mid-workflow in a checkout with a populated index. Without the pathspec this
+commit sweeps a feature's staged files in under a config message, which is the exact bug Phase 10 of
+`work-issue` and Phase 9 of `work-pr` no longer permit.
+
+Keep the `git add` as well: `git commit -- {path}` fails on a never-tracked file, and a freshly
+scaffolded `.hivrr.json` is exactly that.
+
+Then confirm the commit carries one path and no more:
+
+```bash
+git show --stat --oneline HEAD
+```
+
+If anything but `.hivrr.json` is listed, report it and stop. Do not report a clean config commit.
+
+**On a protected branch** — do not commit. Stage it and report:
+
+```bash
+git add .hivrr.json
+```
+
+`core` forbids committing directly to a protected branch, so the decision is the user's: commit it
+from a feature branch, or run `git commit -m "chore(config): record .hivrr.json settings" --
+.hivrr.json` deliberately.
+
+**Never push.** `init` is setup, not delivery, and a push from a setup phase is a surprise.
+
+Emit one of:
+- `INIT: .hivrr.json committed on {branch}`
+- `INIT: .hivrr.json staged — {branch} is protected, commit deliberately`
+- `INIT: .hivrr.json unchanged`
