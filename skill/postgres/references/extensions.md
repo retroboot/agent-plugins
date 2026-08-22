@@ -138,7 +138,7 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 
 -- Create spatial table
 CREATE TABLE locations (
-  id   SERIAL PRIMARY KEY,
+  id   BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   name TEXT NOT NULL,
   geom GEOMETRY(Point, 4326)  -- WGS84 lat/lng
 );
@@ -193,7 +193,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 -- Create table with vector column
 CREATE TABLE embeddings (
-  id        SERIAL PRIMARY KEY,
+  id        BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   content   TEXT,
   embedding vector(1536)  -- OpenAI embeddings are 1536 dimensions
 );

@@ -25,8 +25,8 @@ def plan_context_budget(
     MODEL_LIMITS = {
         "gpt-4o": 128_000,
         "gpt-4o-mini": 128_000,
-        "claude-sonnet-4-5": 200_000,
-        "claude-haiku-4-5-20251001": 200_000,
+        "claude-sonnet-5": 1_000_000,
+        "claude-haiku-4-5": 200_000,
     }
     total = MODEL_LIMITS.get(model, 128_000)
     fixed = system_tokens + few_shot_tokens + user_input_tokens + min_output_tokens

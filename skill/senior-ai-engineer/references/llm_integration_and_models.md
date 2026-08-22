@@ -9,9 +9,9 @@
 | GPT-4o | General reasoning, multimodal, function calling | 128K | Best balance of capability/cost |
 | GPT-4o-mini | High-volume, latency-sensitive tasks | 128K | ~15× cheaper than GPT-4o |
 | o1 / o1-mini | Complex multi-step reasoning, math, code | 128K | High latency, no streaming |
-| Claude Sonnet 4.5 | Long context, instruction following, tool use | 200K | Strong for agents and coding |
+| Claude Opus 5 | Hardest reasoning tasks, research, long-horizon agents | 1M | Highest capability, highest cost |
+| Claude Sonnet 5 | Long context, instruction following, tool use | 1M | Strong for agents and coding |
 | Claude Haiku 4.5 | Fast, cheap, classification, extraction | 200K | Best cost/latency in class |
-| Claude Opus 4.6 | Hardest reasoning tasks, research | 200K | Highest capability, highest cost |
 | Llama 3.1 70B | Private data, on-prem, fine-tuning | 128K | Open weights, strong open-source |
 | Mixtral 8x7B | MoE, good at reasoning, lower cost | 32K | Fast on multi-GPU |
 
@@ -64,7 +64,7 @@ tools = [{
 }]
 
 response = client.messages.create(
-    model="claude-haiku-4-5-20251001",
+    model="claude-haiku-4-5",
     max_tokens=1024,
     tools=tools,
     tool_choice={"type": "tool", "name": "extract_entities"},
@@ -169,9 +169,9 @@ class ModelRoute:
     max_tokens: int
 
 ROUTES = {
-    TaskComplexity.SIMPLE:   ModelRoute("gpt-4o-mini",  "claude-haiku-4-5-20251001", 512),
-    TaskComplexity.MODERATE: ModelRoute("gpt-4o",       "claude-sonnet-4-5",          2048),
-    TaskComplexity.COMPLEX:  ModelRoute("o1",            "claude-opus-4-6",            4096),
+    TaskComplexity.SIMPLE:   ModelRoute("gpt-4o-mini",  "claude-haiku-4-5",  512),
+    TaskComplexity.MODERATE: ModelRoute("gpt-4o",       "claude-sonnet-5",   2048),
+    TaskComplexity.COMPLEX:  ModelRoute("o1",           "claude-opus-5",     4096),
 }
 
 async def routed_completion(prompt: str, complexity: TaskComplexity) -> str:
@@ -221,7 +221,7 @@ local_client = OpenAI(
 ```python
 # Anthropic prompt caching for large system prompts
 response = client.messages.create(
-    model="claude-sonnet-4-5",
+    model="claude-sonnet-5",
     max_tokens=1024,
     system=[
         {
@@ -237,12 +237,21 @@ response = client.messages.create(
 ```python
 # Track costs per request
 def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
+    # Anthropic list prices are published per 1M tokens; divide by 1000 for this table.
+    # Re-check against the pricing page rather than carrying these forward — a model
+    # keeping its ID across a price change is the case this table gets wrong silently.
     PRICING = {
         "gpt-4o":           (0.0025, 0.010),   # per 1K tokens (in, out)
         "gpt-4o-mini":      (0.00015, 0.0006),
-        "claude-sonnet-4-5": (0.003, 0.015),
-        "claude-haiku-4-5-20251001":  (0.00025, 0.00125),
+        "claude-opus-5":    (0.005, 0.025),    # $5 / $25 per 1M
+        "claude-sonnet-5":  (0.003, 0.015),    # $3 / $15 per 1M
+        "claude-haiku-4-5": (0.001, 0.005),    # $1 / $5 per 1M
     }
-    in_price, out_price = PRICING.get(model, (0, 0))
+    # Fail loudly on an unpriced model. Defaulting to (0, 0) reports a free
+    # request, which is indistinguishable from a genuinely cheap one and
+    # survives every dashboard downstream.
+    if model not in PRICING:
+        raise KeyError(f"No pricing for {model} — add it before routing traffic there.")
+    in_price, out_price = PRICING[model]
     return (input_tokens * in_price + output_tokens * out_price) / 1000
 ```
