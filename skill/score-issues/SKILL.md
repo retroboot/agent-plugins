@@ -41,16 +41,25 @@ every open issue — that is the correct behavior for a repo with no board, not 
 Read the board status for each candidate and drop any whose status is **In Progress** or **Done**.
 An issue that is not on the board has no status; keep it — "not tracked" is not "underway".
 
+**Exclude parent epics.** An issue with children is not workable — dispatching an agent at it
+proposes implementing a container rather than a change. When `issues.hierarchy` is enabled, read
+`subIssuesSummary.total` for each candidate using the **Read hierarchy** command from the loaded
+reference and drop any issue whose total is greater than zero. Record it in `excluded` as `Epic`.
+
+Skip this entirely when `issues.hierarchy` is disabled or absent. If the hierarchy query fails,
+warn and score every issue — the same fallback as an unconfigured board. Losing the filter
+degrades the result; aborting destroys it.
+
 **Surface the exclusion.** A silently shorter list looks like a scoring decision. Before Phase 3,
 display:
 
 ```
-Excluded (board): #123 In Progress, #456 Done
+Excluded: #123 In Progress, #456 Done, #789 Epic
 ```
 
 This skill is machine-executed, so a display line is not enough — record the excluded issues as
 `excluded` and emit them in Phase 4 alongside `scores`. Store it as
-`{issue_number_string: status_name}`.
+`{issue_number_string: reason}`, where the reason is a board status name or `Epic`.
 
 If the board query fails, warn and score every issue — the same fallback as an unconfigured board.
 Losing the filter degrades the result; aborting destroys it.
@@ -107,6 +116,12 @@ Where keys are issue number strings and values are integer scores 0–99.
 
 RESULT_JSON: {"scores": {"123": 72, "456": 41}, "excluded": {"789": "Done"}}
 
-`excluded` maps issue number strings to the board status that caused the exclusion. **Omit the key entirely when nothing was excluded** — including when no board is configured — so its presence always means the board filter actually ran. Existing consumers that read only `scores` are unaffected.
+`excluded` maps issue number strings to the reason that caused the exclusion — a board status
+(`In Progress`, `Done`) or `Epic` for a parent with children. **Omit the key entirely
+when nothing was excluded.** Its presence means something was filtered; it no longer implies that
+the board filter specifically ran, because an epic is excluded whether or not a board is
+configured.
+
+Existing consumers that read only `scores` are unaffected.
 
 No explanation after this line.

@@ -47,7 +47,11 @@ An issue that is not on the board has no status; keep it.
 Excluded (board): #123 In Progress, #456 Done
 ```
 
-This skill is machine-executed, so a display line is not enough — record the excluded issues as `excluded` and emit them in Phase 4 alongside `groups`. Store it as `{issue_number_string: status_name}`.
+This line covers board exclusions only, because it runs before Phase 3 has identified any epic.
+Phase 3 Step 1 emits its own line for those. Do not add `Epic` entries here — nothing has been
+classified as one yet.
+
+This skill is machine-executed, so a display line is not enough — record the excluded issues as `excluded` and emit them in Phase 4 alongside `groups`. Store it as `{issue_number_string: reason}`, where the reason is a board status name or `Epic`.
 
 If the board query fails, warn and group every issue — the same fallback as an unconfigured board.
 
@@ -64,10 +68,34 @@ Work the two signals in this order — dependency first, then file overlap. Stat
 two issues that depend on each other belong together even when they touch different files, while two
 issues that merely share a file may be entirely unrelated.
 
-**Step 1 — Build the dependency edges.** Read each body for explicit statements: `Depends on #N`,
-`Blocked by #N`, `Closes #N`, `Part of #N`, or prose naming another issue as a prerequisite. An
-issue and its stated prerequisite are candidates for the same group. Treat an unstated dependency as
-absent — do not infer one from topic similarity.
+**Step 1 — Build the dependency edges.** Use structured hierarchy first, prose second.
+
+When `issues.hierarchy` is enabled, read each candidate's `parent`, `subIssues`, and `subIssuesSummary` using the
+**Read hierarchy** command from the loaded reference. This yields edges that are *data*, not
+inference:
+
+- Two issues sharing a `parent` are **siblings** — strong candidates for one wave.
+- An issue whose `parent` is also in the candidate list belongs with it.
+- An issue with `subIssuesSummary.total > 0` is an **epic**. Never group an epic with its own
+  children; drop it from grouping entirely and record it in `excluded` as `Epic`.
+
+Then read each body for explicit statements: `Depends on #N`, `Blocked by #N`, `Closes #N`,
+`Part of #N`, or prose naming another issue as a prerequisite. Prose edges **supplement**
+structured ones — they never override them. Treat an unstated dependency as absent; do not infer
+one from topic similarity.
+
+When `issues.hierarchy` is disabled, absent, or the provider is not `github`, use prose only —
+the behavior this skill had before hierarchy existed. If the hierarchy query fails, warn and fall
+back to prose for that run: losing the structured edges degrades the result, aborting destroys it.
+
+**Surface any epics dropped here**, the same way Phase 2 surfaces board exclusions — this is the
+only place they can be reported, since Phase 2's line runs before they are identified:
+
+```
+Excluded (epic): #789 Epic
+```
+
+Add them to the same `excluded` map Phase 2 populates.
 
 **Step 2 — Measure file overlap.** Collect the file paths each body mentions. Two issues overlap
 when they name the same file, not merely the same directory or product area. Overlap makes grouping
@@ -124,10 +152,16 @@ RESULT_JSON: {"groups": [[123, 456], [789]]}
 
 Where each inner array is a wave of issue numbers to implement together.
 
-**When Phase 2 excluded issues**, add the `excluded` key so the omission is machine-readable rather than an unexplained gap between what was requested and what came back:
+**When Phase 2 or Phase 3 excluded issues**, add the `excluded` key so the omission is machine-readable rather than an unexplained gap between what was requested and what came back:
 
 RESULT_JSON: {"groups": [[123, 456]], "excluded": {"789": "In Progress"}}
 
-`excluded` maps issue number strings to the board status that caused the exclusion. **Omit the key entirely when nothing was excluded** — including when no board is configured — so its presence always means the board filter actually ran. Existing consumers that read only `groups` are unaffected.
+`excluded` maps issue number strings to the reason that caused the exclusion — a board status
+(`In Progress`, `Done`) or `Epic` for a parent dropped by Phase 3 Step 1. **Omit the key entirely
+when nothing was excluded.** Its presence means something was filtered; it no longer implies that
+the board filter specifically ran, because an epic is excluded whether or not a board is
+configured.
+
+Existing consumers that read only `groups` are unaffected.
 
 No explanation after this line.
