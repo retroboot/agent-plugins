@@ -1,5 +1,5 @@
 ---
-description: Merge a GitHub PR, close linked issues, clean up branches
+description: Merge a PR or MR, close linked issues, clean up branches, capture follow-up work
 ---
 
 # /merge-pr $ARGUMENTS

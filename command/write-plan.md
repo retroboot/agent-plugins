@@ -1,5 +1,5 @@
 ---
-description: Create a detailed implementation plan document for a spec or set of existing issues — without creating new GitHub/Linear issues
+description: Create a detailed implementation plan document for a spec or set of existing issues — without creating new tracker issues
 ---
 
 Bootstrap — run before the main skill:

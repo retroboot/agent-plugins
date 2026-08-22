@@ -1,6 +1,6 @@
 ---
 name: debug
-description: Diagnose a bug, failure, or problem — produces a diagnostic report with root cause analysis and recommendations
+description: Diagnose a bug, failure, or problem — produces a root cause analysis report without making changes
 license: MIT
 compatibility: opencode
 ---

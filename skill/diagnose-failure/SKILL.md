@@ -1,6 +1,6 @@
 ---
 name: diagnose-failure
-description: Diagnose a failed worker job from its logs and recommend next action
+description: Diagnose a failed worker job from its logs and recommend RETRY, SKIP, or HUMAN_REVIEW
 license: MIT
 compatibility: opencode
 ---

@@ -1,5 +1,5 @@
 ---
-description: Review a pull request — fetches the diff, analyzes it, and posts a structured comment
+description: Review a pull request or merge request — fetches the diff, analyzes it, and posts a structured comment
 ---
 
 # /review-pr $ARGUMENTS

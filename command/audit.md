@@ -1,5 +1,5 @@
 ---
-description: Scan the codebase for issues across security, accessibility, tech-debt, and performance
+description: Run code audits across domains — security, accessibility, tech-debt, performance
 ---
 
 # /audit $ARGUMENTS

@@ -1,5 +1,5 @@
 ---
-description: Diagnose a bug or problem — produces a root cause analysis report without making changes
+description: Diagnose a bug, failure, or problem — produces a root cause analysis report without making changes
 ---
 
 # /debug $ARGUMENTS

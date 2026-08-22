@@ -1,5 +1,5 @@
 ---
-description: Triage a feature or problem into sized GitHub and Linear issues
+description: Triage a feature or problem into sized, actionable issues in the configured tracker — then write a comprehensive implementation plan with TDD tasks, complexity-aware blueprints, UI/UX coverage, and an automated plan review
 ---
 
 Bootstrap — run in order before the main skill:

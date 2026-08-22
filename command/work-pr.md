@@ -1,5 +1,5 @@
 ---
-description: Address PR feedback end-to-end — fetch, implement, test, push
+description: Address PR or MR feedback end-to-end — fetch, implement fixes, test, push
 ---
 
 # /work-pr $ARGUMENTS
