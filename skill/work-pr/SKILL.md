@@ -161,9 +161,9 @@ Wait for their response before continuing.
 
 ## Phase 9 — Commit
 
-[**Staging**](../core/SKILL.md#staging) in the `core` skill governs this step, and the bootstrap has
-already loaded it. Its blanket-staging prohibition, explicit `git add`, and `git status --short`
-check apply to a feedback commit unchanged.
+Staging follows [**Staging**](../core/SKILL.md#staging) in the `core` skill: the blanket-staging
+prohibition, the explicit `git add`, and the `git status --short` check all apply to a feedback
+commit unchanged.
 
 The file list is this skill's to build: take it from the feedback items you addressed in this run.
 

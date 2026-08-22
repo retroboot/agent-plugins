@@ -417,9 +417,9 @@ Wait for their response before continuing.
 
 ## Phase 10 — Commit
 
-Staging is governed by [**Staging**](../core/SKILL.md#staging) in the `core` skill, which the
-command's bootstrap has already loaded. It carries the prohibition on blanket staging, the explicit
-`git add`, and the `git status --short` check that must come back clean before you commit.
+Follow [**Staging**](../core/SKILL.md#staging) in the `core` skill — it has the prohibition on
+blanket staging, the explicit `git add`, and the `git status --short` check that must come back
+clean before you commit.
 
 What `core` leaves to this skill is the file list. Build it from what you actually changed:
 

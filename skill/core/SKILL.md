@@ -68,9 +68,6 @@ path must pass that path as a pathspec too:
 git commit -m "{message}" -- {path}
 ```
 
-Each skill derives its own file list — that part is not shared, and this section does not specify
-it.
-
 ## Code Review Standards
 
 Rate findings by severity:
