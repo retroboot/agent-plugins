@@ -125,6 +125,12 @@ record both by hand; a half-manual block has unreadable provenance.
 The trade is explicit: the sentinel buys accuracy and gives up drift detection. A manual command
 that stops working will keep being run until someone notices, because nothing re-checks it.
 
+**A manual command must fail loudly when it cannot run.** Detection at least reports `skipped`
+honestly; a hand-written command that collects findings on stdout and ignores stderr reports `pass`
+after every one of its inputs failed to open, and the skills relay that as verified. Anchor it to
+the repo root, fold stderr into what is collected, and assert that each input file exists before
+trusting a check's silence.
+
 ---
 
 ## Precedence

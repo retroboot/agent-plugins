@@ -146,7 +146,8 @@ unconventional — structural checks defined in a `README`, a bespoke harness, a
 detection tables have no row for. Phase 4 then leaves the block alone. Without it, detection
 correctly finds nothing and writes `null`, which means "checked, there is nothing" — so the
 execution skills report `skipped` and an unattended run skips verification on a repo that has it.
-**This repo uses the sentinel**, because its own checks are the four in **Verification** below.
+**This repo uses the sentinel**, because its own checks are the four in **Verification** below, and
+`verify.test` holds the runnable form of them.
 
 Run `init` to scaffold the file from detected repo state. It never overwrites an existing one.
 
@@ -219,6 +220,13 @@ rules, and only the *procedure* below it differs between the skills. Adding a li
 the duplication is correct; if you cannot make that claim, extract the line into a reference
 instead. Never raise the `length > 60` threshold to make the check pass — that hides future
 duplication silently, which is the failure the check exists to catch.
+
+**`.hivrr.json` `verify.test` is the runnable form of these four checks.** It runs them from the
+repo root, prints only findings, and exits non-zero when there are any — which is what makes
+`work-issue` and `work-pr` report `tests pass` here instead of `tests skipped`. **Adding or changing
+a check above means changing it there too.** Nothing enforces that: both files stay valid Markdown
+and JSON however far apart they drift, and `verify.detectedFrom: ["manual"]` stops `init` from
+re-deriving the command. A fifth check added here and not there is simply never run.
 
 **The check covers one pair, deliberately.** Other same-named skills share lines over the same
 threshold today — `planning` and `brainstorm` share the session-UUID bootstrap and its fallback
