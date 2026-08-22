@@ -6,8 +6,8 @@
     "ladder": ["main"]
   },
   "verify": {
-    "test": null,
+    "test": "bash -c 'cd \"$(git rev-parse --show-toplevel)\" || exit 1; bad=$( { for f in .claude-plugin/marketplace.json docs/shared-lines-allowlist.txt skill/work-pr/SKILL.md skill/work-issue/SKILL.md; do [ -f \"$f\" ] || echo \"MISSING INPUT $f\"; done; jq empty $(git ls-files \"*.json\") || echo \"INVALID JSON\"; jq -r \".plugins[] | (.skills // [])[]\" .claude-plugin/marketplace.json | sort -u | while read -r p; do [ -f \"$p/SKILL.md\" ] || echo \"BAD SKILL $p\"; done; jq -r \".plugins[] | (.commands // [])[]\" .claude-plugin/marketplace.json | sort -u | while read -r p; do case \"$p\" in *.md) [ -f \"$p\" ] || echo \"MISSING COMMAND $p\";; *) echo \"NO .md EXTENSION $p\";; esac; done; grep -Fxf skill/work-pr/SKILL.md skill/work-issue/SKILL.md | awk \"length > 60\" | grep -vFxf docs/shared-lines-allowlist.txt | sed \"s/^/DUPLICATED /\"; } 2>&1 ); [ -z \"$bad\" ] && echo \"structural checks pass\" || { echo \"$bad\"; exit 1; }'",
     "lint": null,
-    "detectedFrom": []
+    "detectedFrom": ["manual"]
   }
 }
