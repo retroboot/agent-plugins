@@ -330,11 +330,19 @@ git commit -m "chore(config): record .hivrr.json settings" -- .hivrr.json
 bare `git commit` commits the **whole index** — including anything staged before `init` ran, by the
 user or by an interrupted workflow. `init` runs as the first bootstrap step of every command, so it
 routinely executes mid-workflow in a checkout with a populated index. Without the pathspec this
-commit sweeps a feature's staged files in under a config message, which is the exact bug Phase 10 of
-`work-issue` and Phase 9 of `work-pr` no longer permit.
+commit sweeps a feature's staged files in under a config message, which is the exact bug the commit
+phases of `work-issue` and `work-pr` no longer permit.
 
 Keep the `git add` as well: `git commit -- {path}` fails on a never-tracked file, and a freshly
 scaffolded `.hivrr.json` is exactly that.
+
+**Why this rule is restated here rather than linked.** `core` states it once, under **Staging**, and
+`work-issue` and `work-pr` link to it. `init` cannot: it ships in `dev`, `planner`, **and**
+`dispatcher`, and only `dev` ships `core` — a plugin install carries just the skills its
+`marketplace.json` entry names, so `../core/SKILL.md` resolves to nothing in two installs out of
+three. Reordering the bootstrap so `core` loads before `init` would not change that; the constraint
+is packaging, not load order. Keep the copy inline, and keep it phase-agnostic — the phase numbers
+in the other two skills are hand-maintained and nothing verifies a prose reference to them.
 
 Then confirm the commit carries one path and no more:
 

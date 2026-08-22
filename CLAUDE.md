@@ -130,8 +130,8 @@ each other's changes. It is opt-in per repo and needs two things: `worktree.enab
 tool. One without the other silently does nothing.
 
 Worktrees live under `.claude/worktrees/`, so an adopting repo needs `.claude/` in its `.gitignore`
-as well — otherwise the worktree shows up as an untracked path and `work-issue` Phase 10 stops on
-it, reporting a concurrent session that is not there. This repo already ignores `.claude/`.
+as well — otherwise the worktree shows up as an untracked path and the commit phase of `work-issue`
+stops on it, reporting a concurrent session that is not there. This repo already ignores `.claude/`.
 
 They are **not** free — untracked files do not travel, and they must be cleaned up. See
 `skill/init/references/config.md`.
