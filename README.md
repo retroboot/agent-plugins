@@ -30,10 +30,10 @@ The plugin is split into five focused packages:
 | `init` | One-time setup — provider config, repo labels, `.hivrr.json` scaffold, verify commands, project board IDs |
 | `session` | Loads config and the active provider reference for the session |
 | `core` | Coding philosophy — quality gates, git safety, script policy, and task completion standards |
-| `work-issue` | Implement an issue end-to-end and open a PR |
-| `work-pr` | Address PR review feedback end-to-end |
-| `review-pr` | Review a PR and post a structured comment |
-| `merge-pr` | Merge a PR, close linked issues, clean up branches |
+| `work-issue` | Implement an issue end-to-end and open a PR/MR |
+| `work-pr` | Address PR/MR review feedback end-to-end |
+| `review-pr` | Review a PR/MR and post a structured comment |
+| `merge-pr` | Merge a PR/MR, close linked issues, clean up branches, capture follow-up work |
 | `promote` | Promote one ladder rung to the next — `dev → staging → main` |
 | `wave` | Execute multiple related issues in order on a shared branch |
 | `debug` | Diagnose a bug without making changes |

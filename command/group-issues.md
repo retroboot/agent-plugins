@@ -1,5 +1,5 @@
 ---
-description: Group GitHub issues into implementation waves for batched execution
+description: Group issues into implementation waves for efficient batched execution
 ---
 
 # /group-issues $ARGUMENTS

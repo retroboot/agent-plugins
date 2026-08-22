@@ -1,5 +1,5 @@
 ---
-description: Diagnose a failed worker job and recommend RETRY, SKIP, or HUMAN_REVIEW
+description: Diagnose a failed worker job from its logs and recommend RETRY, SKIP, or HUMAN_REVIEW
 ---
 
 # /diagnose-failure $ARGUMENTS

@@ -1,5 +1,5 @@
 ---
-description: Promote one environment rung to the next — dev to staging to main
+description: Promote one ladder rung to the next (dev to staging to main) — open the PR/MR, verify CI, merge with a merge commit
 ---
 
 # /promote $ARGUMENTS

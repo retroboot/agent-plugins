@@ -1,5 +1,5 @@
 ---
-description: Score GitHub issues by urgency (0-99) for work allocation
+description: Score a list of issues by urgency (0-99) for work allocation prioritization
 ---
 
 # /score-issues $ARGUMENTS

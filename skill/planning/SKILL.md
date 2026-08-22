@@ -1,6 +1,6 @@
 ---
 name: planning
-description: Triage a feature or problem into sized, actionable GitHub and Linear issues — then write a comprehensive implementation plan with TDD tasks, complexity-aware blueprints, UI/UX coverage, and an automated plan review.
+description: Triage a feature or problem into sized, actionable issues in the configured tracker — then write a comprehensive implementation plan with TDD tasks, complexity-aware blueprints, UI/UX coverage, and an automated plan review
 license: MIT
 compatibility: opencode
 ---
