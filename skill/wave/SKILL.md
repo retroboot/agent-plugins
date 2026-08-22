@@ -40,6 +40,22 @@ assuming `main` there produces a wave summary listing commits that are already m
 
 Store it as `{integration}`.
 
+**Worktree (conditional).** Read `worktree` from `.hivrr.json`. When `worktree.enabled` is true
+**and** the repo's `CLAUDE.md` authorizes it, run this wave inside a worktree named
+`wave/{min}-{max}-{count}` — the same name as the branch. When the key is absent or false, skip this
+paragraph entirely and use the branch logic below unchanged.
+
+Follow the **Enter a worktree** section in [`work-issue/SKILL.md`](../work-issue/SKILL.md): check
+`git worktree list --porcelain` for an existing entry holding the branch and re-enter it if found,
+otherwise create one; then re-point with `git checkout -B wave/{min}-{max}-{count}
+origin/{integration}`, carry `worktree.carry`, and run `worktree.setup`. The config key set without
+the `CLAUDE.md` authorization warns once and continues in the current checkout — it never fails the
+wave.
+
+The resume logic below is unchanged and runs **after** entry. Scanning
+`git log origin/{integration}..HEAD` inside the worktree yields the same answer as in the main
+checkout, because it is the same branch.
+
 Check whether this branch already exists:
 
 ```

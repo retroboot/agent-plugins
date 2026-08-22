@@ -174,6 +174,56 @@ Display: `Complexity: {simple|medium|complex}`
 
 ## Phase 5 — Create a Working Branch
 
+### Enter a worktree (conditional)
+
+Read `worktree` from `.hivrr.json`. **Skip this entire section** when `worktree.enabled` is absent
+or false — the session works in the current checkout exactly as before.
+
+Before entering, confirm the repo's `CLAUDE.md` authorizes it (see **Adopting worktrees** in
+[`config.md`](../init/references/config.md)). If the config key is set but the authorization line is
+absent, warn once and continue **without** a worktree:
+
+`Worktree: enabled in .hivrr.json but not authorized in CLAUDE.md — continuing in the current checkout`
+
+**Check for an existing worktree first.** Git refuses to check one branch out in two worktrees —
+`fatal: 'issue/{N}' is already used by worktree at '…'` — so a resumed issue must re-enter its own
+rather than create a second:
+
+```bash
+git worktree list --porcelain
+```
+
+- **An entry already holds `issue/{N}`** — re-enter it with `EnterWorktree` using its `path`. Skip
+  carry and setup; they ran on creation. Continue to the branch phase.
+- **No entry holds it** — create one with `EnterWorktree` named `issue/{N}`, then continue below.
+
+**Re-point the branch.** `EnterWorktree` forks per `worktree.baseRef`, whose default (`fresh`) forks
+from `origin/<default-branch>` — which on a ladder repo is the wrong rung, since
+`branches.integration` is `dev` and the default branch is `main`. This is the same class of defect
+[`github.md`](../session/references/github.md) already warns about for `gh pr create --base`.
+Re-point from inside the worktree rather than depending on a global setting every adopter would have
+to change:
+
+```bash
+git fetch origin {integration}
+git checkout -B issue/{N} origin/{integration}
+```
+
+Resolve `{integration}` exactly as the branch phase below does.
+
+**Carry untracked files.** A worktree receives tracked files only. For each path in
+`worktree.carry`, copy it from the original checkout into the worktree — symlink it instead when it
+is a large directory such as `node_modules`. A path that does not exist in the source is a
+**warning**, not an error: a repo without a `.env` is normal.
+
+**Run setup.** If `worktree.setup` is non-null, run it once inside the worktree, on creation only —
+never on resume. A non-zero exit is a **warning**: report the command and its exit code and
+continue. A worktree with missing dependencies is recoverable by hand; aborting loses the session.
+
+Display: `Worktree: {path} | branch: issue/{N} | carried: {n} | setup: ok | skipped | failed`
+
+---
+
 **Unified wave strategy:**
 Skip this phase — the `wave` skill creates and manages its own branch in Phase 8.
 
