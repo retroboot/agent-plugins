@@ -302,6 +302,42 @@ Collect the references actually closed into `issues_closed`.
 
 Display: `Issues: {count} verified, {count} closed | none`
 
+### Close the parent when its last child closes
+
+GitHub does not do this — a parent whose children are all closed reports `percentCompleted: 100`
+and stays `OPEN`. Nothing acts on the rollup, so if this skill does not close the parent, nothing
+will.
+
+Skip this entirely when `issues.hierarchy` is disabled or absent. The phase-level skip above
+already covers `is_promotion`, so do not re-check it here.
+
+For each reference in `issues_closed`:
+
+1. Read its `parent` using the **Read hierarchy** command from the loaded reference. No parent —
+   which is the common case — means nothing to do.
+2. Read the parent's `subIssuesSummary`. Close the parent with the **Close** command **only** when
+   `completed == total` and `total > 0`.
+3. Deduplicate by parent **before** step 2, not after. Several children of one epic closing in a
+   single merge must produce one close attempt, not one per child — and deduplicating after the
+   summary read would still issue one query per child.
+
+A parent that is already closed needs no action. A parent with open children is left open —
+**never** close a parent with unfinished children, and never reopen one.
+
+Read the summary **after** the children are closed, not before. `completed` reflects the state at
+query time, so a read taken before the closing loop reports the parent as unsatisfied and the last
+child never triggers it.
+
+Then mark the closed parent Done on the board using the same rules as its children: if the parent
+is not on the board, warn and skip rather than adding it at merge time.
+
+Every step here warns and continues. A failure to close a parent must not affect the merge, which
+has already happened.
+
+Collect closed parents into `parents_closed` and include them in the Phase 11 completion JSON.
+
+Display: `Parents closed: {list}` or nothing when none qualified.
+
 ### Move the board cards to Done
 
 Reached only on a non-promotion merge — the phase-level skip above already covers promotions, so do not re-check `is_promotion` here.
@@ -500,7 +536,9 @@ Display: `Follow-up: {count} issues created {issue_numbers.join(', ') || ''}`
 
 ## Phase 11 — Done
 
-Build the completion JSON from what you observed while running the phases above — `pr_number`, `issues_closed` from Phase 7, `branch_deleted` from Phase 6, and the follow-up issue numbers from Phase 10. Emit it as defined in the command's Output section.
+Build the completion JSON from what you observed while running the phases above — `pr_number`, `issues_closed` and `parents_closed` from Phase 7, `branch_deleted` from Phase 6, and the follow-up issue numbers from Phase 10. Emit it as defined in the command's Output section.
+
+Include `parents_closed` as an array, empty when none qualified or when `issues.hierarchy` is off. Omitting the key on a hierarchy-enabled repo is indistinguishable from the operation having failed.
 
 ---
 

@@ -181,6 +181,23 @@ Propose a set of issues. For each issue:
 - **Labels**: choose from the label reference loaded by init (`$CLAUDE_SKILL_DIR/../init/references/labels.md`). Common picks: `bug`, `feature`, `enhancement`, `refactor`, `documentation`, `chore`, `security`. Add a priority label (`P0`–`P3`) and a size label (`size:xs`–`size:xl`) to each issue.
 - **Dependencies**: which issues must be completed first
 
+**Propose a parent epic** when `issues.hierarchy` is enabled **and** either the complexity tier is
+Complex or the breakdown contains at least `issues.epicThreshold` issues (default `4`). Below that
+bar, emit a flat set — a parent wrapping two issues is bookkeeping with no board benefit.
+
+The epic is an issue like any other, with:
+- **Title**: the feature name, not an action ("Email verification", not "Add email verification")
+- **Body**: the goal, the architecture summary, and a link to the plan doc — no acceptance criteria
+  of its own, because its children carry those
+- **Labels**: the feature/priority labels, **no size label** — an epic has no size
+- **Size**: none
+
+At Complex tier the epic corresponds to the Blueprint as a whole, and each Blueprint step maps to
+one child.
+
+Skip this entirely when `issues.hierarchy` is disabled or absent, or when the resolved tracker is
+not `github`.
+
 Rules:
 - No issue larger than L — split XL issues
 - Prefer fewer, clearer issues over many small ones
@@ -398,6 +415,27 @@ Ready to create {n} issues in GitHub{linear_note}.
 Approve, adjust, or cancel?
 ```
 
+**When an epic was proposed in Phase 6**, show the hierarchy here so the user approves it rather
+than discovering it after creation:
+
+```
+Issues:
+  EPIC {epic_title}
+    1. [{size}] {title}
+       {one-line summary}
+       depends on: none
+
+    2. [{size}] {title}
+       {one-line summary}
+       depends on: #1
+  ...
+
+Ready to create 1 epic + {n} issues in GitHub{linear_note}.
+Approve, adjust, or cancel?
+```
+
+When no epic was proposed, the display is unchanged.
+
 Do not proceed until the user explicitly approves or provides changes. If they provide changes, revise the draft and show it again. Do not create any issues until approved.
 
 **If `--plan-only` mode:** Skip this checkpoint after plan review — the plan doc is already saved. Display: `Plan saved to {path}. Review it and run /work-issue when ready.`
@@ -426,6 +464,24 @@ Wait for the answer before proceeding. If "adjust", revise and re-post. If "canc
 
 Skip if `--plan-only` mode.
 
+**When an epic was approved, create it first.** Its number is needed to attach the children, and a
+child created before its parent cannot be linked without a second pass.
+
+1. Create the epic using the **Create issue** command from the loaded reference.
+2. Create each child issue as normal.
+3. Resolve the epic's and every child's node ID in **one** aliased query using the
+   **Resolve node IDs** command from the loaded reference.
+4. Attach each child using the **Link a child to a parent** command — which is check-then-add, not
+   blind-add. A child that already reports the intended parent is already linked; skip it silently.
+
+**Each attach warns and continues on failure.** The issues are the deliverable and they already
+exist by this point; a hierarchy outage must not lose a planning session's output. This is the same
+rule the board operations follow.
+
+Track how many children attached for the Phase 13 summary.
+
+Display: `Hierarchy: {n}/{total} children attached to #{epic}` or nothing when disabled.
+
 For each approved issue, use the **Create issue** command from the loaded reference.
 
 Collect the created issue numbers/identifiers and URLs.
@@ -436,7 +492,8 @@ Display each as it's created: `Created: #{number} — {title}`
 
 Read `project` from `.hivrr.json`. **When `project` is absent, skip this silently** — most repos have no board, and saying so for every issue is noise. See **Board operations** in [`config.md`](../init/references/config.md) for the commands and the shared rules.
 
-For each created issue:
+For each created issue — **including the epic**, which must reach the board alongside its children
+or the rollup that motivates creating it has nothing to display on:
 
 1. Add it: `gh project item-add {project.number} --owner {project.owner} --url {issue_url}`
 2. Resolve its item ID
@@ -529,6 +586,7 @@ WORKFLOW COMPLETE
 Session:   {session_uuid}
 Plan doc:  docs/plans/{filename}.md
 GitHub:    {issue_numbers or 'plan-only mode — no issues created'}
+Epic:      #{epic_number} — {n}/{total} children attached | not applicable
 Linear:    {linear_ids or 'not configured'}
 Board:     {n}/{total} added as Todo | not configured | {n} failed — see warnings above
 
