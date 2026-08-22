@@ -76,3 +76,15 @@ Apply the branch-deletion safety rules in `merge-pr/SKILL.md` before passing `--
 glab api projects/{PROJECT_ENCODED}/merge_requests/{N}/pipelines | jq -r '.[0].status // "none"'
      # Returns: "success" | "failed" | "canceled" | "running" | "pending" | "none" (no pipeline)
 ```
+
+---
+
+## Sub-Issues
+
+**Not supported.** GitLab has no free-tier equivalent of GitHub sub-issues; the nearest analogue
+is Premium-tier epics, which have a different data model and are out of scope.
+
+When the resolved provider is `gitlab`, treat `issues.hierarchy` as `false` regardless of its
+configured value. Every hierarchy operation is a silent no-op, and skills that consume hierarchy
+fall back to their documented pre-hierarchy behavior — for `group-issues`, that means parsing
+`Depends on #N` and `Part of #N` from issue bodies.

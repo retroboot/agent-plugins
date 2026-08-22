@@ -32,6 +32,10 @@ Global `providerConfig` survives for values that genuinely are user-shaped: `git
     "statusFieldId": "PVTSSF_xxx",
     "status": { "todo": "<option id>", "inProgress": "<option id>", "done": "<option id>" }
   },
+  "issues": {
+    "hierarchy": true,
+    "epicThreshold": 4
+  },
   "worktree": {
     "enabled": true,
     "carry": [".env", ".claude/settings.local.json"],
@@ -64,6 +68,9 @@ Every top-level key is optional. A file containing only `{}` is valid and resolv
 | `project.id` | string (`PVT_…`) | — | `gh project item-edit --project-id` |
 | `project.statusFieldId` | string (`PVTSSF_…`) | — | board status transitions |
 | `project.status.todo` \| `.inProgress` \| `.done` | string (option id) | — | board status transitions |
+| `issues` | object \| absent | absent — all hierarchy operations are silent no-ops | `planning`, `work-issue`, `merge-pr`, `score-issues`, `group-issues` |
+| `issues.hierarchy` | boolean | `false` | all hierarchy operations |
+| `issues.epicThreshold` | number | `4` | `planning` |
 | `worktree` | object \| absent | absent — no worktree behavior | `work-issue`, `wave`, `merge-pr`, `init` |
 | `worktree.enabled` | boolean | `false` | `work-issue`, `wave` |
 | `worktree.carry` | string[] | `[]` | `work-issue`, `wave` |
@@ -110,6 +117,20 @@ Branches that must never be deleted or force-pushed. Entries may use a trailing 
 ### `project`
 
 GitHub Projects v2 board wiring. Field mutations on Projects v2 are GraphQL-only and need opaque IDs, so they are resolved once and cached here rather than looked up per call. When `project` is absent, every board operation is a silent no-op — never an error.
+
+### `issues`
+
+Issue-hierarchy wiring. `hierarchy` opts the repo into GitHub sub-issues; when it is `false` or the
+`issues` key is absent, every hierarchy operation is a **silent no-op** — never a warning. This is
+the same contract as `project`, and for the same reason: most repos will not adopt hierarchy, and
+announcing that on every invocation is noise.
+
+`epicThreshold` is the issue count at or above which `planning` proposes a parent epic. Below it,
+planning emits a flat set — a parent wrapping two issues is bookkeeping with no board benefit.
+
+**`hierarchy` is GitHub-only.** GitLab has no equivalent outside Premium epics and Linear has its
+own native parent/sub-issue model that does not route through these commands. When the resolved
+provider is not `github`, treat `hierarchy` as `false` regardless of its configured value.
 
 ### `worktree`
 
