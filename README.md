@@ -353,9 +353,8 @@ in that block are unguarded.
 
 Three properties of the two Markdown files are load-bearing here, all three recorded in advance by
 #172 from what the fifth check cost to get right. The section extractor stops at the next heading of
-**any** level, because `data-platform`'s
-table is the last one under **Skills** and an extractor that stops only at `^### ` runs straight on
-into the configuration tables. `README.md` lists the shared setup skills as
+**any** level, because `data-platform`'s table is the last one under **Skills** and an extractor that
+stops only at `^### ` runs straight on into the configuration tables. `README.md` lists the shared setup skills as
 ``| `init` | Shared setup skill — see `dev` |`` under `planner` and `dispatcher`, and that is a row
 like any other, so it compares equal. And `data-platform` has no `commands` key at all, so
 `(.commands // [])` must yield an empty set that compares equal to an absent `**Commands:**` line.
