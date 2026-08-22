@@ -275,17 +275,18 @@ reg_c=$(jq -r '.plugins[] | (.commands // [])[]' .claude-plugin/marketplace.json
           | sed 's|.*/||; s|\.md$||' | sort -u)
 doc_c=$(awk '/^## Commands/ { v = 1; next } v && /^## / { exit } v' README.md \
           | sed -n 's|^/\([A-Za-z0-9_-][A-Za-z0-9_-]*\).*|\1|p' | sort -u)
-for c in $reg_c; do
+printf '%s\n' "$reg_c" | grep . | while read -r c; do
     printf '%s\n' "$doc_c" | grep -qxF "$c" || echo "COMMAND UNDOCUMENTED $c"
   done
-for c in $doc_c; do
+printf '%s\n' "$doc_c" | grep . | while read -r c; do
     printf '%s\n' "$reg_c" | grep -qxF "$c" || echo "COMMAND NOT REGISTERED $c"
   done
 
 # CLAUDE.md's init phase count matches skill/init/SKILL.md's phase headings
 ip_n=$(grep '^## Phase [0-9]' skill/init/SKILL.md \
          | sed 's/^## Phase *\([0-9][0-9]*\).*/\1/' | sort -n -u | grep -c .)
-ip_said=$(sed -n 's/.*[^A-Za-z]\([a-z][a-z]*\) ordered phases.*/\1/p' CLAUDE.md | head -1)
+ip_said=$(sed -n 's/.*[^A-Za-z]\([A-Za-z][a-z]*\) ordered phases.*/\1/p' CLAUDE.md \
+            | head -1 | tr 'A-Z' 'a-z')
 [ "$(w2n "$ip_said")" = "$ip_n" ] \
   || echo "INIT PHASE COUNT DRIFT CLAUDE.md says $ip_said, skill/init/SKILL.md has $ip_n"
 ```
@@ -485,17 +486,31 @@ silent asymmetry. That row enumerates the same phases — *"provider config, rep
 one for symmetry with `CLAUDE.md`; the enumeration is the useful part and the number in front of it
 is what drifts.
 
-The same reasoning cleared the last two unverified counts in `README.md` — **a different pair from
-the check counts above**, and the ones #175 was filed for. The overview read *"split into **five**
-focused packages"*, and the fifth check's message table was introduced as *"It reports **five**
-distinct failures"*; both now read without a number. Neither sentence *named* what it counted, which
-is the test `CLAUDE.md`'s surviving count passes and these two did not — so rewording was the right
-answer rather than two more checks, and the table or list each one introduces still tells a reader
+The same reasoning cleared the last two counts in `README.md` that named something in another file
+— **a different pair from the check counts above**, and the ones #175 was filed for. The overview
+read *"split into **five** focused packages"*, counting `marketplace.json`'s plugins, and the fifth
+check's message table was introduced as *"It reports **five** distinct failures"*, counting rows of
+that table; both now read without a number. Neither sentence *named* what it counted, which is the
+test `CLAUDE.md`'s surviving count passes and these two did not — so rewording was the right answer
+rather than two more checks, and the table or list each one introduces still tells a reader
 everything the number did.
 
-To re-run the two: rename a command in the usage block, remove one from `marketplace.json`, state
-the wrong number before `ordered phases` in `CLAUDE.md`, and delete that number entirely. Each must
-produce its own message, and a clean tree must still print `structural checks pass`.
+**That is the line worth drawing, and it is narrower than "no counts in prose".** A count whose
+subject lives in another file — plugins in `marketplace.json`, phases in a `SKILL.md`, checks in
+this block — can go stale without anything moving nearby, so it is either checked or reworded away.
+A count of items in its own paragraph cannot: *"Two properties of the block are load-bearing"* above
+two sentences, or *"Three properties of the two Markdown files"* above three, drifts only if
+somebody edits the list it introduces while looking straight at it. Those are deliberately left
+alone. Apply the same test to a count you are about to add — if you have to open another file to
+confirm it, it needs a check or a rewrite.
+
+To re-run the two: rename a command in the usage block, remove one from `marketplace.json`,
+register one in `marketplace.json` with no example in the block, state the wrong number before
+`ordered phases` in `CLAUDE.md`, capitalize that number, and delete it entirely. Each must produce
+its own message, and a clean tree must still print `structural checks pass`. The rename emits both
+command messages at once, so the third case is what exercises `COMMAND UNDOCUMENTED` on its own
+terms; the capitalized case is what proves the number word is read case-insensitively, which the
+first draft of this check got wrong.
 
 **Extracting does not always mean a new reference file.** The blanket-staging prohibition was
 allowlisted and then extracted to the **Git Safety** section of `skill/core/SKILL.md`, because every
