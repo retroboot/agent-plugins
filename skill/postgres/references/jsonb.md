@@ -5,7 +5,7 @@
 ```sql
 -- Use JSONB (binary, indexed, faster)
 CREATE TABLE documents (
-  id   SERIAL PRIMARY KEY,
+  id   BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   data JSONB NOT NULL
 );
 

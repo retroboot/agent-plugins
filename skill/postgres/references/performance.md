@@ -174,8 +174,13 @@ SELECT * FROM orders o JOIN users u ON o.user_id = u.id;
 CREATE INDEX idx_orders_user ON orders(user_id);
 -- 2. Update statistics
 ANALYZE orders, users;
--- 3. Increase work_mem if hash join would be better
-SET work_mem = '256MB';
+-- 3. Increase work_mem if hash join would be better.
+--    SET LOCAL scopes it to the surrounding transaction, so a pooled connection is
+--    not left with an elevated work_mem for every later query it serves.
+BEGIN;
+SET LOCAL work_mem = '256MB';
+SELECT * FROM orders o JOIN users u ON o.user_id = u.id;
+COMMIT;
 ```
 
 ### Problem: COUNT(*) slow
@@ -264,7 +269,7 @@ Use transaction-level pooling for web applications. Session-level pooling for ap
 # Memory settings (for 16GB RAM server)
 shared_buffers = 4GB           # 25% of RAM
 effective_cache_size = 12GB    # 75% of RAM
-work_mem = 64MB                # Per sort operation — set per-session for analytics
+work_mem = 64MB                # Per sort operation — raise per-transaction for analytics
 maintenance_work_mem = 1GB     # For VACUUM, CREATE INDEX
 
 # Checkpoint tuning
@@ -281,7 +286,7 @@ max_parallel_workers_per_gather = 4
 max_parallel_workers = 8
 ```
 
-**Caution on `work_mem`:** Do not set globally to a large value — it is allocated per sort operation and can cause OOM with concurrent queries. Set per-session for analytical workloads.
+**Caution on `work_mem`:** Do not set globally to a large value — it is allocated per sort operation and can cause OOM with concurrent queries. Raise it for an individual analytical query with `SET LOCAL` inside a transaction; a plain `SET` persists for the rest of the session, which on a pooled connection means every later query that borrows it.
 
 ---
 
