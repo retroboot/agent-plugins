@@ -39,7 +39,7 @@ It reports a `DESC …` message naming the plugin and the specific disagreement;
 full table, kept there so adding a message does not leave a stale list here. Fix the disagreement —
 never edit around the check.
 
-For that to be one rule rather than five special cases, **keep every `marketplace.json` description
+For that to be one rule rather than one special case per plugin, **keep every `marketplace.json` description
 a single sentence with no terminal period.** A two-sentence description ends in a period of its
 own, and then this file adds nothing — so `{description}.` stops describing the line here, and the
 check reports that row as drifted when it is not. The check catches the cause directly and reports

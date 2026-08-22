@@ -392,9 +392,9 @@ stop before **Phase 6 — Reconcile the Config**, the phase that commits `.hivrr
 that is bootstrap step 1 of every command in `dev`, `planner`, and `dispatcher`.
 
 `merge-pr` has a `## Phase 2b`, deliberately. The check counts **distinct** numbers, so `2b` folds
-into `2` and twelve headings yield eleven contiguous phases. Do not renumber the skill to satisfy
-the check. A skill that states no count is not required to — thirteen of the fourteen state none and
-the check is silent on all of them.
+into `2` and the skill ends up with one fewer contiguous phase than it has headings. Do not renumber
+it to satisfy the check. A skill that states no count is not required to — `init` is the only one
+that does, and the check is silent on every other skill.
 
 **The heading match is anchored to a digit — `^## Phase [0-9]`, not `^## Phase` — and must stay that
 way.** The `sed` after it only rewrites lines containing a number, so an unanchored match passes a
@@ -521,8 +521,8 @@ it is only reachable from plugins that ship `core` — which today is `dev` alon
 
 `skill/planning/references/plan-writing.md` and `skill/init/SKILL.md` therefore state the staging
 rule in their own words. For `plan-writing.md` the reason is that `planner` does not ship `core`.
-For `init` it is the same reason and it is stronger, because `init` ships in three plugins and two
-of them — `planner` and `dispatcher` — do not carry `core`. **Load order is not what keeps that copy
+For `init` it is the same reason and it is stronger, because `init` ships in `dev`, `planner`, and
+`dispatcher`, and the last two of those do not carry `core`. **Load order is not what keeps that copy
 inline.** A plugin install contains only the skills its `marketplace.json` entry names, so
 reordering the bootstrap to load `core` before `init` would still leave `../core/SKILL.md`
 unresolvable in two installs out of three. Do not "fix" either copy into a link; the way to remove
