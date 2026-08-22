@@ -85,6 +85,25 @@ Do these together:
 
 Store everything you learn about the issues as `issue_data`.
 
+**Check for hierarchy.** When `issues.hierarchy` is enabled, read `parent` and `subIssuesSummary`
+for each issue using the **Read hierarchy** command from the loaded reference. Skip this entirely
+when `issues.hierarchy` is disabled or absent; if the query fails, warn and continue treating every
+issue as workable — losing the check degrades the run, aborting destroys it.
+
+If an issue has `subIssuesSummary.total > 0` with at least one child still open, it is an epic.
+Implementing it directly produces one oversized PR that closes a container rather than its
+contents. Display:
+
+`Epic: #{number} has {open}/{total} open sub-issues — work those instead: {child_numbers}`
+
+Then stop and ask which children to work, unless `--auto` is set. Under `--auto`, substitute the
+**open children** for the epic in `issue_numbers` and continue — do not abort, and do not
+implement the epic. Substituting several children for one issue can change the routing decision
+made in Phase 2, so re-run that routing on the new list before continuing.
+
+An epic whose children are all closed is workable as an ordinary issue; it is likely a
+documentation or wrap-up task.
+
 Display: `Fetched: {count} issue(s) from {repo_owner}/{repo_name}`
 
 ### Load session context
