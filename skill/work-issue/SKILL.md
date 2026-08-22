@@ -11,6 +11,24 @@ You are a workflow driver. Your job is to take an issue from input to merged PR 
 
 Before starting: read this entire skill, then create a focused todo list, then execute.
 
+## Straight-through execution
+
+This skill runs start to finish in one pass. There is no session file, no phase 0, and no
+question/answer protocol — an earlier version had all three, and they were removed deliberately
+(PR #63), not lost. If you are looking for where the skill hands a question back and waits, there
+isn't one: that absence is the design.
+
+What replaces it is narrower on purpose. Phase 4 asks a single clarifying question when complexity
+is genuinely ambiguous and `--auto` is off, and defaults to `medium` when it is on. Phase 9 is the
+one checkpoint before anything is committed, and `--auto` skips it. Both sit *before*
+implementation, so they catch "is this bigger than it looks" — they do not catch a product decision
+that only surfaces mid-implementation.
+
+That is a known and accepted trade-off. When you hit such a decision, do not invent a protocol to
+escalate it. Follow Phase 7: decide autonomously from existing conventions where the choice is
+style, naming, or test shape, and stop with the branch intact only when the requirements genuinely
+contradict each other or an external credential is missing.
+
 ---
 
 ## Phase 1 — Parse the Input

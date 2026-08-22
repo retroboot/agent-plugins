@@ -1,10 +1,36 @@
+<!-- Claude Code loads this file automatically as project-level instructions. -->
+
 # Hivrr Claude Plugin
 
 Skills and commands for implementation, brainstorming, planning, and code review workflows in Claude Code.
 
+> **This file has two jobs.** It documents the repo for people, and Claude Code loads it verbatim as
+> project instructions for any session started here — so every sentence is also a directive an agent
+> will act on. Write it as instructions, not as description: prefer "keep this list in sync with
+> `marketplace.json`" over "this list mirrors `marketplace.json`". Editing it changes agent
+> behaviour in this repo, which is why a change here is a behaviour change and not a docs change
+> (see **Verification** below).
+
 ## Plugins
 
 `.claude-plugin/marketplace.json` is the source of truth for what ships. Keep this list in sync with it.
+
+### Path resolution
+
+Skills and commands are registered with different path shapes, and getting one wrong fails silently
+— the entry is accepted, the skill or command simply never loads.
+
+| Kind | Registered as | Resolves to |
+|---|---|---|
+| Skill | a **directory**, no extension — `./skill/audit` | `skill/audit/SKILL.md` |
+| Command | a **file, `.md` included** — `./command/audit.md` | `command/audit.md` |
+
+Always write the extension on a command entry. All 14 currently carry it and all 14 load, so the
+explicit form is the one known to work; whether the manager would also accept an extension-less
+command path is untested and not worth relying on either way. The third check under
+**Verification** keeps the explicit form in place, because nothing else in the repo would catch
+its absence — a command that fails to resolve produces no error, just a slash command that is not
+there.
 
 ### `dev`
 Implementation and code review — issues, PRs, waves, merges, and environment promotions.
@@ -70,7 +96,7 @@ The full rule, and the reasoning behind it, is in `skill/core/SKILL.md`.
 
 ## Verification
 
-The product here is JSON and Markdown, so verification is structural — validate that every JSON file parses and that every skill and command registered in `marketplace.json` resolves to a real path. Both commands are in the README.
+The product here is JSON and Markdown, so verification is structural — validate that every JSON file parses, that every registered skill is a directory holding a `SKILL.md`, and that every registered command is an existing `.md` file. All three commands are in the README.
 
 Because JSON and Markdown *are* the product in this repo, a change to `marketplace.json` or any `SKILL.md` is a behavior change, not a docs change. Do not skip verification on it.
 
