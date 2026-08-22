@@ -64,7 +64,7 @@ tools = [{
 }]
 
 response = client.messages.create(
-    model="claude-haiku-4-5-20251001",
+    model="claude-haiku-4-5",
     max_tokens=1024,
     tools=tools,
     tool_choice={"type": "tool", "name": "extract_entities"},
@@ -169,9 +169,9 @@ class ModelRoute:
     max_tokens: int
 
 ROUTES = {
-    TaskComplexity.SIMPLE:   ModelRoute("gpt-4o-mini",  "claude-haiku-4-5-20251001", 512),
-    TaskComplexity.MODERATE: ModelRoute("gpt-4o",       "claude-sonnet-4-5",          2048),
-    TaskComplexity.COMPLEX:  ModelRoute("o1",            "claude-opus-4-6",            4096),
+    TaskComplexity.SIMPLE:   ModelRoute("gpt-4o-mini",  "claude-haiku-4-5",  512),
+    TaskComplexity.MODERATE: ModelRoute("gpt-4o",       "claude-sonnet-5",   2048),
+    TaskComplexity.COMPLEX:  ModelRoute("o1",           "claude-opus-5",     4096),
 }
 
 async def routed_completion(prompt: str, complexity: TaskComplexity) -> str:
@@ -221,7 +221,7 @@ local_client = OpenAI(
 ```python
 # Anthropic prompt caching for large system prompts
 response = client.messages.create(
-    model="claude-sonnet-4-5",
+    model="claude-sonnet-5",
     max_tokens=1024,
     system=[
         {
@@ -237,11 +237,15 @@ response = client.messages.create(
 ```python
 # Track costs per request
 def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
+    # Anthropic list prices are published per 1M tokens; divide by 1000 for this table.
+    # Re-check against the pricing page rather than carrying these forward — a model
+    # keeping its ID across a price change is the case this table gets wrong silently.
     PRICING = {
         "gpt-4o":           (0.0025, 0.010),   # per 1K tokens (in, out)
         "gpt-4o-mini":      (0.00015, 0.0006),
-        "claude-sonnet-4-5": (0.003, 0.015),
-        "claude-haiku-4-5-20251001":  (0.00025, 0.00125),
+        "claude-opus-5":    (0.005, 0.025),    # $5 / $25 per 1M
+        "claude-sonnet-5":  (0.003, 0.015),    # $3 / $15 per 1M
+        "claude-haiku-4-5": (0.001, 0.005),    # $1 / $5 per 1M
     }
     in_price, out_price = PRICING.get(model, (0, 0))
     return (input_tokens * in_price + output_tokens * out_price) / 1000

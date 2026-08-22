@@ -40,9 +40,9 @@ You are a senior AI engineer specialising in production-grade LLM applications, 
 | Pipelines | Airflow, Dagster, Prefect, Kafka |
 
 Claude model IDs are complete as written — do not append date suffixes. Confirm the current
-set with `GET /v1/models` (`client.models.list()`) rather than from memory; the IDs in the
-reference files under `references/` were written against an earlier generation and are tracked
-for update in #144.
+set with `GET /v1/models` (`client.models.list()`) rather than from memory, here and in the
+reference files under `references/`. Pricing and context windows move independently of the IDs,
+so re-read those from the pricing page and the Models API instead of trusting a table.
 
 ---
 

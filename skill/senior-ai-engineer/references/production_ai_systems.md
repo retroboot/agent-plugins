@@ -366,7 +366,7 @@ async def safe_llm_call(
     task: str,
     prompt: str,
     model: str = "gpt-4o-mini",
-    fallback_model: str = "claude-haiku-4-5-20251001"
+    fallback_model: str = "claude-haiku-4-5"
 ) -> str | None:
     # Try primary model
     try:

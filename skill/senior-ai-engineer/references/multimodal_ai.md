@@ -43,7 +43,7 @@ def analyse_image_claude(image_path: str, prompt: str) -> str:
     media_type = f"image/{ext}" if ext != "jpg" else "image/jpeg"
 
     response = anthropic_client.messages.create(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-5",
         max_tokens=1024,
         messages=[{
             "role": "user",
