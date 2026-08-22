@@ -14,6 +14,7 @@ Skills and commands for implementation, brainstorming, planning, and code review
 ## Plugins
 
 `.claude-plugin/marketplace.json` is the source of truth for what ships. Keep this list in sync with it.
+
 **The sixth structural check enforces that**, for the `**Skills:**` and `**Commands:**` lines below as
 well as for `README.md`'s per-plugin table, and reports `SKILLS DRIFT {plugin} {file}` or
 `COMMANDS DRIFT {plugin} {file}` naming which file disagrees. So the sentence above is now a checked

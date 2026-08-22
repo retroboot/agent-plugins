@@ -255,7 +255,7 @@ w2n() { case "$1" in one) echo 1;; two) echo 2;; three) echo 3;; four) echo 4;; 
         six) echo 6;; seven) echo 7;; eight) echo 8;; nine) echo 9;; ten) echo 10;;
         eleven) echo 11;; twelve) echo 12;; thirteen) echo 13;; *) echo 0;; esac; }
 for f in skill/*/SKILL.md; do
-    nums=$(grep '^## Phase' "$f" | sed 's/^## Phase *\([0-9][0-9]*\).*/\1/' | sort -n -u)
+    nums=$(grep '^## Phase [0-9]' "$f" | sed 's/^## Phase *\([0-9][0-9]*\).*/\1/' | sort -n -u)
     cnt=$(printf '%s\n' "$nums" | grep -c .)
     [ "$cnt" -eq 0 ] && continue
     [ "$nums" = "$(seq 1 "$cnt")" ] \
@@ -351,9 +351,9 @@ There is no `COMMANDS DRIFT {plugin} readme`, because `README.md` lists commands
 block under **Commands** rather than per plugin. That is a real gap, not an oversight — the commands
 in that block are unguarded.
 
-Three properties of the two Markdown files are load-bearing here. #172 recorded all three in advance,
-from what the fifth check cost to get right; each is confirmed below by observation rather than taken
-on trust. The section extractor stops at the next heading of **any** level, because `data-platform`'s
+Three properties of the two Markdown files are load-bearing here, all three recorded in advance by
+#172 from what the fifth check cost to get right. The section extractor stops at the next heading of
+**any** level, because `data-platform`'s
 table is the last one under **Skills** and an extractor that stops only at `^### ` runs straight on
 into the configuration tables. `README.md` lists the shared setup skills as
 ``| `init` | Shared setup skill — see `dev` |`` under `planner` and `dispatcher`, and that is a row
@@ -376,11 +376,24 @@ into `2` and twelve headings yield eleven contiguous phases. Do not renumber the
 the check. A skill that states no count is not required to — thirteen of the fourteen state none and
 the check is silent on all of them.
 
+**The heading match is anchored to a digit — `^## Phase [0-9]`, not `^## Phase` — and must stay that
+way.** The `sed` after it only rewrites lines containing a number, so an unanchored match passes a
+heading like `## Phase Contract` through whole, into the list of phase *numbers*, where it inflates
+the count and reports a sequence failure against a file that has none. That heading is not
+hypothetical: `skill/init/SKILL.md` opens with a bolded **"Phase contract"** paragraph, and promoting
+it to a heading is an ordinary edit. A check that reports drift which does not exist gets switched
+off, which costs more than never having written it.
+
 The eighth check is the smallest and the most self-referential: it counts the `# ` comments at
 column 0 in the block above and compares that against the number word before `checks:` in
 `CLAUDE.md`. **One column-0 `# ` comment per check** is therefore the convention the block is
 written to; comments *inside* a check are indented so they do not inflate the count. It counts
 itself, which is correct — it is a check, and it lives in the block.
+
+It reads the number word with `w2n`, **the helper defined in the seventh check above** — which is
+why #173 wanted the two done in one pass. Deleting or reordering the seventh breaks the eighth. That
+fails loudly rather than silently, since `w2n: command not found` is caught by the `2>&1` and exits
+non-zero, but do not move one without the other.
 
 This replaced three hand-maintained counts, one of which was already wrong: `CLAUDE.md` read
 *"All three commands are in the README"* when there were four, and had since the duplication check
@@ -393,6 +406,11 @@ To re-run the three: remove a skill from a plugin in `marketplace.json`, delete 
 row, delete an entry from a `**Skills:**` line, state the wrong phase count in `skill/init/SKILL.md`,
 renumber a phase heading to leave a gap, and change the number word in `CLAUDE.md`. Each must produce
 its own message.
+
+The digit anchor needs a fixture, because no skill in the repo can currently trip it. Add a
+`## Phase Contract` heading above the numbered ones in any `SKILL.md`, confirm the check stays
+**silent**, then drop the `[0-9]` from the match and confirm it reports `PHASE SEQUENCE` naming that
+heading as a phase number. Revert both.
 
 **Extracting does not always mean a new reference file.** The blanket-staging prohibition was
 allowlisted and then extracted to the **Git Safety** section of `skill/core/SKILL.md`, because every
