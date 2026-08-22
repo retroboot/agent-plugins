@@ -176,9 +176,12 @@ A repo opts in with **both** of these:
    > the start of those workflows and clean up per `merge-pr`.
 
 3. `.claude/` in the repo's `.gitignore`. Worktrees are created under `.claude/worktrees/`, and if
-   that path is not ignored it shows up as an untracked directory — which `work-issue` Phase 10 and
-   `work-pr` Phase 9 treat as evidence of a concurrent session and **stop on**. The workflow then
-   halts on its own worktree and reports the wrong cause.
+   that path is not ignored it shows up as an untracked `??` entry in the `git status --short`
+   check `core` requires before committing. That does not halt the run — `core` judges untracked
+   entries by who created them, and a worktree this run entered is expected — but it does put a
+   directory in front of every later commit that has to be told apart from a genuine
+   concurrent-session signal, and it is what a regression to blanket staging would sweep into a
+   commit wholesale. Ignore it and the question never arises.
 
 The `.hivrr.json` key carries the settings; the CLAUDE.md line is what authorizes the tool; the
 `.gitignore` entry is what keeps the worktree invisible to the staging check.

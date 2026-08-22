@@ -9,7 +9,9 @@ compatibility: opencode
 
 Ensure provider config, labels, repo config, and verify commands are in place before any workflow runs. Called once per command.
 
-**Phase contract — read this before anything else.** The five phases run **in order, every time**. A phase that finds its work already done reports and **continues to the next phase**; it does not end the skill. Only an unrecoverable error stops `init`.
+**Phase contract — read this before anything else.** The seven phases run **in order, every time**. A phase that finds its work already done reports and **continues to the next phase**; it does not end the skill. Only an unrecoverable error stops `init`.
+
+**The count in that sentence is load-bearing.** It is what tells you the run is not finished, so a wrong number truncates the skill silently — stopping after Phase 5 would skip Phase 6, which is what commits `.hivrr.json`. Nothing verifies it. If you add or remove a phase here, update this line, the `init` row in `README.md`, and the `init` bullet under **Shared setup skills** in `CLAUDE.md` in the same commit.
 
 "Idempotent" here means each phase is cheap and safe to re-run, not that the skill exits early. Phase 4 in particular exists to catch repo drift and is worthless if an earlier phase short-circuits past it.
 
@@ -330,11 +332,19 @@ git commit -m "chore(config): record .hivrr.json settings" -- .hivrr.json
 bare `git commit` commits the **whole index** — including anything staged before `init` ran, by the
 user or by an interrupted workflow. `init` runs as the first bootstrap step of every command, so it
 routinely executes mid-workflow in a checkout with a populated index. Without the pathspec this
-commit sweeps a feature's staged files in under a config message, which is the exact bug Phase 10 of
-`work-issue` and Phase 9 of `work-pr` no longer permit.
+commit sweeps a feature's staged files in under a config message, which is the exact bug the commit
+phases of `work-issue` and `work-pr` no longer permit.
 
 Keep the `git add` as well: `git commit -- {path}` fails on a never-tracked file, and a freshly
 scaffolded `.hivrr.json` is exactly that.
+
+**Why this rule is restated here rather than linked.** `core` states it once, under **Staging**, and
+`work-issue` and `work-pr` link to it. `init` cannot: it ships in `dev`, `planner`, **and**
+`dispatcher`, and only `dev` ships `core` — a plugin install carries just the skills its
+`marketplace.json` entry names, so `../core/SKILL.md` resolves to nothing in two installs out of
+three. Reordering the bootstrap so `core` loads before `init` would not change that; the constraint
+is packaging, not load order. Keep the copy inline, and keep it phase-agnostic — the phase numbers
+in the other two skills are hand-maintained and nothing verifies a prose reference to them.
 
 Then confirm the commit carries one path and no more:
 
@@ -392,9 +402,9 @@ git branch -vv | grep ': gone]'
 ```
 
 **Do not use `git branch --merged` here.** Under squash merges — this plugin's default strategy, and
-what `merge-pr` Phase 9 Step 2 documents at length — a merged branch shares no commit with the base,
-so `--merged` returns nothing for exactly the branches this phase most needs to find. The failure is
-silent: an empty result is indistinguishable from "no merged orphans".
+what `merge-pr` documents at length where it cleans up branches — a merged branch shares no commit
+with the base, so `--merged` returns nothing for exactly the branches this phase most needs to find.
+The failure is silent: an empty result is indistinguishable from "no merged orphans".
 
 `: gone]` means the remote ref disappeared, **not** that the work landed — a closed-unmerged PR and a
 force-pushed rename produce the same signature. `merge-pr` treats that ambiguity as a reason to

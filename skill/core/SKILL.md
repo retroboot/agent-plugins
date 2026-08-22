@@ -60,6 +60,20 @@ Every staged path must be one this run touched. **If an unexpected path appears,
 it** — it means another session is writing to this checkout, which is the exact condition worktree
 isolation exists to prevent. Do not unstage and continue silently.
 
+**Read the untracked entries too, not just the staged ones.** `git status --short` marks them `??`,
+and since staging became explicit they are the only place another session's new files can show up —
+nothing unnamed reaches the index any more.
+
+Judge them by **who created them**, not by the fact that they are untracked. All of these are
+expected, none are staged, and none of them block the commit:
+
+- scratch this run wrote itself, such as session state under `.ai/session/`
+- a worktree this run entered
+- anything untracked that was already present when the run started
+
+A `??` path that is none of those is another session writing to this checkout — **stop and report
+it.** Do not stage it, do not delete it, and do not commit around it.
+
 Staging one file is not the same as committing one file. A bare `git commit` commits the **whole
 index**, including anything staged before this run started, so a phase that commits a single known
 path must pass that path as a pathspec too:

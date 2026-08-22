@@ -27,7 +27,7 @@ The plugin is split into five focused packages:
 
 | Skill | Description |
 |-------|-------------|
-| `init` | One-time setup — provider config, repo labels, `.hivrr.json` scaffold, verify commands, project board IDs |
+| `init` | One-time setup — provider config, repo labels, `.hivrr.json` scaffold, verify commands, project board IDs, config reconciliation, orphan-worktree reporting |
 | `session` | Loads config and the active provider reference for the session |
 | `core` | Coding philosophy — quality gates, git safety, script policy, and task completion standards |
 | `work-issue` | Implement an issue end-to-end and open a PR/MR |
@@ -235,9 +235,23 @@ allowlisted and then extracted to the **Git Safety** section of `skill/core/SKIL
 `dev` command already loads `core` as its third bootstrap step. A rule that lands there costs no new
 file and no new indirection — the destination is already in context when the skill runs. Prefer it
 over `skill/*/references/` for anything that is a *policy* rather than a *procedure*, and note that
-it is only reachable from plugins that ship `core`: `skill/planning/references/plan-writing.md`
-states the same staging rule in its own words because `planner` does not, and
-`skill/init/SKILL.md` states it in its own words because `init` runs before `core` is loaded.
+it is only reachable from plugins that ship `core` — which today is `dev` alone.
+
+`skill/planning/references/plan-writing.md` and `skill/init/SKILL.md` therefore state the staging
+rule in their own words. For `plan-writing.md` the reason is that `planner` does not ship `core`.
+For `init` it is the same reason and it is stronger, because `init` ships in three plugins and two
+of them — `planner` and `dispatcher` — do not carry `core`. **Load order is not what keeps that copy
+inline.** A plugin install contains only the skills its `marketplace.json` entry names, so
+reordering the bootstrap to load `core` before `init` would still leave `../core/SKILL.md`
+unresolvable in two installs out of three. Do not "fix" either copy into a link; the way to remove
+one is to add `./skill/core` to the plugin that needs it — and, if the rule has to be *in context*
+rather than merely reachable, to load it before the skill that cites it. Packaging is what makes the
+link resolve; bootstrap order is what makes it free.
+
+Where those inline copies point at other skills, keep the reference **phase-agnostic** — "the commit
+phases of `work-issue` and `work-pr`", not "Phase 10 and Phase 9". Phase numbers are hand-maintained
+and no check reads prose, so a skill that gains or loses a phase leaves every citation of it silently
+wrong.
 
 **`.hivrr.json` `verify.test` is the runnable form of these four checks.** It runs them from the
 repo root, prints only findings, and exits non-zero when there are any — which is what makes
