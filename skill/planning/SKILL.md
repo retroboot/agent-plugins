@@ -169,7 +169,10 @@ Display: `Complexity: {tier} — {one-line rationale}`
 
 ## Phase 6 — Draft the Breakdown
 
-**If `--plan-only` mode:** Skip the issue proposal. Only produce the file structure map (used in Phase 8). Jump directly to that section below.
+**If `--plan-only` mode:** Skip the issue proposal. What remains depends on the tier resolved in Phase 5:
+
+- **Medium and Complex** — jump directly to the file structure map section below and produce it. Phase 7 consumes it.
+- **Simple** — skip this phase entirely. The file structure map is gated to Medium and Complex, and a Simple plan doc lists key files instead, so this phase has nothing to produce. Go straight to Phase 7.
 
 Propose a set of issues. For each issue:
 - **Title**: concise, action-oriented ("Add email verification token generation")
@@ -224,6 +227,7 @@ See [references/plan-writing.md](references/plan-writing.md) for the full task s
 
 ### Simple tier
 Brief plan doc: goal, architecture, key files, linked issues. No TDD task breakdown. 1-2 pages.
+In `--plan-only` mode there are no issues to link — omit that section rather than leaving it empty.
 
 ### Medium tier
 Full implementation plan with TDD task breakdown. For each task:
@@ -472,11 +476,12 @@ Display each: `Linear: {identifier} — {title}`
 
 ## Phase 12 — Write to Memory
 
-After issue creation, persist the planning output to memory before exiting.
+After issue creation — or, in `--plan-only` mode, after the plan document is written — persist the planning output to memory before exiting.
 
 **Memory write:**
 ```
 session/{session_uuid}/prd         = full PRD text
+session/{session_uuid}/plan_only   = true when --plan-only was set, false otherwise
 session/{session_uuid}/plan        = [{ task_id, title, repo,
                                         dependencies, acceptance_criteria,
                                         github_issue_url }]
@@ -486,8 +491,29 @@ session/{session_uuid}/constraints = discovered constraints and non-goals
 session/{session_uuid}/phase       = "executing"
 ```
 
+### `plan_only` in plan-only mode
+
+`--plan-only` creates no issues, so `plan` has nothing to hold. Write it as an **empty array** and
+write `plan_only = true` alongside it. Write both keys in both modes.
+
+The discriminator is the point. Without it a consumer reading `plan` alone cannot tell "this session
+deliberately created no issues" from "the plan write failed" or "this key was never written" — all
+three look like an empty array. `plan_only = true` says which, and tells the consumer to read
+`plan_doc` instead.
+
 **Local file fallback:**
 If memory is unavailable, write to `.ai/session/{session_uuid}/plan.md` containing the full plan and PRD content. Log a warning: `WARNING: Memory unavailable, plan written to .ai/session/{session_uuid}/plan.md`
+
+Open that file with a mode line, so the discriminator survives the fallback path too:
+
+```markdown
+Mode: plan-only     ← or: Mode: standard
+```
+
+Without it a plan-only session leaves a `plan.md` holding no issues and nothing saying that was
+deliberate — the same ambiguity `plan_only` exists to remove, one layer down. A reader that finds no
+`Mode:` line at all should assume standard mode; that is what every `plan.md` written before this
+line existed means.
 
 Do not fail if memory write fails — log the warning and continue.
 

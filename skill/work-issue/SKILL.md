@@ -100,16 +100,27 @@ intent rather than re-deriving it from the issue body alone.
 ```
 session/{SESSION_UUID}/prd         full PRD text
 session/{SESSION_UUID}/plan        the task graph
+session/{SESSION_UUID}/plan_only   true when the session ran --plan-only and created no issues
+session/{SESSION_UUID}/plan_doc    path to the plan document — the payload in plan-only mode
 session/{SESSION_UUID}/decisions   architectural choices made during decomposition
 ```
+
+**An empty `plan` alongside `plan_only = true` is not a failure.** That session wrote a plan document
+rather than issues, so there is no task graph to match this issue against. Read `plan_doc` for the
+reasoning, take the task-id fallback below, and continue — do not warn about a missing plan.
 
 **Local file fallback:** `.ai/session/{SESSION_UUID}/plan.md`, written by the `planning` skill when
 memory was unavailable to it. See Phase 12 of the `planning` skill for what writes these.
 
-The fallback is not lossless. `planning` writes the three keys above separately to memory but
-collapses its file fallback into a single `plan.md` holding the plan and PRD content, so
-`decisions` may be absent when reading from disk. Treat that as a missing key — the warn-and-continue
-rule below already covers it — rather than as a read failure.
+The fallback is not lossless. `planning` writes the keys above separately to memory but
+collapses its file fallback into a single `plan.md`, so `decisions` may be absent when reading from
+disk. Treat that as a missing key — the warn-and-continue rule below already covers it — rather than
+as a read failure.
+
+`plan_only` survives the collapse as the `Mode:` line `planning` writes at the top of `plan.md`.
+Read it from there. **When no `Mode:` line is present, assume standard mode** — that is what a
+`plan.md` written before this line existed means, and assuming plan-only would suppress a real
+missing-plan warning.
 
 Hold the result as `session_context` and carry it through Phase 6 planning and Phase 7
 implementation. It is context, not instruction: where `session_context` and the issue body conflict,
