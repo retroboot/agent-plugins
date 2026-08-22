@@ -25,9 +25,9 @@ Skills and commands are registered with different path shapes, and getting one w
 | Skill | a **directory**, no extension — `./skill/audit` | `skill/audit/SKILL.md` |
 | Command | a **file, `.md` included** — `./command/audit.md` | `command/audit.md` |
 
-Always write the extension on a command entry. All 14 currently carry it and all 14 load, so the
-explicit form is the one known to work; whether the manager would also accept an extension-less
-command path is untested and not worth relying on either way. The third check under
+Always write the extension on a command entry. Every command entry currently carries it and every
+command loads, so the explicit form is the one known to work; whether the manager would also accept
+an extension-less command path is untested and not worth relying on either way. The third check under
 **Verification** keeps the explicit form in place, because nothing else in the repo would catch
 its absence — a command that fails to resolve produces no error, just a slash command that is not
 there.

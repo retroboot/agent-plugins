@@ -167,14 +167,15 @@ Or reference the local path during development:
 
 ## Verification
 
-This repo ships no shell scripts — see the script policy in `skill/core/SKILL.md`. Its product is JSON and Markdown, so verification is structural:
+This repo ships no shell scripts — see the script policy in `skill/core/SKILL.md`. Its product is JSON and Markdown, so verification is structural.
 
 Skills and commands resolve by different rules, so check them separately — a single `[ -e ]` test
 passes on a command entry that has lost its `.md`, and that command then fails to load silently.
+Let git enumerate the JSON files rather than listing them, so the check cannot drift from the repo:
 
 ```bash
 # every JSON file parses
-jq empty .hivrr.json .claude-plugin/marketplace.json skill/postgres-query/package.json
+jq empty $(git ls-files '*.json')
 
 # every registered skill is a directory holding a SKILL.md
 jq -r '.plugins[] | (.skills // [])[]' .claude-plugin/marketplace.json | sort -u \
