@@ -20,6 +20,13 @@ well as for `README.md`'s per-plugin table, and reports `SKILLS DRIFT {plugin} {
 `COMMANDS DRIFT {plugin} {file}` naming which file disagrees. So the sentence above is now a checked
 rule rather than a hopeful one — add a skill to a plugin and three files have to say so.
 
+`README.md` lists commands as a flat usage block rather than per plugin, so the sixth check has no
+`readme` direction for them. **The ninth check covers that block repo-wide instead**, in both
+directions: it reports `COMMAND UNDOCUMENTED {name}` for a registered command with no usage example
+and `COMMAND NOT REGISTERED {name}` for an example naming a command that no longer ships. Adding a
+command therefore means `marketplace.json`, the `**Commands:**` line below, and the usage block in
+`README.md` — and removing one means all three as well.
+
 **In sync means verbatim.** Each `### plugin` heading below is followed by that plugin's
 `marketplace.json` `description`, character for character apart from the trailing period this file
 adds. Say it once and copy it, rather than writing a second description here — the two drifted
@@ -32,12 +39,13 @@ It reports a `DESC …` message naming the plugin and the specific disagreement;
 full table, kept there so adding a message does not leave a stale list here. Fix the disagreement —
 never edit around the check.
 
-For that to be one rule rather than five special cases, **keep every `marketplace.json` description
-a single sentence with no terminal period.** A two-sentence description ends in a period of its
-own, and then this file adds nothing — so `{description}.` stops describing the line here, and the
-check reports that row as drifted when it is not. The check catches the cause directly and reports
-`DESC TERMINAL PERIOD {name}`, so read that as "shorten the description", not "add a period here".
-If a description needs a second clause, join it with a comma rather than starting a new sentence.
+For that to be one rule rather than one special case per plugin, **keep every `marketplace.json`
+description a single sentence with no terminal period.** A two-sentence description ends in a period
+of its own, and then this file adds nothing — so `{description}.` stops describing the line here,
+and the check reports that row as drifted when it is not. The check catches the cause directly and
+reports `DESC TERMINAL PERIOD {name}`, so read that as "shorten the description", not "add a period
+here". If a description needs a second clause, join it with a comma rather than starting a new
+sentence.
 
 Two things about the shape of this file are load-bearing, because they are what the check reads:
 
@@ -114,7 +122,7 @@ Full data platform — data science, engineering, analysis, AI engineering, Snow
 
 `init` and `session` are included by `dev`, `planner`, and `dispatcher`, and every command loads them before its main skill.
 
-- **`init`** — seven ordered phases: provider config, repo labels, `.hivrr.json` scaffold, verify-command detection, project board ID resolution, config reconciliation, and orphan-worktree reporting. The phases run **in order, every time**; a phase with nothing to do reports and continues rather than ending the skill. Keep the count and the list here matching the `## Phase` headings in `skill/init/SKILL.md` and the `init` row in `README.md`. A count that reads low tells an agent the run is over before it is — which is exactly what happened, when that skill said `five` against seven headings. **The seventh structural check now holds `skill/init/SKILL.md`'s own count** against its own headings, so that specific failure cannot recur silently. It does not read *this* sentence: the count here is still hand-maintained, and the `init` row in `README.md` is too.
+- **`init`** — seven ordered phases: provider config, repo labels, `.hivrr.json` scaffold, verify-command detection, project board ID resolution, config reconciliation, and orphan-worktree reporting. The phases run **in order, every time**; a phase with nothing to do reports and continues rather than ending the skill. Keep the count and the list here matching the `## Phase` headings in `skill/init/SKILL.md` and the `init` row in `README.md`. A count that reads low tells an agent the run is over before it is — which is exactly what happened, when that skill said `five` against seven headings. **The seventh structural check holds `skill/init/SKILL.md`'s own count** against its own headings, and **the tenth holds the count in this sentence** against those same headings, so a low count can no longer ship from either file. Neither reads the *list*: comparing prose names against heading titles needs a normalization nobody would trust, so keep the list here matching `skill/init/SKILL.md` by hand. The `init` row in `README.md` enumerates the same phases and states no count deliberately — it has no bare number to drift, so do not add one for symmetry with this line.
 - **`session`** — reads config and loads the active provider reference for the session.
 
 ## Repo configuration
@@ -172,9 +180,9 @@ The full rule, and the reasoning behind it, is in `skill/core/SKILL.md`.
 
 ## Verification
 
-The product here is JSON and Markdown, so verification is structural. Eight checks: every JSON file parses; every registered skill is a directory holding a `SKILL.md`; every registered command is an existing `.md` file; `work-issue` and `work-pr` do not duplicate each other's verify procedure; the plugin descriptions in this file match `marketplace.json` verbatim; the skill and command lists beside those descriptions match it too; every skill's phase headings run `1..N` with any stated count matching; and the count opening this sentence matches the number of checks in the README block. All of them are in the README, and `.hivrr.json` `verify.test` is the runnable form of them.
+The product here is JSON and Markdown, so verification is structural. Ten checks: every JSON file parses; every registered skill is a directory holding a `SKILL.md`; every registered command is an existing `.md` file; `work-issue` and `work-pr` do not duplicate each other's verify procedure; the plugin descriptions in this file match `marketplace.json` verbatim; the skill and command lists beside those descriptions match it too; every skill's phase headings run `1..N` with any stated count matching; the count opening this sentence matches the number of checks in the README block; `README.md`'s command usage block names exactly the commands `marketplace.json` registers; and the `init` phase count in this file matches the phase headings in `skill/init/SKILL.md`. All of them are in the README, and `.hivrr.json` `verify.test` is the runnable form of them.
 
-**That opening count is itself the eighth check**, so it can no longer drift silently — it is compared against the `# ` comments at column 0 in the README **Verification** block. It is the only check count left in the repo; `README.md` carried two more, and those were reworded away rather than checked, because a bare number tells a reader nothing they can act on while this sentence has to *name* what it counts. Adding a check means extending this sentence, and the check will say so if you forget.
+**That opening count is itself the eighth check**, so it can no longer drift silently — it is compared against the `# ` comments at column 0 in the README **Verification** block. It is the only check count left in the repo; `README.md` carried two more, and those were reworded away rather than checked, because a bare number tells a reader nothing they can act on while this sentence has to *name* what it counts. Adding a check means extending this sentence, and the check will say so if you forget. **No count that names something in another file is left unguarded**: `README.md`'s two remaining ones — the plugin count and the `DESC` message-row count — were reworded away as well, and the only other such number here, `init`'s phase count above, is held by the tenth check. Counts of items in their own paragraph are a different thing and are deliberately left alone — *"Two things about the shape of this file are load-bearing"* above two bullets drifts only if you edit the list while looking at it. The test for a count you are adding is whether confirming it means opening another file.
 
 Because JSON and Markdown *are* the product in this repo, a change to `marketplace.json` or any `SKILL.md` is a behavior change, not a docs change. Do not skip verification on it.
 
