@@ -205,10 +205,10 @@ Let git enumerate the JSON files rather than listing them, so the check cannot d
 # every JSON file parses
 json_files=$(git ls-files '*.json')
 if [ -n "$json_files" ]; then
-    # unquoted on purpose: word splitting is what passes each path as its own argument
-    jq empty $json_files
+  # unquoted on purpose: word splitting is what passes each path as its own argument
+  jq empty $json_files
 else
-    echo "NO JSON FILES TRACKED"
+  echo "NO JSON FILES TRACKED"
 fi
 
 # every registered skill is a directory holding a SKILL.md
@@ -462,12 +462,22 @@ false drift report is to edit `CLAUDE.md` to match — at which point the count 
 green, and the next real drift is invisible. That is the failure this section warns about twice, in
 the one check whose entire job is to make a number trustworthy.
 
-So the two extractors are now the same four-line program, down to the `printf '\140\140\140'`
-that builds the fence without writing a backtick the enclosing quoting would eat. They cannot
-literally share code — one lives in `.hivrr.json` and one in this block — so **changing either means
-changing both**, the same warning `w2n` already carries below. This is a far narrower copy than the
-5 KB transcription #179 removed, and it is small enough to compare by eye; if it grows, extract it
-rather than letting the two drift.
+So the two now run the same `awk` program, character for character apart from the `\$0` the
+loader's quoting forces on it and the `2>/dev/null` it adds. They cannot literally share code — one
+lives in `.hivrr.json` and one in this block — so **changing either means changing both**, the same
+warning `w2n` already carries below. This is a far narrower copy than the 5 KB transcription #179
+removed, and it is small enough to compare by eye; if it grows, extract it rather than letting the
+two drift. Leaving `2>/dev/null` off this copy is deliberate: the loader silences a broken
+extraction because `NO VERIFY BLOCK` reports it more clearly a line later, while here a broken
+extraction has nothing downstream to catch it and should be heard.
+
+Both copies build the fence with `printf '\140\140\140'`, and only one of them has to. The loader
+wraps its `awk` program in **double** quotes — it has no choice, being already inside
+`bash -c '…'` — and a literal backtick there would open a command substitution. This copy is
+single-quoted, where bash leaves backticks alone entirely, so it could write the fence out. It uses
+the `printf` anyway for two reasons that outlast the quoting: it is what keeps the two copies
+comparable by eye, and it keeps a fence-shaped token out of the fence, where a renderer or a future
+extractor could take it for the closing delimiter.
 
 It reads the number word with `w2n`, **the helper defined in the seventh check above** — which is
 why #173 wanted the two done in one pass. Deleting or reordering the seventh breaks the eighth. That
@@ -656,9 +666,8 @@ nothing, and the run reports `structural checks pass`. That was reachable from t
 not only from a future one — `jq empty $(git ls-files '*.json')` degenerated to a bare `jq empty`
 if the glob ever matched nothing, and a bare `jq empty` reads stdin. The first check now names that
 case explicitly instead, so no command in the block reads stdin today; the rule stands anyway,
-because the next check added could. Passing the block as an
-argument without also closing stdin trades the silent skip for a hang, because the same command then
-blocks on the caller's terminal. So: **a check may not depend on stdin.** With `</dev/null` one that
+because the next check added could. Passing the block as an argument without also closing stdin
+trades the silent skip for a hang, because the same command then blocks on the caller's terminal. So: **a check may not depend on stdin.** With `</dev/null` one that
 tries gets EOF immediately and the checks after it still run, which is the only behaviour compatible
 with the promise this section makes.
 
