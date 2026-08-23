@@ -203,7 +203,13 @@ Let git enumerate the JSON files rather than listing them, so the check cannot d
 
 ```bash
 # every JSON file parses
-jq empty $(git ls-files '*.json')
+json_files=$(git ls-files '*.json')
+if [ -n "$json_files" ]; then
+    # unquoted on purpose: word splitting is what passes each path as its own argument
+    jq empty $json_files
+else
+    echo "NO JSON FILES TRACKED"
+fi
 
 # every registered skill is a directory holding a SKILL.md
 jq -r '.plugins[] | (.skills // [])[]' .claude-plugin/marketplace.json | sort -u \
@@ -271,7 +277,9 @@ for f in skill/*/SKILL.md; do
   done
 
 # CLAUDE.md's stated check count matches the number of checks in this block
-n=$(awk '/^## Verification/ { v = 1; next } v && /^## / { exit } v' README.md | grep -c '^# ')
+fence=$(printf '\140\140\140')
+n=$(awk -v fence="$fence" '/^## Verification/ { v = 1; next } v && !f && /^## / { exit }
+      v && index($0, fence) == 1 { if (f) exit; f = 1; next } v && f' README.md | grep -c '^# ')
 said=$(sed -n 's/.*[^A-Za-z]\([A-Za-z][a-z]*\) checks:.*/\1/p' CLAUDE.md | head -1 | tr 'A-Z' 'a-z')
 [ "$(w2n "$said")" = "$n" ] || echo "CHECK COUNT DRIFT CLAUDE.md says $said, README has $n"
 
@@ -311,6 +319,22 @@ Silence from all of them means everything registered resolves, nothing is duplic
 numbering holds, every count in `CLAUDE.md` matches what it counts, and the three places that
 describe the plugins agree. See **Path resolution** in `CLAUDE.md` for the contract the first three
 commands enforce.
+
+**The first check says so when there is nothing to check.** `jq empty $(git ls-files '*.json')` on
+its own cannot tell *"every JSON file parses"* apart from *"there are no JSON files"*: an empty
+command substitution leaves a bare `jq empty`, which reads stdin — closed by the loader, so it sees
+empty input, exits `0`, and prints nothing. In a repo where `.claude-plugin/marketplace.json` **is**
+the product, the second of those is catastrophic and would have reported as healthy. The guard is
+folded under the existing comment rather than given one of its own, because it is the same check
+made honest rather than a new claim — so this is still eleven checks, not twelve.
+
+Two things about its shape are deliberate. `$json_files` is left **unquoted** in the `jq` call, and
+that is the one place in the block where word splitting is wanted — it is what passes each path as
+its own argument. A path containing whitespace would therefore break it; no file in this repo has
+one, and the `git ls-files -z` / `xargs -0` form that would handle it reintroduces a stdin-reading
+command, which is exactly what the loader forbids. **Do not close this gap by reverting the stdin
+closure** — without `</dev/null` the bare `jq empty` eats the rest of the block instead, which is
+strictly worse; see the loader paragraphs at the end of this section.
 
 The fourth check guards against the failure the others cannot see: two skills carrying the same
 procedure in prose. Markdown that parses and resolves is still wrong if it says the same thing
@@ -422,10 +446,28 @@ it to a heading is an ordinary edit. A check that reports drift which does not e
 off, which costs more than never having written it.
 
 The eighth check is the smallest and the most self-referential: it counts the `# ` comments at
-column 0 in the block above and compares that against the number word before `checks:` in
+column 0 **inside the fence above** and compares that against the number word before `checks:` in
 `CLAUDE.md`. **One column-0 `# ` comment per check** is therefore the convention the block is
 written to; comments *inside* a check are indented so they do not inflate the count. It counts
 itself, which is correct — it is a check, and it lives in the block.
+
+**Its `awk` is the loader's `awk`, and that is the whole point.** It once read the *section* —
+`/^## Verification/ … v && /^## / { exit }`, everything up to the next heading — which was a
+distinction without a difference while the fence was the only place column-0 `# ` lines lived and
+the runnable form was a separate transcription anyway. Since the loader started executing the fence,
+the fence is authoritative for what *runs* while a section-wide count reads past it: a line of prose
+beginning `# ` at column 0 anywhere in **Verification**, or a second fenced block added here,
+inflates `n` and reports `CHECK COUNT DRIFT` against a `CLAUDE.md` that is correct. The fix for a
+false drift report is to edit `CLAUDE.md` to match — at which point the count is wrong, the check is
+green, and the next real drift is invisible. That is the failure this section warns about twice, in
+the one check whose entire job is to make a number trustworthy.
+
+So the two extractors are now the same four-line program, down to the `printf '\140\140\140'`
+that builds the fence without writing a backtick the enclosing quoting would eat. They cannot
+literally share code — one lives in `.hivrr.json` and one in this block — so **changing either means
+changing both**, the same warning `w2n` already carries below. This is a far narrower copy than the
+5 KB transcription #179 removed, and it is small enough to compare by eye; if it grows, extract it
+rather than letting the two drift.
 
 It reads the number word with `w2n`, **the helper defined in the seventh check above** — which is
 why #173 wanted the two done in one pass. Deleting or reordering the seventh breaks the eighth. That
@@ -443,6 +485,12 @@ To re-run the three: remove a skill from a plugin in `marketplace.json`, delete 
 row, delete an entry from a `**Skills:**` line, state the wrong phase count in `skill/init/SKILL.md`,
 renumber a phase heading to leave a gap, and change the number word in `CLAUDE.md`. Each must produce
 its own message.
+
+The eighth check's boundary needs two cases of its own, and both are confirmations of **silence**:
+add a column-0 `# ` prose line to **Verification** outside the fence, and add a second fenced block
+to this section. Neither may change `n`, and a clean tree must still print `structural checks pass`.
+Then confirm the check has not simply been switched off, by adding a check to the fence without
+touching `CLAUDE.md` and seeing `CHECK COUNT DRIFT`.
 
 The digit anchor needs a fixture, because no skill in the repo can currently trip it. Add a
 `## Phase Contract` heading above the numbered ones in any `SKILL.md`, confirm the check stays
@@ -604,9 +652,11 @@ second edit.** That is the point: the two forms cannot drift, because there is o
 **The block is passed as an argument and run with stdin closed, and both halves are load-bearing.**
 Piping it in instead — `printf "%s\n" "$BLOCK" | bash` — makes the script its own child's stdin, so
 any check that reads stdin consumes the *rest of the block*: every check after it is skipped, emits
-nothing, and the run reports `structural checks pass`. That is reachable from the block as written,
-not only from a future one — `jq empty $(git ls-files '*.json')` degenerates to a bare `jq empty`
-if the glob ever matches nothing, and a bare `jq empty` reads stdin. Passing the block as an
+nothing, and the run reports `structural checks pass`. That was reachable from the block as written,
+not only from a future one — `jq empty $(git ls-files '*.json')` degenerated to a bare `jq empty`
+if the glob ever matched nothing, and a bare `jq empty` reads stdin. The first check now names that
+case explicitly instead, so no command in the block reads stdin today; the rule stands anyway,
+because the next check added could. Passing the block as an
 argument without also closing stdin trades the silent skip for a hang, because the same command then
 blocks on the caller's terminal. So: **a check may not depend on stdin.** With `</dev/null` one that
 tries gets EOF immediately and the checks after it still run, which is the only behaviour compatible
@@ -621,8 +671,8 @@ a second fenced example added later in this section is not swallowed, and a fenc
 is never reached. If the heading is renamed or the fence deleted, the extraction comes back empty and
 the loader reports `NO VERIFY BLOCK` and exits non-zero rather than passing on nothing, which is the
 one failure mode that could otherwise turn verification into a silent no-op. Rename the heading and
-you must update the extractor in `.hivrr.json` — and the eighth check, which counts this block by the
-same anchor.
+you must update the extractor in `.hivrr.json` — and the eighth check, which now runs that same
+extractor rather than merely sharing its anchor.
 
 To re-run it: rename a message in the block and confirm the tool emits the new name, add a line to
 the block and confirm it runs, then rename `## Verification`, delete the fence, and move `README.md`
