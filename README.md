@@ -277,11 +277,13 @@ for f in skill/*/SKILL.md; do
   done
 
 # CLAUDE.md's stated check count matches the number of checks in this block
-fence=$(printf '\140\140\140')
-n=$(awk -v fence="$fence" '/^## Verification/ { v = 1; next } v && !f && /^## / { exit }
-      v && index($0, fence) == 1 { if (f) exit; f = 1; next } v && f' README.md | grep -c '^# ')
-said=$(sed -n 's/.*[^A-Za-z]\([A-Za-z][a-z]*\) checks:.*/\1/p' CLAUDE.md | head -1 | tr 'A-Z' 'a-z')
-[ "$(w2n "$said")" = "$n" ] || echo "CHECK COUNT DRIFT CLAUDE.md says $said, README has $n"
+if [ -n "${HIVRR_VERIFY_BLOCK:-}" ]; then
+    n=$(printf '%s\n' "$HIVRR_VERIFY_BLOCK" | grep -c '^# ')
+    said=$(sed -n 's/.*[^A-Za-z]\([A-Za-z][a-z]*\) checks:.*/\1/p' CLAUDE.md | head -1 | tr 'A-Z' 'a-z')
+    [ "$(w2n "$said")" = "$n" ] || echo "CHECK COUNT DRIFT CLAUDE.md says $said, README has $n"
+  else
+    echo "CHECK COUNT UNCHECKED HIVRR_VERIFY_BLOCK unset, so nothing counted the block that ran"
+  fi
 
 # README's command usage block names exactly the registered commands
 reg_c=$(jq -r '.plugins[] | (.commands // [])[]' .claude-plugin/marketplace.json \
@@ -451,33 +453,55 @@ column 0 **inside the fence above** and compares that against the number word be
 written to; comments *inside* a check are indented so they do not inflate the count. It counts
 itself, which is correct — it is a check, and it lives in the block.
 
-**Its `awk` is the loader's `awk`, and that is the whole point.** It once read the *section* —
-`/^## Verification/ … v && /^## / { exit }`, everything up to the next heading — which was a
-distinction without a difference while the fence was the only place column-0 `# ` lines lived and
-the runnable form was a separate transcription anyway. Since the loader started executing the fence,
-the fence is authoritative for what *runs* while a section-wide count reads past it: a line of prose
-beginning `# ` at column 0 anywhere in **Verification**, or a second fenced block added here,
-inflates `n` and reports `CHECK COUNT DRIFT` against a `CLAUDE.md` that is correct. The fix for a
-false drift report is to edit `CLAUDE.md` to match — at which point the count is wrong, the check is
-green, and the next real drift is invisible. That is the failure this section warns about twice, in
-the one check whose entire job is to make a number trustworthy.
+**It does not find the fence — it is handed it.** `.hivrr.json` `verify.test` already extracts this
+block in order to run it, and it now exports that text as `HIVRR_VERIFY_BLOCK`, which is what the
+check counts. So `n` is a property of the script that actually executed rather than a second reading
+of `README.md` that might disagree with it, and there is exactly one extractor in the repo.
 
-So the two now run the same `awk` program, character for character apart from the `\$0` the
-loader's quoting forces on it and the `2>/dev/null` it adds. They cannot literally share code — one
-lives in `.hivrr.json` and one in this block — so **changing either means changing both**, the same
-warning `w2n` already carries below. This is a far narrower copy than the 5 KB transcription #179
-removed, and it is small enough to compare by eye; if it grows, extract it rather than letting the
-two drift. Leaving `2>/dev/null` off this copy is deliberate: the loader silences a broken
-extraction because `NO VERIFY BLOCK` reports it more clearly a line later, while here a broken
-extraction has nothing downstream to catch it and should be heard.
+That boundary is the part worth getting right, and this check has had it wrong before. It once read
+the *section* — `/^## Verification/ … v && /^## / { exit }`, everything up to the next heading —
+which was a distinction without a difference while the fence was the only place column-0 `# ` lines
+lived and the runnable form was a separate transcription anyway. Once the loader began executing the
+fence, the fence became authoritative for what *runs* while a section-wide count read past it: a
+line of prose beginning `# ` at column 0 anywhere in **Verification**, or a second fenced block added
+here, would inflate `n` and report `CHECK COUNT DRIFT` against a `CLAUDE.md` that is correct. The fix
+for a false drift report is to edit `CLAUDE.md` to match — at which point the count is wrong, the
+check is green, and the next real drift is invisible. That is the failure this section warns about twice,
+in the one check whose entire job is to make a number trustworthy.
 
-Both copies build the fence with `printf '\140\140\140'`, and only one of them has to. The loader
-wraps its `awk` program in **double** quotes — it has no choice, being already inside
-`bash -c '…'` — and a literal backtick there would open a command substitution. This copy is
-single-quoted, where bash leaves backticks alone entirely, so it could write the fence out. It uses
-the `printf` anyway for two reasons that outlast the quoting: it is what keeps the two copies
-comparable by eye, and it keeps a fence-shaped token out of the fence, where a renderer or a future
-extractor could take it for the closing delimiter.
+**#184 closed that by copying the loader's `awk` here; #185 deleted the copy instead.** Two
+extractors kept in step by eye is the same defect one level down — if they drifted, `n` would
+quietly stop describing what runs and nothing would say so, which is precisely what #183 was filed
+about. A twelfth check comparing the two programs was the obvious answer and was rejected: the two
+cannot be byte-identical, since the loader escapes `\$0` for the double quotes it is forced into and
+adds a `2>/dev/null` this copy did not want, so the comparison would need a normalization taught
+which differences are permitted — a third thing to keep correct, guarding a duplication that did not
+have to exist. Passing the block in removes the pair rather than policing it. The fence-building
+`printf '\140\140\140'` went with it; only the loader needs one now, and only because a literal
+backtick inside its double quotes would open a command substitution.
+
+**The rule that `printf` carried outlives it: no check may put a fence-shaped token at column 0.**
+The extractor stops at the first one it meets after the opening fence, so a stray three-backtick
+line inside the block ends it there — and a cut between two checks can leave a script that is still
+*valid*, runs the checks above it, and reports `structural checks pass`. Confirmed both ways on this
+block: a fence inserted before the eighth check truncates it silently, while one inserted after
+reports `CHECK COUNT DRIFT … README has 8`, because `n` counts what ran. So the eighth check covers
+the tail of the block and nothing covers the head, which is the narrow gap that makes this an
+authoring rule rather than a check. It is narrow because such a line closes the Markdown fence too,
+leaving the rest of this section rendered as prose — visibly broken, not quietly. Build any fence a
+check needs with `printf`, as the loader still does.
+
+**The cost is that this one check needs the loader**, and it says so rather than guessing. Run the
+fence on its own with nothing exported and `HIVRR_VERIFY_BLOCK` is unset, so the check reports
+`CHECK COUNT UNCHECKED` instead of counting zero and drifting against it — the same rule #182
+established for the JSON check: an extraction that comes back empty is a failure, never a match. Do
+not answer that message by re-extracting from `README.md` as a fallback; the fallback *is* the copy
+this check was built to do without. Run the checks the way `work-issue` and `work-pr` do, with
+`eval "$(jq -r '.verify.test' .hivrr.json)"`.
+
+**So `HIVRR_VERIFY_BLOCK` is part of the loader contract**, alongside the closed stdin documented at
+the end of this section: the loader passes the block as an argument, closes its stdin, and exports
+the same text under that name. A check may read the third the way it must respect the second.
 
 It reads the number word with `w2n`, **the helper defined in the seventh check above** — which is
 why #173 wanted the two done in one pass. Deleting or reordering the seventh breaks the eighth. That
@@ -500,7 +524,9 @@ The eighth check's boundary needs two cases of its own, and both are confirmatio
 add a column-0 `# ` prose line to **Verification** outside the fence, and add a second fenced block
 to this section. Neither may change `n`, and a clean tree must still print `structural checks pass`.
 Then confirm the check has not simply been switched off, by adding a check to the fence without
-touching `CLAUDE.md` and seeing `CHECK COUNT DRIFT`.
+touching `CLAUDE.md` and seeing `CHECK COUNT DRIFT`. Two more cover the hand-off: extract the fence
+and run it with `HIVRR_VERIFY_BLOCK` unset, which must report `CHECK COUNT UNCHECKED`, and drop the
+`export` from `.hivrr.json`, which must report the same through the loader rather than passing.
 
 The digit anchor needs a fixture, because no skill in the repo can currently trip it. Add a
 `## Phase Contract` heading above the numbered ones in any `SKILL.md`, confirm the check stays
@@ -654,18 +680,20 @@ is why #169 removed the last two rather than renumbering them.
 
 **`.hivrr.json` `verify.test` runs the checks above by executing them.** It is a loader, not a
 copy: it `cd`s to the repo root, confirms the files the checks read are present, extracts the first
-fenced block under **Verification** with `awk`, runs it as `bash -c "$BLOCK" </dev/null`, prints only
-findings, and exits non-zero when there are any — which is what makes `work-issue` and `work-pr`
-report `tests pass` here instead of `tests skipped`. **So adding or changing a check above needs no
-second edit.** That is the point: the two forms cannot drift, because there is only one.
+fenced block under **Verification** with `awk`, exports it as `HIVRR_VERIFY_BLOCK` for the eighth
+check to count, runs it as `bash -c "$HIVRR_VERIFY_BLOCK" </dev/null`, prints only findings, and
+exits non-zero when there are any — which is what makes `work-issue` and `work-pr` report
+`tests pass` here instead of `tests skipped`. **So adding or changing a check above needs no second
+edit.** That is the point: the two forms cannot drift, because there is only one.
 
 **The block is passed as an argument and run with stdin closed, and both halves are load-bearing.**
-Piping it in instead — `printf "%s\n" "$BLOCK" | bash` — makes the script its own child's stdin, so
-any check that reads stdin consumes the *rest of the block*: every check after it is skipped, emits
-nothing, and the run reports `structural checks pass`. That was reachable from the block as written,
-not only from a future one — `jq empty $(git ls-files '*.json')` degenerated to a bare `jq empty`
-if the glob ever matched nothing, and a bare `jq empty` reads stdin. The first check now names that
-case explicitly instead, so no command in the block reads stdin today; the rule stands anyway,
+Piping it in instead — `printf "%s\n" "$HIVRR_VERIFY_BLOCK" | bash` — makes the script its own
+child's stdin, so any check that reads stdin consumes the *rest of the block*: every check after it
+is skipped, emits nothing, and the run reports `structural checks pass`. That was reachable from the
+block as written, not only from a future one — `jq empty $(git ls-files '*.json')` degenerated to a
+bare `jq empty` if the glob ever matched nothing, and a bare `jq empty` reads stdin. The first check
+now names that case explicitly instead, so no command in the block reads stdin today; the rule
+stands anyway,
 because the next check added could. Passing the block as an argument without also closing stdin
 trades the silent skip for a hang, because the same command then blocks on the caller's terminal.
 So: **a check may not depend on stdin.** With `</dev/null` one that tries gets EOF immediately and
@@ -681,8 +709,8 @@ a second fenced example added later in this section is not swallowed, and a fenc
 is never reached. If the heading is renamed or the fence deleted, the extraction comes back empty and
 the loader reports `NO VERIFY BLOCK` and exits non-zero rather than passing on nothing, which is the
 one failure mode that could otherwise turn verification into a silent no-op. Rename the heading and
-you must update the extractor in `.hivrr.json` — and the eighth check, which now runs that same
-extractor rather than merely sharing its anchor.
+the extractor in `.hivrr.json` is the only thing you have to update — the eighth check reads what it
+extracted rather than repeating its anchor, so there is no second copy to remember.
 
 To re-run it: rename a message in the block and confirm the tool emits the new name, add a line to
 the block and confirm it runs, then rename `## Verification`, delete the fence, and move `README.md`
