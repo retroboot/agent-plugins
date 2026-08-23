@@ -667,9 +667,10 @@ not only from a future one — `jq empty $(git ls-files '*.json')` degenerated t
 if the glob ever matched nothing, and a bare `jq empty` reads stdin. The first check now names that
 case explicitly instead, so no command in the block reads stdin today; the rule stands anyway,
 because the next check added could. Passing the block as an argument without also closing stdin
-trades the silent skip for a hang, because the same command then blocks on the caller's terminal. So: **a check may not depend on stdin.** With `</dev/null` one that
-tries gets EOF immediately and the checks after it still run, which is the only behaviour compatible
-with the promise this section makes.
+trades the silent skip for a hang, because the same command then blocks on the caller's terminal.
+So: **a check may not depend on stdin.** With `</dev/null` one that tries gets EOF immediately and
+the checks after it still run, which is the only behaviour compatible with the promise this section
+makes.
 
 Anything reading `verify.test` expecting to *see* the checks will not find them there any more —
 it holds the extractor. The checks are here.
