@@ -278,12 +278,12 @@ for f in skill/*/SKILL.md; do
 
 # CLAUDE.md's stated check count matches the number of checks in this block
 if [ -n "${HIVRR_VERIFY_BLOCK:-}" ]; then
-  n=$(printf '%s\n' "$HIVRR_VERIFY_BLOCK" | grep -c '^# ')
-  said=$(sed -n 's/.*[^A-Za-z]\([A-Za-z][a-z]*\) checks:.*/\1/p' CLAUDE.md | head -1 | tr 'A-Z' 'a-z')
-  [ "$(w2n "$said")" = "$n" ] || echo "CHECK COUNT DRIFT CLAUDE.md says $said, README has $n"
-else
-  echo "CHECK COUNT UNCHECKED HIVRR_VERIFY_BLOCK unset, so nothing counted the block that ran"
-fi
+    n=$(printf '%s\n' "$HIVRR_VERIFY_BLOCK" | grep -c '^# ')
+    said=$(sed -n 's/.*[^A-Za-z]\([A-Za-z][a-z]*\) checks:.*/\1/p' CLAUDE.md | head -1 | tr 'A-Z' 'a-z')
+    [ "$(w2n "$said")" = "$n" ] || echo "CHECK COUNT DRIFT CLAUDE.md says $said, README has $n"
+  else
+    echo "CHECK COUNT UNCHECKED HIVRR_VERIFY_BLOCK unset, so nothing counted the block that ran"
+  fi
 
 # README's command usage block names exactly the registered commands
 reg_c=$(jq -r '.plugins[] | (.commands // [])[]' .claude-plugin/marketplace.json \
@@ -479,6 +479,17 @@ which differences are permitted — a third thing to keep correct, guarding a du
 have to exist. Passing the block in removes the pair rather than policing it. The fence-building
 `printf '\140\140\140'` went with it; only the loader needs one now, and only because a literal
 backtick inside its double quotes would open a command substitution.
+
+**The rule that `printf` carried outlives it: no check may put a fence-shaped token at column 0.**
+The extractor stops at the first one it meets after the opening fence, so a stray three-backtick
+line inside the block ends it there — and a cut between two checks can leave a script that is still
+*valid*, runs the checks above it, and reports `structural checks pass`. Confirmed both ways on this
+block: a fence inserted before the eighth check truncates it silently, while one inserted after
+reports `CHECK COUNT DRIFT … README has 8`, because `n` counts what ran. So the eighth check covers
+the tail of the block and nothing covers the head, which is the narrow gap that makes this an
+authoring rule rather than a check. It is narrow because such a line closes the Markdown fence too,
+leaving the rest of this section rendered as prose — visibly broken, not quietly. Build any fence a
+check needs with `printf`, as the loader still does.
 
 **The cost is that this one check needs the loader**, and it says so rather than guessing. Run the
 fence on its own with nothing exported and `HIVRR_VERIFY_BLOCK` is unset, so the check reports
