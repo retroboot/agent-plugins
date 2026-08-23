@@ -363,6 +363,8 @@ runs, immediately and with no second copy to update. It used to be a hand transc
 `bash -c '…'`, which could contain no single quote and had to build a backtick with
 `printf "\140"`; nothing compared the two forms, so a check added here and not there was simply
 never run. Those constraints are gone — write ordinary readable bash, quotes and backticks and all.
+One consequence replaces them: the fence is now parsed as a script, so a syntax error in any one
+check fails all of them rather than none. It fails loudly, which is the trade this is worth.
 
 To re-run them: edit one `CLAUDE.md` description, edit one `marketplace.json` description, append a
 period to one, insert a blank line under one heading, rename one heading, and replace one em dash
@@ -548,12 +550,16 @@ the reason a short overview table earns its place beside the reference text. Mak
 would add a third copy to keep in step and delete the difference that justifies the table. The sixth
 check made the same call for skill lists, comparing basenames and leaving descriptions alone.
 
-Two properties of the table are load-bearing, both borrowed rather than invented. The extractor
-anchors on `## Overview` and stops at the next heading of **any** level, the way the sixth check
-does — this file has several pipe tables and only one of them is this one. And it reuses the sixth
+Three properties of the table are load-bearing, the first two borrowed rather than invented. The
+extractor anchors on `## Overview` and stops at the next heading of **any** level, the way the sixth
+check does — this file has several pipe tables and only one of them is this one. It reuses the sixth
 check's `rd_s` extraction verbatim, `` s/^| *`\([^`]*\)` *|.*/\1/p ``, which takes a backticked
 first column and so ignores the header row, the separator row, and the bulleted prose above the
-table, none of which match.
+table, none of which match. And **the plugin table must stay the only backticked-first-column table
+under `## Overview`**, because the extractor takes every such row in the section rather than that one
+table: a second table of that shape added here would turn each of its rows into a phantom plugin name
+and report `PLUGIN NOT REGISTERED` for it. Add one at a heading of its own, or anchor the extraction
+more narrowly first.
 
 **Deleting the table would also have closed this**, and it was weighed: `## Overview` and the
 per-plugin sections under **Skills** list the same plugins, so a reader gets the set twice, and #175
@@ -590,10 +596,21 @@ is why #169 removed the last two rather than renumbering them.
 
 **`.hivrr.json` `verify.test` runs the checks above by executing them.** It is a loader, not a
 copy: it `cd`s to the repo root, confirms the files the checks read are present, extracts the first
-fenced block under **Verification** with `awk`, pipes it to `bash`, prints only findings, and exits
-non-zero when there are any — which is what makes `work-issue` and `work-pr` report `tests pass`
-here instead of `tests skipped`. **So adding or changing a check above needs no second edit.** That
-is the point: the two forms cannot drift, because there is only one.
+fenced block under **Verification** with `awk`, runs it as `bash -c "$BLOCK" </dev/null`, prints only
+findings, and exits non-zero when there are any — which is what makes `work-issue` and `work-pr`
+report `tests pass` here instead of `tests skipped`. **So adding or changing a check above needs no
+second edit.** That is the point: the two forms cannot drift, because there is only one.
+
+**The block is passed as an argument and run with stdin closed, and both halves are load-bearing.**
+Piping it in instead — `printf "%s\n" "$BLOCK" | bash` — makes the script its own child's stdin, so
+any check that reads stdin consumes the *rest of the block*: every check after it is skipped, emits
+nothing, and the run reports `structural checks pass`. That is reachable from the block as written,
+not only from a future one — `jq empty $(git ls-files '*.json')` degenerates to a bare `jq empty`
+if the glob ever matches nothing, and a bare `jq empty` reads stdin. Passing the block as an
+argument without also closing stdin trades the silent skip for a hang, because the same command then
+blocks on the caller's terminal. So: **a check may not depend on stdin.** With `</dev/null` one that
+tries gets EOF immediately and the checks after it still run, which is the only behaviour compatible
+with the promise this section makes.
 
 Anything reading `verify.test` expecting to *see* the checks will not find them there any more —
 it holds the extractor. The checks are here.

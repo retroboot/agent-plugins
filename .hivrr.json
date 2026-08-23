@@ -6,7 +6,7 @@
     "ladder": ["main"]
   },
   "verify": {
-    "test": "bash -c 'cd \"$(git rev-parse --show-toplevel)\" || exit 1; FENCE=$(printf \"\\140\\140\\140\"); BLOCK=$(awk -v fence=\"$FENCE\" \"/^## Verification/ { v = 1; next } v && !f && /^## / { exit } v && index(\\$0, fence) == 1 { if (f) exit; f = 1; next } v && f\" README.md 2>/dev/null); bad=$( { for f in .claude-plugin/marketplace.json docs/shared-lines-allowlist.txt skill/work-pr/SKILL.md skill/work-issue/SKILL.md skill/init/SKILL.md CLAUDE.md README.md; do [ -f \"$f\" ] || echo \"MISSING INPUT $f\"; done; if [ -n \"$BLOCK\" ]; then printf \"%s\\n\" \"$BLOCK\" | bash; else echo \"NO VERIFY BLOCK README.md has no fenced bash block under ## Verification\"; fi; } 2>&1 ); [ -z \"$bad\" ] && echo \"structural checks pass\" || { echo \"$bad\"; exit 1; }'",
+    "test": "bash -c 'cd \"$(git rev-parse --show-toplevel)\" || exit 1; FENCE=$(printf \"\\140\\140\\140\"); BLOCK=$(awk -v fence=\"$FENCE\" \"/^## Verification/ { v = 1; next } v && !f && /^## / { exit } v && index(\\$0, fence) == 1 { if (f) exit; f = 1; next } v && f\" README.md 2>/dev/null); bad=$( { for f in .claude-plugin/marketplace.json docs/shared-lines-allowlist.txt skill/work-pr/SKILL.md skill/work-issue/SKILL.md skill/init/SKILL.md CLAUDE.md README.md; do [ -f \"$f\" ] || echo \"MISSING INPUT $f\"; done; if [ -n \"$BLOCK\" ]; then bash -c \"$BLOCK\" </dev/null; else echo \"NO VERIFY BLOCK README.md has no fenced bash block under ## Verification\"; fi; } 2>&1 ); [ -z \"$bad\" ] && echo \"structural checks pass\" || { echo \"$bad\"; exit 1; }'",
     "lint": null,
     "detectedFrom": ["manual"]
   }
