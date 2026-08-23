@@ -27,6 +27,14 @@ and `COMMAND NOT REGISTERED {name}` for an example naming a command that no long
 command therefore means `marketplace.json`, the `**Commands:**` line below, and the usage block in
 `README.md` — and removing one means all three as well.
 
+**The eleventh check does the same for `README.md`'s Overview table**, the one a new reader meets
+first. It compares the backticked names in that table's first column against `.plugins[].name` in
+both directions — `PLUGIN UNDOCUMENTED {name}` and `PLUGIN NOT REGISTERED {name}` — and reads the
+**names only**. The Purpose column beside them is a deliberately shorter paraphrase of the
+`marketplace.json` description this file repeats verbatim; leave it alone rather than making it a
+third verbatim copy. So adding a plugin means `marketplace.json`, a `### plugin` heading here, and
+a row in that table.
+
 **In sync means verbatim.** Each `### plugin` heading below is followed by that plugin's
 `marketplace.json` `description`, character for character apart from the trailing period this file
 adds. Say it once and copy it, rather than writing a second description here — the two drifted
@@ -176,11 +184,13 @@ or the authorization line — like the absent project board above, the absence i
 
 **This repo ships no shell scripts.** A script earns its place only when it is read-only or trivially reversible, non-interactive, single-purpose, and performs deterministic computation the model cannot reliably do in prose. Workflow logic goes in skills as explicit steps, where each command is visible and each real output is read.
 
+The structural checks are not a counter-example. They are a fenced block in `README.md` — read-only, non-interactive, single-purpose — and `.hivrr.json` `verify.test` extracts and runs that block rather than a `.sh` on disk. That is what makes the documented form and the runnable form the same thing; see **Verification** below.
+
 The full rule, and the reasoning behind it, is in `skill/core/SKILL.md`.
 
 ## Verification
 
-The product here is JSON and Markdown, so verification is structural. Ten checks: every JSON file parses; every registered skill is a directory holding a `SKILL.md`; every registered command is an existing `.md` file; `work-issue` and `work-pr` do not duplicate each other's verify procedure; the plugin descriptions in this file match `marketplace.json` verbatim; the skill and command lists beside those descriptions match it too; every skill's phase headings run `1..N` with any stated count matching; the count opening this sentence matches the number of checks in the README block; `README.md`'s command usage block names exactly the commands `marketplace.json` registers; and the `init` phase count in this file matches the phase headings in `skill/init/SKILL.md`. All of them are in the README, and `.hivrr.json` `verify.test` is the runnable form of them.
+The product here is JSON and Markdown, so verification is structural. Eleven checks: every JSON file parses; every registered skill is a directory holding a `SKILL.md`; every registered command is an existing `.md` file; `work-issue` and `work-pr` do not duplicate each other's verify procedure; the plugin descriptions in this file match `marketplace.json` verbatim; the skill and command lists beside those descriptions match it too; every skill's phase headings run `1..N` with any stated count matching; the count opening this sentence matches the number of checks in the README block; `README.md`'s command usage block names exactly the commands `marketplace.json` registers; the `init` phase count in this file matches the phase headings in `skill/init/SKILL.md`; and `README.md`'s Overview table names exactly the plugins `marketplace.json` registers. All of them live in the fenced block under **Verification** in `README.md`, and `.hivrr.json` `verify.test` **runs that block** rather than restating it — it extracts the fence and pipes it to `bash`. Editing a check there is the whole edit; there is no second form to keep in step, and losing the block fails loudly as `NO VERIFY BLOCK` rather than passing on nothing.
 
 **That opening count is itself the eighth check**, so it can no longer drift silently — it is compared against the `# ` comments at column 0 in the README **Verification** block. It is the only check count left in the repo; `README.md` carried two more, and those were reworded away rather than checked, because a bare number tells a reader nothing they can act on while this sentence has to *name* what it counts. Adding a check means extending this sentence, and the check will say so if you forget. **No count that names something in another file is left unguarded**: `README.md`'s two remaining ones — the plugin count and the `DESC` message-row count — were reworded away as well, and the only other such number here, `init`'s phase count above, is held by the tenth check. Counts of items in their own paragraph are a different thing and are deliberately left alone — *"Two things about the shape of this file are load-bearing"* above two bullets drifts only if you edit the list while looking at it. The test for a count you are adding is whether confirming it means opening another file.
 

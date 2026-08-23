@@ -192,6 +192,11 @@ Or reference the local path during development:
 
 This repo ships no shell scripts — see the script policy in `skill/core/SKILL.md`. Its product is JSON and Markdown, so verification is structural.
 
+The fenced block below is not an exception to that policy. It is read-only, non-interactive, and
+single-purpose, and it is not a `.sh` on disk — it is documentation in this file, which
+`.hivrr.json` `verify.test` extracts and runs. What you read here is exactly what runs; see the
+paragraphs after the block.
+
 Skills and commands resolve by different rules, so check them separately — a single `[ -e ]` test
 passes on a command entry that has lost its `.md`, and that command then fails to load silently.
 Let git enumerate the JSON files rather than listing them, so the check cannot drift from the repo:
@@ -289,6 +294,17 @@ ip_said=$(sed -n 's/.*[^A-Za-z]\([A-Za-z][a-z]*\) ordered phases.*/\1/p' CLAUDE.
             | head -1 | tr 'A-Z' 'a-z')
 [ "$(w2n "$ip_said")" = "$ip_n" ] \
   || echo "INIT PHASE COUNT DRIFT CLAUDE.md says $ip_said, skill/init/SKILL.md has $ip_n"
+
+# README's Overview table names exactly the registered plugins
+reg_p=$(jq -r '.plugins[].name' .claude-plugin/marketplace.json | sort -u)
+ov_p=$(awk '/^## Overview/ { v = 1; next } v && /^#/ { exit } v' README.md \
+         | sed -n 's/^| *`\([^`]*\)` *|.*/\1/p' | sort -u)
+printf '%s\n' "$reg_p" | grep . | while read -r p; do
+    printf '%s\n' "$ov_p" | grep -qxF "$p" || echo "PLUGIN UNDOCUMENTED $p"
+  done
+printf '%s\n' "$ov_p" | grep . | while read -r p; do
+    printf '%s\n' "$reg_p" | grep -qxF "$p" || echo "PLUGIN NOT REGISTERED $p"
+  done
 ```
 
 Silence from all of them means everything registered resolves, nothing is duplicated, the phase
@@ -341,13 +357,14 @@ That leaves `CLAUDE.md` instructing every agent about a plugin nobody can instal
 backticked `###` heading as a plugin claim, which is why `CLAUDE.md` reserves that heading shape for
 plugins and documents everything else at another level.
 
-**The `verify.test` form of these checks is not a copy of the text above.** It is wrapped in
-`bash -c '…'`, so it can contain no single quote, and a bare backtick would be command substitution
-to the inner shell — it builds one with `printf "\140"` instead, and reads the plugin names once
-into a variable rather than calling `jq --arg` per heading. Transcribe the **behavior** between the
-two forms, not the characters, and re-run the drift cases below after editing either. This is the
-same warning as "adding a check here means changing it there too", one level finer: a check that
-survives transcription as text but not as behavior passes silently for both files.
+**The block above is not a description of `verify.test` — it *is* `verify.test`.** The runnable
+form extracts this fence at run time and pipes it to `bash`, so editing a check here changes what
+runs, immediately and with no second copy to update. It used to be a hand transcription wrapped in
+`bash -c '…'`, which could contain no single quote and had to build a backtick with
+`printf "\140"`; nothing compared the two forms, so a check added here and not there was simply
+never run. Those constraints are gone — write ordinary readable bash, quotes and backticks and all.
+One consequence replaces them: the fence is now parsed as a script, so a syntax error in any one
+check fails all of them rather than none. It fails loudly, which is the trade this is worth.
 
 To re-run them: edit one `CLAUDE.md` description, edit one `marketplace.json` description, append a
 period to one, insert a blank line under one heading, rename one heading, and replace one em dash
@@ -512,6 +529,47 @@ command messages at once, so the third case is what exercises `COMMAND UNDOCUMEN
 terms; the capitalized case is what proves the number word is read case-insensitively, which the
 first draft of this check got wrong.
 
+The eleventh check reads the `## Overview` table — the plugin list a new reader meets before any
+other. The fifth check compares `marketplace.json` descriptions against `CLAUDE.md`; the sixth
+compares skill and command *lists* against the per-plugin tables under **Skills**, which are a
+different set of tables further down this file. The `## Overview` section has no `` ### `plugin` ``
+headings at all, so the sixth check's extractor never enters it, and nothing read that table. A
+plugin could be added to `marketplace.json` and never appear there, or removed and linger
+indefinitely — the defect `DESC NO PLUGIN` catches for `CLAUDE.md`, in the file installed users read
+first.
+
+| Output | Meaning |
+|---|---|
+| `PLUGIN UNDOCUMENTED {name}` | `marketplace.json` registers a plugin the Overview table never lists |
+| `PLUGIN NOT REGISTERED {name}` | The Overview table names a plugin that no longer ships |
+
+**It compares names, and nothing else.** The Purpose column is a paraphrase written for someone
+skimming — `dev` reads *"issues, PRs, waves, merges, and promotions"* against the
+`marketplace.json` *"…and environment promotions"* that `CLAUDE.md` repeats verbatim — and that is
+the reason a short overview table earns its place beside the reference text. Making the two verbatim
+would add a third copy to keep in step and delete the difference that justifies the table. The sixth
+check made the same call for skill lists, comparing basenames and leaving descriptions alone.
+
+Three properties of the table are load-bearing, the first two borrowed rather than invented. The
+extractor anchors on `## Overview` and stops at the next heading of **any** level, the way the sixth
+check does — this file has several pipe tables and only one of them is this one. It reuses the sixth
+check's `rd_s` extraction verbatim, `` s/^| *`\([^`]*\)` *|.*/\1/p ``, which takes a backticked
+first column and so ignores the header row, the separator row, and the bulleted prose above the
+table, none of which match. And **the plugin table must stay the only backticked-first-column table
+under `## Overview`**, because the extractor takes every such row in the section rather than that one
+table: a second table of that shape added here would turn each of its rows into a phantom plugin name
+and report `PLUGIN NOT REGISTERED` for it. Add one at a heading of its own, or anchor the extraction
+more narrowly first.
+
+**Deleting the table would also have closed this**, and it was weighed: `## Overview` and the
+per-plugin sections under **Skills** list the same plugins, so a reader gets the set twice, and #175
+preferred deletion to a check for the bare count that used to sit above it. The table survives
+because it is the first thing in the file and gives the one-line orientation the **Skills** sections
+do not — it earns its place in a way that count did not.
+
+To re-run it: delete a row from the Overview table, and add a row for a plugin `marketplace.json`
+does not list. Each must produce its own message.
+
 **Extracting does not always mean a new reference file.** The blanket-staging prohibition was
 allowlisted and then extracted to the **Git Safety** section of `skill/core/SKILL.md`, because every
 `dev` command already loads `core` as its third bootstrap step. A rule that lands there costs no new
@@ -536,12 +594,42 @@ count of its *own* phases; it cannot read a citation of someone else's, and no c
 skill that gains or loses a phase still leaves every cross-skill citation of it silently wrong, which
 is why #169 removed the last two rather than renumbering them.
 
-**`.hivrr.json` `verify.test` is the runnable form of the checks above.** It runs them from the
-repo root, prints only findings, and exits non-zero when there are any — which is what makes
-`work-issue` and `work-pr` report `tests pass` here instead of `tests skipped`. **Adding or changing
-a check above means changing it there too.** Nothing enforces that: both files stay valid Markdown
-and JSON however far apart they drift, and `verify.detectedFrom: ["manual"]` stops `init` from
-re-deriving the command. A check added here and not there is simply never run.
+**`.hivrr.json` `verify.test` runs the checks above by executing them.** It is a loader, not a
+copy: it `cd`s to the repo root, confirms the files the checks read are present, extracts the first
+fenced block under **Verification** with `awk`, runs it as `bash -c "$BLOCK" </dev/null`, prints only
+findings, and exits non-zero when there are any — which is what makes `work-issue` and `work-pr`
+report `tests pass` here instead of `tests skipped`. **So adding or changing a check above needs no
+second edit.** That is the point: the two forms cannot drift, because there is only one.
+
+**The block is passed as an argument and run with stdin closed, and both halves are load-bearing.**
+Piping it in instead — `printf "%s\n" "$BLOCK" | bash` — makes the script its own child's stdin, so
+any check that reads stdin consumes the *rest of the block*: every check after it is skipped, emits
+nothing, and the run reports `structural checks pass`. That is reachable from the block as written,
+not only from a future one — `jq empty $(git ls-files '*.json')` degenerates to a bare `jq empty`
+if the glob ever matches nothing, and a bare `jq empty` reads stdin. Passing the block as an
+argument without also closing stdin trades the silent skip for a hang, because the same command then
+blocks on the caller's terminal. So: **a check may not depend on stdin.** With `</dev/null` one that
+tries gets EOF immediately and the checks after it still run, which is the only behaviour compatible
+with the promise this section makes.
+
+Anything reading `verify.test` expecting to *see* the checks will not find them there any more —
+it holds the extractor. The checks are here.
+
+**The extractor is anchored, and losing the anchor fails loudly.** It starts at the `## Verification`
+heading, takes the **first** fenced block it then meets, and stops at that block's closing fence — so
+a second fenced example added later in this section is not swallowed, and a fence earlier in the file
+is never reached. If the heading is renamed or the fence deleted, the extraction comes back empty and
+the loader reports `NO VERIFY BLOCK` and exits non-zero rather than passing on nothing, which is the
+one failure mode that could otherwise turn verification into a silent no-op. Rename the heading and
+you must update the extractor in `.hivrr.json` — and the eighth check, which counts this block by the
+same anchor.
+
+To re-run it: rename a message in the block and confirm the tool emits the new name, add a line to
+the block and confirm it runs, then rename `## Verification`, delete the fence, and move `README.md`
+aside — each of those three must report `NO VERIFY BLOCK` and exit non-zero, the last one alongside
+`MISSING INPUT README.md`. Renaming the heading to something that still *starts* with
+`## Verification` is not one of the cases: the anchor is a prefix match, so the block is still found
+and still runs.
 
 **The duplication check covers one pair, deliberately.** Other same-named skills share lines over
 the same threshold today — `planning` and `brainstorm` share the session-UUID bootstrap and its fallback
