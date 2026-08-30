@@ -315,6 +315,19 @@ printf '%s\n' "$reg_p" | grep . | while read -r p; do
 printf '%s\n' "$ov_p" | grep . | while read -r p; do
     printf '%s\n' "$reg_p" | grep -qxF "$p" || echo "PLUGIN NOT REGISTERED $p"
   done
+
+# the PR review declares itself read-only and grants no unrestricted tool
+rfm=$(awk 'NR == 1 && $0 == "---" { p = 1; next } p && $0 == "---" { exit } p' \
+        skill/review-pr/SKILL.md)
+if ! printf '%s\n' "$rfm" | grep -q '^allowed-tools:'; then
+    echo "REVIEW NOT READ-ONLY skill/review-pr/SKILL.md (no allowed-tools)"
+  else
+    printf '%s\n' "$rfm" | grep -qE '^ *-? *(Edit|Write|NotebookEdit|Bash) *$' \
+      && echo "REVIEW MAY WRITE skill/review-pr/SKILL.md (allowed-tools grants an unrestricted tool)"
+    # Bash(git:*) covers checkout, stash, commit, and clean; Bash(git remote:*) keeps a space
+    printf '%s\n' "$rfm" | grep -qE '^ *-? *Bash\(git[:)]' \
+      && echo "REVIEW MAY WRITE skill/review-pr/SKILL.md (allowed-tools grants unscoped git)"
+  fi
 ```
 
 Silence from all of them means everything registered resolves, nothing is duplicated, the phase
