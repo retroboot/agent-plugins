@@ -131,14 +131,14 @@ REVIEW UNVERIFIED skill/review-pr/SKILL.md (no Verify phase)
 
 ### `w2n` cannot count past thirteen
 
-`README.md`'s verify block defines `w2n()` with cases `one` through `thirteen`. The block currently holds 11 checks:
+`README.md`'s verify block defines `w2n()` with cases `one` through `thirteen`. The block currently holds 12 checks — one more than when this plan was drafted on 2026-08-26: PR #190 landed a twelfth check in the interim (`review-pr` declares an `allowed-tools` list that grants it no unrestricted tool), unrelated to this plan. Every check this plan adds therefore lands one slot later than originally numbered — **thirteenth through eighteenth**, not twelfth through seventeenth — and every step below has been updated to say so.
 
 ```
 $ FENCE=$(printf "\140\140\140"); awk -v fence="$FENCE" '…' README.md | grep -c '^# '
-11
+12
 ```
 
-This plan adds six, reaching seventeen. `w2n seventeen` returns `0`, the eighth check compares `0` against `17`, and reports `CHECK COUNT DRIFT` on a count that is correct. **Step 1 extends `w2n` to twenty before adding the first check** — otherwise every later step fails verification for a reason that has nothing to do with the step.
+This plan adds six, reaching eighteen. `w2n eighteen` returns `0`, the eighth check compares `0` against `18`, and reports `CHECK COUNT DRIFT` on a count that is correct. **Step 1 extends `w2n` to twenty before adding the first check** — otherwise every later step fails verification for a reason that has nothing to do with the step.
 
 ### The phase-sequence check governs every renumbering
 
@@ -209,7 +209,7 @@ Step 1 ──> Step 2 ──> Step 3 ──> Step 4 ──> Step 5 ──> Step 
 
 There is no parallelism here, and that is a finding rather than an oversight. Blueprint's parallel rule requires no shared output files; every step edits either `skill/audit/SKILL.md` or the same four domain-skill sections, and **every** step edits `README.md` and `CLAUDE.md` — the check-count sentence alone serialises the whole plan. Step 7 touches a different skill in a different plugin and is still serial for that reason.
 
-Step 7 is last rather than first despite being independent of the audit work: it reuses the verifier prompt shape that Step 4 establishes, and lands the seventeenth check on a count that Steps 1–6 have already moved five times.
+Step 7 is last rather than first despite being independent of the audit work: it reuses the verifier prompt shape that Step 4 establishes, and lands the eighteenth check on a count that Steps 1–6 have already moved five times.
 
 | Step | Item | Scope | Size |
 |---|---|---|---|
@@ -247,7 +247,7 @@ Story points: XS=1, S=2, M=3, L=5. Total: 24.
 
   This is a pure extension — every existing case keeps its value, so no current check changes behaviour.
 
-- [ ] **Step 2: Add the twelfth check**
+- [ ] **Step 2: Add the thirteenth check**
 
   Append to the end of the fenced block in `README.md`, after the Overview-table check:
 
@@ -266,7 +266,7 @@ Story points: XS=1, S=2, M=3, L=5. Total: 24.
 
 - [ ] **Step 3: Update the check count in `CLAUDE.md`**
 
-  Under `## Verification`, the sentence currently opens `Eleven checks: every JSON file parses, …`. Change the word to `Twelve` and append this to the end of the list:
+  Under `## Verification`, the sentence currently opens `Twelve checks: every JSON file parses, …`. Change the word to `Thirteen` and append this to the end of the list:
 
   ```
   ; and the four `audit-*` skills declare themselves read-only
@@ -353,7 +353,7 @@ Expected: `structural checks pass`
 Run: `head -20 skill/audit-security/SKILL.md`
 Expected: frontmatter containing an `allowed-tools:` list with no `Edit`, `Write`, or bare `Bash`.
 
-**Exit criteria:** All four domain skills declare `allowed-tools`; the twelfth check is green; `w2n` resolves `sixteen` to 16; every domain skill's Output Format forbids unread line numbers.
+**Exit criteria:** All four domain skills declare `allowed-tools`; the thirteenth check is green; `w2n` resolves `sixteen` to 16; every domain skill's Output Format forbids unread line numbers.
 
 **Rollback:** `git revert` the commit. Nothing else depends on this step yet.
 
@@ -369,7 +369,7 @@ Expected: frontmatter containing an `allowed-tools:` list with no `Edit`, `Write
 
 **Tasks:**
 
-- [ ] **Step 1: Add the thirteenth check**
+- [ ] **Step 1: Add the fourteenth check**
 
   Append to the fenced block in `README.md`:
 
@@ -385,7 +385,7 @@ Expected: frontmatter containing an `allowed-tools:` list with no `Edit`, `Write
 
 - [ ] **Step 2: Update the check count in `CLAUDE.md`**
 
-  Change `Twelve checks:` to `Thirteen checks:` and append to the list:
+  Change `Thirteen checks:` to `Fourteen checks:` and append to the list:
 
   ```
   ; and every `audit-*` skill's output format names the shared finding fields
@@ -436,7 +436,7 @@ Expected: frontmatter containing an `allowed-tools:` list with no `Edit`, `Write
 
   Then re-append the **Never emit a `file:line` you did not read** paragraph from Step 1 below it.
 
-- [ ] **Step 5: Run verification and confirm the thirteenth check passes**
+- [ ] **Step 5: Run verification and confirm the fourteenth check passes**
 
   Run: `jq -r '.verify.test' .hivrr.json | bash`
   Expected: `structural checks pass`, exit 0.
@@ -578,7 +578,7 @@ Expected: `structural checks pass`
 Run: `grep -c '^## Phase [0-9]' skill/audit/SKILL.md`
 Expected: `8`
 
-**Exit criteria:** All four domain skills document the same twelve-field contract; `skill/audit/SKILL.md` Phase 4 unions, dedupes, assigns ids, and writes `.ai/audit/findings.json`; the discovery-bar override is stated once in Phase 3; the thirteenth check is green.
+**Exit criteria:** All four domain skills document the same twelve-field contract; `skill/audit/SKILL.md` Phase 4 unions, dedupes, assigns ids, and writes `.ai/audit/findings.json`; the discovery-bar override is stated once in Phase 3; the fourteenth check is green.
 
 **Rollback:** `git revert` the commit. The artifact path is new, so no consumer breaks; delete `.ai/audit/` if a run created one.
 
@@ -594,7 +594,7 @@ Expected: `8`
 
 **Tasks:**
 
-- [ ] **Step 1: Add the fourteenth check**
+- [ ] **Step 1: Add the fifteenth check**
 
   Append to the fenced block in `README.md`:
 
@@ -606,7 +606,7 @@ Expected: `8`
 
 - [ ] **Step 2: Update the check count in `CLAUDE.md`**
 
-  Change `Thirteen checks:` to `Fourteen checks:` and append:
+  Change `Fourteen checks:` to `Fifteen checks:` and append:
 
   ```
   ; and the security scan carries an explicit exclusion list
@@ -768,7 +768,7 @@ Expected: `structural checks pass`
 Run: `grep -c 'OWASP' skill/audit-security/SKILL.md`
 Expected: `0` — the checklist headings, the frontmatter description, and the intro sentence all stop framing this skill as an OWASP pass.
 
-**Exit criteria:** `## What to Look For` names seven shapes and no APIs-by-class headings; `## Do Not Report` exists with eight exclusions; the fourteenth check is green.
+**Exit criteria:** `## What to Look For` names seven shapes and no APIs-by-class headings; `## Do Not Report` exists with eight exclusions; the fifteenth check is green.
 
 **Rollback:** `git revert` the commit. Discovery reverts to the checklist; nothing downstream depends on the shape list.
 
@@ -784,7 +784,7 @@ Expected: `0` — the checklist headings, the frontmatter description, and the i
 
 **Tasks:**
 
-- [ ] **Step 1: Add the fifteenth check**
+- [ ] **Step 1: Add the sixteenth check**
 
   Append to the fenced block in `README.md`:
 
@@ -801,7 +801,7 @@ Expected: `0` — the checklist headings, the frontmatter description, and the i
 
 - [ ] **Step 2: Update the check count in `CLAUDE.md`**
 
-  Change `Fourteen checks:` to `Fifteen checks:` and append:
+  Change `Fifteen checks:` to `Sixteen checks:` and append:
 
   ```
   ; and the audit verify phase spawns typed subagents rather than forking
@@ -851,7 +851,7 @@ Expected: `0` — the checklist headings, the frontmatter description, and the i
   | 8 | `## Phase 8 — Create GitHub Issues` |
   | 9 | `## Phase 9 — Done` |
 
-  The heading must be exactly `## Phase 5 — Verify` — the fifteenth check matches
+  The heading must be exactly `## Phase 5 — Verify` — the sixteenth check matches
   `^## Phase .* — Verify$`.
 
   Phase 5's body:
@@ -1070,7 +1070,7 @@ Expected: `9`
 Run: `grep -n 'subagent_type' skill/audit/SKILL.md`
 Expected: at least one hit inside the Phase 5 body.
 
-**Exit criteria:** Phase 5 exists, dispatches typed subagents, tallies votes, and writes verdicts back to the artifact; issue creation files only `confirmed` findings; the budget cap is reported when it applies; the fifteenth check is green.
+**Exit criteria:** Phase 5 exists, dispatches typed subagents, tallies votes, and writes verdicts back to the artifact; issue creation files only `confirmed` findings; the budget cap is reported when it applies; the sixteenth check is green.
 
 **Rollback:** `git revert` the commit. Phase numbering returns to 1–8; the artifact keeps its Step 2 shape and simply carries no verdicts.
 
@@ -1082,11 +1082,11 @@ Expected: at least one hit inside the Phase 5 body.
 
 **Context brief:** Every domain skill maps category to severity — `skill/audit-security/SKILL.md:70` says auth bypass is high, remote code execution is critical, and so on, with no reference to what an attacker would first need. Their guidance is that category-anchored severity "isn't useful", and that severity must be judged separately from the verdict so that "this is real" does not inflate into "this is critical". This step adds a ranking phase after verification that re-derives severity from preconditions and reachability, and discards the discovery-time claim rather than adjusting it. Phase count goes 9 → 10.
 
-**Dependencies:** Step 4 must be merged. Ranking runs on confirmed findings only, and the sixteenth check asserts it comes after Verify.
+**Dependencies:** Step 4 must be merged. Ranking runs on confirmed findings only, and the seventeenth check asserts it comes after Verify.
 
 **Tasks:**
 
-- [ ] **Step 1: Add the sixteenth check**
+- [ ] **Step 1: Add the seventeenth check**
 
   Append to the fenced block in `README.md`:
 
@@ -1103,14 +1103,14 @@ Expected: at least one hit inside the Phase 5 body.
 
 - [ ] **Step 2: Update the check count in `CLAUDE.md`**
 
-  Change `Fifteen checks:` to `Sixteen checks:` and append:
+  Change `Sixteen checks:` to `Seventeen checks:` and append:
 
   ```
   ; and the audit ranking phase runs after verification rather than before it
   ```
 
-  `w2n` resolves `sixteen` because Step 1 of this plan extended it. If `CHECK COUNT DRIFT` appears
-  here reporting `says sixteen, README has 16`, the `w2n` extension was lost — restore it.
+  `w2n` resolves `seventeen` because Step 1 of this plan extended it. If `CHECK COUNT DRIFT` appears
+  here reporting `says seventeen, README has 17`, the `w2n` extension was lost — restore it.
 
 - [ ] **Step 3: Run verification and confirm the red state**
 
@@ -1302,7 +1302,7 @@ Expected: `10`
 Run: `grep -n 'Preconditions' skill/audit-tech-debt/SKILL.md`
 Expected: a hit in the `## Severity Guide` table header.
 
-**Exit criteria:** Phase 6 exists after Phase 5, ranks confirmed findings from preconditions, discards the discovery claim, and reports every movement; all four domain severity guides are precondition-anchored; the sixteenth check is green.
+**Exit criteria:** Phase 6 exists after Phase 5, ranks confirmed findings from preconditions, discards the discovery claim, and reports every movement; all four domain severity guides are precondition-anchored; the seventeenth check is green.
 
 **Rollback:** `git revert` the commit. Phase numbering returns to 1–9 and severity falls back to the discovery-time claim.
 
@@ -1338,7 +1338,7 @@ Expected: a hit in the `## Severity Guide` table header.
   | 11 | `## Phase 11 — Done` |
 
   The Verify and Rank headings keep their exact suffixes — `— Verify` and `— Rank by
-  Preconditions` — so the fifteenth and sixteenth checks still match after renumbering.
+  Preconditions` — so the sixteenth and seventeenth checks still match after renumbering.
 
   No cross-reference in any domain skill needs touching: every reference this plan added names its
   phase rather than numbering it, which is why renumbering four times costs nothing outside the
@@ -1508,7 +1508,7 @@ moved.
 
 **Tasks:**
 
-- [ ] **Step 1: Add the seventeenth check**
+- [ ] **Step 1: Add the eighteenth check**
 
   Append to the fenced block in `README.md`:
 
@@ -1548,7 +1548,7 @@ moved.
 
 - [ ] **Step 2: Update the check count in `CLAUDE.md`**
 
-  Change `Sixteen checks:` to `Seventeen checks:` and append this to the end of the list:
+  Change `Seventeen checks:` to `Eighteen checks:` and append this to the end of the list:
 
   ```
   ; and `review-pr` verifies its findings rather than filtering them at discovery
@@ -1621,7 +1621,7 @@ moved.
   | 7 | `## Phase 7 — Post the Review` |
   | 8 | `## Phase 8 — Done` |
 
-  The heading must be exactly `## Phase 5 — Verify` — the seventeenth check matches
+  The heading must be exactly `## Phase 5 — Verify` — the eighteenth check matches
   `^## Phase .* — Verify$`.
 
   Phase 5's body:
@@ -1738,7 +1738,37 @@ moved.
   ```
   ````
 
-- [ ] **Step 6: Report the filtering in `## Phase 6 — Compose the Review`**
+- [ ] **Step 6: Add `Task` to `review-pr`'s `allowed-tools`**
+
+  `skill/review-pr/SKILL.md`'s frontmatter already declares `allowed-tools` — added independently by
+  #190, after this plan was first drafted — restricting the skill to `Read, Glob, Grep, Bash(gh:*),
+  Bash(glab:*), Bash(jq:*), Bash(git remote:*), Bash(grep:*), Bash(rg:*), Bash(ls:*), Bash(head:*),
+  Bash(wc:*)`. The **Verify** phase this step just inserted spawns `Task` subagents to run its
+  verifiers, and `Task` is not in that list — under a runtime that enforces `allowed-tools`, Verify
+  would be unable to spawn a single verifier. Add it, between `Grep` and `Bash(gh:*)`:
+
+  ```yaml
+  allowed-tools:
+    - Read
+    - Glob
+    - Grep
+    - Task
+    - Bash(gh:*)
+    - Bash(glab:*)
+    - Bash(jq:*)
+    - Bash(git remote:*)
+    - Bash(grep:*)
+    - Bash(rg:*)
+    - Bash(ls:*)
+    - Bash(head:*)
+    - Bash(wc:*)
+  ```
+
+  This does not trip the twelfth check (`review-pr` declares an `allowed-tools` list that grants it
+  no unrestricted tool) — that check only flags `Edit`, `Write`, `NotebookEdit`, bare `Bash`, or
+  unscoped `git`, and `Task` is none of those.
+
+- [ ] **Step 7: Report the filtering in `## Phase 6 — Compose the Review`**
 
   Three edits to the template, all in `## Phase 6 — Compose the Review`.
 
@@ -1782,7 +1812,7 @@ moved.
   A `pre_existing` demotion is a confirmed defect that this PR did not introduce; a flat
   "unverified" stamp over the whole section would say the opposite.
 
-- [ ] **Step 7: State how follow-up reviews verify**
+- [ ] **Step 8: State how follow-up reviews verify**
 
   `## Phase 4 — Analyze the Diff` restructures a follow-up review into ✅ Fixed / ⏳ Remaining /
   🆕 New, and the Summary template edited above belongs to the first-review structure. Add to
@@ -1801,7 +1831,7 @@ moved.
   > verdicts from the earlier review.
   ```
 
-- [ ] **Step 8: Parse `--votes N`, then document it**
+- [ ] **Step 9: Parse `--votes N`, then document it**
 
   A flag documented on the command but not parsed by the skill is swallowed into `pr_number` or
   `inline_context`. All three touchpoints land in this task.
@@ -1842,7 +1872,7 @@ moved.
 
   The ninth check reads only the command name from that line, so the flag is free.
 
-- [ ] **Step 9: Add the phase-count sentence to `skill/review-pr/SKILL.md`**
+- [ ] **Step 10: Add the phase-count sentence to `skill/review-pr/SKILL.md`**
 
   Under `# Review PR/MR Workflow`, replace the line `Before starting: read this entire skill, then
   execute.` with:
@@ -1858,7 +1888,7 @@ moved.
   The seventh check now holds that count against the headings, so a phase added or removed without
   updating this sentence fails verification.
 
-- [ ] **Step 10: Note the split under `### `dev`` in `CLAUDE.md`**
+- [ ] **Step 11: Note the split under `### `dev`` in `CLAUDE.md`**
 
   After the `**Skills:**` and `**Commands:**` lines under `### `dev``, add:
 
@@ -1866,14 +1896,14 @@ moved.
   `review-pr` splits discovery from verification the same way `audit` does: Phase 4 finds at a
   deliberately low bar, Phase 5 re-derives every BLOCKER and REQUIRED from the **whole file** rather
   than the diff hunk, and only survivors are posted. DEFERRED is not verified and is labelled as
-  opinion. The seventeenth structural check holds both halves.
+  opinion. The eighteenth structural check holds both halves.
   ```
 
   **Never insert anything between the `### `dev`` heading and its description line.** The fifth
   check reads that single line and compares it against `marketplace.json`; a blank line there
   reports `DESC BLANK AFTER HEADING dev`.
 
-- [ ] **Step 11: Run verification and confirm it passes**
+- [ ] **Step 12: Run verification and confirm it passes**
 
   Run: `jq -r '.verify.test' .hivrr.json | bash`
   Expected: `structural checks pass`, exit 0.
@@ -1881,7 +1911,7 @@ moved.
   If `PHASE COUNT DRIFT skill/review-pr/SKILL.md (says eight, has N)` appears, the renumbering in
   Task 5 is incomplete — find the gap with `grep '^## Phase [0-9]' skill/review-pr/SKILL.md`.
 
-- [ ] **Step 12: Commit**
+- [ ] **Step 13: Commit**
 
   ```bash
   git add README.md CLAUDE.md command/review-pr.md skill/review-pr/SKILL.md
@@ -1900,13 +1930,17 @@ Expected: `8`
 Run: `grep -nE '(>=|≥) *80' skill/review-pr/SKILL.md`
 Expected: exactly two hits, both prose inside the discovery-bar override paragraph — the sentence
 quoting `core`'s rule, and the sentence re-imposing it at Verify. **Neither may start with `- `.**
-A hit on a list item means the find-time requirement bullet survived, which is what the seventeenth
+A hit on a list item means the find-time requirement bullet survived, which is what the eighteenth
 check reports.
+
+Run: `grep -n '^\s*- Task$' skill/review-pr/SKILL.md`
+Expected: one hit, inside the `allowed-tools` frontmatter list.
 
 **Exit criteria:** Phase 4 asks six adversarial questions, requires a whole-file read before any
 "missing X" finding, and states the bar override; Phase 5 exists, verifies BLOCKER and REQUIRED with
 typed subagents against full files, demotes rather than drops on a split, and routes `pre_existing`
-to DEFERRED; the composed review reports what was filtered; the seventeenth check is green.
+to DEFERRED; `review-pr`'s `allowed-tools` list includes `Task` so Verify's subagents can spawn; the
+composed review reports what was filtered; the eighteenth check is green.
 
 **Rollback:** `git revert` the commit. Phase numbering returns to 1–7 and review reverts to a single
 pass at the ≥80% bar. Nothing in Steps 1–6 depends on this step.
