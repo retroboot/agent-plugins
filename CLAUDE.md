@@ -74,14 +74,15 @@ Skills and commands are registered with different path shapes, and getting one w
 | Kind | Registered as | Resolves to |
 |---|---|---|
 | Skill | a **directory**, no extension — `./skill/audit` | `skill/audit/SKILL.md` |
-| Command | a **file, `.md` included** — `./command/audit.md` | `command/audit.md` |
+| Command | a **file, `.md` included** — `./command/example.md` | `command/example.md` |
 
-Always write the extension on a command entry. Every command entry currently carries it and every
-command loads, so the explicit form is the one known to work; whether the manager would also accept
-an extension-less command path is untested and not worth relying on either way. The third check under
-**Verification** keeps the explicit form in place, because nothing else in the repo would catch
-its absence — a command that fails to resolve produces no error, just a slash command that is not
-there.
+No plugin currently registers a command — every `commands` array in `marketplace.json` is `[]`,
+following the retirement of the last command wrappers. The shape above still governs if one is ever
+added back: always write the extension on a command entry. Whether the manager would also accept an
+extension-less command path is untested and not worth relying on either way. The third check under
+**Verification** keeps the explicit form in place should a command return, because nothing else in
+the repo would catch its absence — a command that fails to resolve produces no error, just a slash
+command that is not there.
 
 ### `dev`
 Implementation and code review — issues, PRs, waves, merges, and environment promotions.

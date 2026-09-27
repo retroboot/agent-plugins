@@ -110,11 +110,10 @@ For each group in `ordered_groups`:
 issue it applies to, and `--auto`. `work-issue` fetches the issues itself — the data from Phase 2 is
 for this skill's own grouping and ordering decisions, not a substitute for `work-issue`'s own fetch.
 A group of more than one issue routes through `work-issue`'s own wave-strategy logic exactly as it
-would from `/work-issue`.
+would from a direct `work-issue` invocation.
 
-`work-issue`'s last phase says to emit its completion JSON as defined in "the command's Output
-section" — there is no command here, so take that to be `{pr, pr_url, branch, issues}`, the contract
-in `command/work-issue.md`, and capture it directly from the skill's own completion.
+`work-issue` ships with no command wrapper — its `## Phase 12 — Done` inlines the completion JSON
+directly (`{pr, pr_url, branch, issues}`). Capture it directly from the skill's own completion.
 
 **Ship.** Load the `ship-pr` skill with the PR number just captured, passing `--no-merge` through
 when this skill received it. **Do not start the next group until `ship-pr` returns.** This is

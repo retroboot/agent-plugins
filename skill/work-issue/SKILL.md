@@ -50,7 +50,7 @@ contradict each other or an external credential is missing.
 
 The input will be one of these forms:
 - A single issue number: `123`
-- Multiple numbers or a range: `123, 456` or `123-126`
+- Multiple numbers or a range: `123, 456`, `123 456`, or `123-126`
 - A GitHub URL
 - A Linear identifier: `PROJ-123`
 - Any of the above followed by `: some context` for inline hints
