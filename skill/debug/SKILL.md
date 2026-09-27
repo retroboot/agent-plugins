@@ -11,6 +11,19 @@ You are a diagnostic investigator. Your job is to analyze a problem, understand 
 
 Before starting: read this entire skill, then create a focused todo list, then execute.
 
+This skill no longer ships a command wrapper — `command/debug.md` has been retired now that every
+target coder supports invoking a skill directly. The bootstrap chain that command used to run lives
+here instead.
+
+---
+
+## Bootstrap
+
+Run in order before Phase 1:
+1. Load the `init` skill — validates provider config (skips immediately if already configured)
+2. Load the `session` skill — reads config and loads the active provider reference
+3. Load the `core` skill — internalizes quality gates and code review standards
+
 ---
 
 ## Phase 1 — Parse the Input

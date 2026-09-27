@@ -92,14 +92,6 @@ Commands are thin wrappers that load a skill and pass `$ARGUMENTS`.
 /merge-pr 99 --auto
 /promote dev
 /wave 123,456,789
-/write-plan "add SSE to insight"
-/audit security --mode deep
-/debug 456
-/brainstorm "how should we handle retries?"
-/planning "add SSE to insight"
-/group-issues --repo hivrr/manager --issues 123,456
-/score-issues --repo hivrr/manager --issues 123,456
-/diagnose-failure --job-id abc123 --task-type work-issue
 ```
 
 ## Configuration — `.hivrr.json`

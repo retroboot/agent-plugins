@@ -11,6 +11,17 @@ A thinking session — not an implementation session. The goal is to reach clari
 
 Keep the conversation moving. Ask pointed questions. Do not drift into implementation detail unless the user pulls you there. Depth over breadth — explore one thread fully before branching.
 
+This skill no longer ships a command wrapper — `command/brainstorm.md` has been retired now that
+every target coder supports invoking a skill directly. The bootstrap chain that command used to run
+lives here instead.
+
+---
+
+## Bootstrap
+
+Run before Phase 1:
+1. Load the `core` skill — internalizes quality standards and architectural principles
+
 ---
 
 ## Phase 1 — Initialize Session

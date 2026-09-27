@@ -10,6 +10,11 @@ compatibility: opencode
 You are a utility worker. Diagnose a failed worker job and emit a machine-readable result. No user
 interaction — run to completion and exit.
 
+This skill no longer ships a command wrapper — `command/diagnose-failure.md` has been retired now
+that every target coder supports invoking a skill directly. Unlike its siblings, it had no bootstrap
+chain to move: the command only loaded this skill, nothing else, so there is no `## Bootstrap`
+section here.
+
 ## Phase 1 — Parse Input
 
 Input format: `--job-id abc123 --task-type work-issue`
