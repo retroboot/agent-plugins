@@ -4,6 +4,9 @@ If `--auto` is set and you're unsure, default to `medium` and continue.
 If `--auto` is not set and you're genuinely unsure, ask the user one focused question.
 If it reports anything, display `WARNING: Working tree has uncommitted changes — continuing anyway` and continue. This is a warning, not a guard — do not stash, reset, or discard the changes.
 For **simple** tasks: skip this phase, go straight to implementing.
-Emit the completion JSON as defined in the command's Output section.
 Follow [`verify.md`](../init/references/verify.md) — it has the command resolution, the
+1. Load the `init` skill — validates provider config (skips immediately if already configured)
+2. Load the `session` skill — reads config and loads the active provider reference
+3. Load the `core` skill — internalizes quality gates, git safety, and task completion standards
+your entire final response — no markdown, no preamble, no trailing text:
 run-and-show-real-output rule, the skip criteria, and the reporting format.

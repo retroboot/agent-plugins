@@ -81,19 +81,6 @@ The plugin is split into focused packages:
 | `postgres` | PostgreSQL administration skills |
 | `postgres-query` | Safe PostgreSQL query execution and analysis |
 
-## Commands
-
-Commands are thin wrappers that load a skill and pass `$ARGUMENTS`.
-
-```
-/work-issue 123
-/work-pr 456
-/review-pr 789
-/merge-pr 99 --auto
-/promote dev
-/wave 123,456,789
-```
-
 ## Configuration — `.hivrr.json`
 
 Per-repo settings live in a committed `.hivrr.json` at the repository root, so they travel with the code and every teammate, agent, and CI runner resolves the same values. **The file is entirely optional** — a repo without one gets documented defaults, not errors.

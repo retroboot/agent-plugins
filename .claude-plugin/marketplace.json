@@ -27,14 +27,7 @@
         "./skill/work-issue",
         "./skill/work-pr"
       ],
-      "commands": [
-        "./command/merge-pr.md",
-        "./command/promote.md",
-        "./command/review-pr.md",
-        "./command/wave.md",
-        "./command/work-issue.md",
-        "./command/work-pr.md"
-      ]
+      "commands": []
     },
     {
       "name": "auditor",

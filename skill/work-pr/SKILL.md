@@ -11,6 +11,19 @@ You are a workflow driver. Your job is to take a pull request or merge request f
 
 Before starting: read this entire skill, then create a focused todo list, then execute.
 
+This skill no longer ships a command wrapper — `command/work-pr.md` has been retired now that every
+target coder supports invoking a skill directly. The bootstrap chain that command used to run lives
+here instead.
+
+---
+
+## Bootstrap
+
+Run in order before Phase 1:
+1. Load the `init` skill — validates provider config (skips immediately if already configured)
+2. Load the `session` skill — reads config and loads the active provider reference
+3. Load the `core` skill — internalizes quality gates, git safety, and task completion standards
+
 ---
 
 ## Phase 1 — Parse the Input
@@ -204,7 +217,17 @@ Display: `Push: {branch_name} → origin`
 
 ## Phase 12 — Done
 
-Emit the completion JSON as defined in the command's Output section.
+There is no command here to defer to — `command/work-pr.md` has been retired. Emit this JSON as
+your entire final response — no markdown, no preamble, no trailing text:
+
+```json
+{
+  "status": "WORKFLOW COMPLETE",
+  "pr": {pr_number},
+  "branch": "{branch_name}",
+  "feedback_addressed": { "blocking": {n}, "recommended": {n} }
+}
+```
 
 ---
 

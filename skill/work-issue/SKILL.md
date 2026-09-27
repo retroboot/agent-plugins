@@ -11,6 +11,21 @@ You are a workflow driver. Your job is to take an issue from input to merged PR 
 
 Before starting: read this entire skill, then create a focused todo list, then execute.
 
+This skill no longer ships a command wrapper — `command/work-issue.md` has been retired now that
+every target coder supports invoking a skill directly. The bootstrap chain that command used to run
+lives here instead.
+
+---
+
+## Bootstrap
+
+Run in order before Phase 1:
+1. Load the `init` skill — validates provider config (skips immediately if already configured)
+2. Load the `session` skill — reads config and loads the active provider reference
+3. Load the `core` skill — internalizes quality gates, git safety, and task completion standards
+
+---
+
 ## Straight-through execution
 
 This skill runs start to finish in one pass. There is no session file, no phase 0, and no
@@ -510,7 +525,18 @@ Display: `Session result written to memory` — or the fallback warning from Pha
 
 ### Emit the result
 
-Emit the completion JSON as defined in the command's Output section.
+There is no command here to defer to — `command/work-issue.md` has been retired. Emit this JSON as
+your entire final response — no markdown, no preamble, no trailing text:
+
+```json
+{
+  "status": "WORKFLOW COMPLETE",
+  "pr": {pr_number},
+  "pr_url": "{url}",
+  "branch": "{branch_name}",
+  "issues": [issue_numbers]
+}
+```
 
 ---
 

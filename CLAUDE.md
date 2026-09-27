@@ -88,8 +88,6 @@ Implementation and code review — issues, PRs, waves, merges, and environment p
 
 **Skills:** `core`, `init`, `session`, `debug`, `merge-pr`, `promote`, `review-pr`, `ship-issue`, `ship-pr`, `wave`, `work-issue`, `work-pr`
 
-**Commands:** `merge-pr`, `promote`, `review-pr`, `wave`, `work-issue`, `work-pr`
-
 ---
 
 ### `auditor`
