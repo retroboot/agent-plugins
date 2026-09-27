@@ -15,7 +15,8 @@ progress clearly, and only stop where a phase says to.
 Before starting: read this entire skill, then create a focused todo list, then execute.
 
 This skill ships with no command wrapper, for the same reason `ship-issue` does not — see
-`CLAUDE.md`. The bootstrap chain other workflows get from their command lives here instead.
+`skill/ship-issue/SKILL.md`. The bootstrap chain other workflows get from their command lives here
+instead.
 
 ---
 

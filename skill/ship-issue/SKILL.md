@@ -57,8 +57,9 @@ Display: `Input: {issue_numbers} | no-merge: {no_merge}`
 Use the **Get issue** command from the loaded reference for every issue in `issue_numbers`. On
 GitHub, request `comments` alongside the command's default fields —
 `gh issue view {N} --repo {OWNER}/{REPO} --json number,title,body,labels,state,comments` — since the
-reference's base form omits it; the Linear and GitLab reference commands return comments as part of
-their default view.
+reference's base form omits it; `linear issue view` and `glab issue view` typically include comments
+in their default output, but confirm against what the command actually returns rather than assuming
+it.
 
 Fold scope-changing comments into what gets implemented: a comment that narrows, extends, or
 reverses part of the issue body supersedes that part of the body for every later phase. Reading only
@@ -90,6 +91,10 @@ different group in this run, that group must not start until the group containin
 Topologically sort `groups` so a dependent group is queued behind its prerequisite. A dependency on
 an issue outside this run's `issue_numbers` is not this skill's concern — treat it as already
 satisfied.
+
+If this produces a cycle — two groups depending on each other — stop before Phase 5 and report the
+cycle rather than guessing at a break point; this is a data error in the source issues, not something
+this skill should resolve silently.
 
 Store `ordered_groups`.
 
