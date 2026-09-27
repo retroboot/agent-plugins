@@ -11,6 +11,23 @@ Transform a feature request, problem description, or rough idea into a concrete 
 
 Keep moving through phases. Only stop at the marked checkpoint.
 
+This skill no longer ships a command wrapper. `command/planning.md` and `command/write-plan.md` have
+both been retired now that every target coder supports invoking a skill directly — `write-plan` was
+never a separate skill, only this one wearing a different command name and always passing
+`--plan-only`. With no command layer, that is just "call `planning` with `--plan-only`" (see Phase 2
+for where the flag is parsed). The bootstrap chain lives here instead, unified to the superset both
+commands' chains needed: `init` is idempotent and `session`'s load is cheap, and Phase 2's
+issue-fetch and Phase 10's tracker writes reach `session` regardless of whether `--plan-only` is set.
+
+---
+
+## Bootstrap
+
+Run in order before Phase 1:
+1. Load the `init` skill — validates provider config (skips immediately if already configured)
+2. Load the `session` skill — reads config and loads the active provider reference
+3. Load the `core` skill — internalizes quality standards and architectural principles
+
 ---
 
 ## Phase 1 — Initialize Session

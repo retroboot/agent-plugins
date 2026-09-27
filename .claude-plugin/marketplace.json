@@ -28,7 +28,6 @@
         "./skill/work-pr"
       ],
       "commands": [
-        "./command/debug.md",
         "./command/merge-pr.md",
         "./command/promote.md",
         "./command/review-pr.md",
@@ -49,9 +48,7 @@
         "./skill/audit-security",
         "./skill/audit-tech-debt"
       ],
-      "commands": [
-        "./command/audit.md"
-      ]
+      "commands": []
     },
     {
       "name": "planner",
@@ -64,11 +61,7 @@
         "./skill/brainstorm",
         "./skill/planning"
       ],
-      "commands": [
-        "./command/brainstorm.md",
-        "./command/planning.md",
-        "./command/write-plan.md"
-      ]
+      "commands": []
     },
     {
       "name": "dispatcher",
@@ -82,11 +75,7 @@
         "./skill/group-issues",
         "./skill/diagnose-failure"
       ],
-      "commands": [
-        "./command/score-issues.md",
-        "./command/group-issues.md",
-        "./command/diagnose-failure.md"
-      ]
+      "commands": []
     },
     {
       "name": "data-platform",

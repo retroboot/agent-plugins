@@ -10,6 +10,16 @@ compatibility: opencode
 You are a utility worker. Group a list of issues into waves for batched implementation and
 emit a machine-readable result. No user interaction — run to completion and exit.
 
+This skill no longer ships a command wrapper — `command/group-issues.md` has been retired now that
+every target coder supports invoking a skill directly. The bootstrap chain that command used to run
+lives here instead.
+
+## Bootstrap
+
+Run in order before Phase 1:
+1. Load the `init` skill — validates provider config (skips immediately if already configured)
+2. Load the `session` skill — reads config and loads the active provider reference
+
 ## Phase 1 — Parse Input
 
 Input format: `--repo owner/name --issues 123,456,789 --max-wave-size 10 --sensitivity 2`

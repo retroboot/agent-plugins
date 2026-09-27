@@ -88,7 +88,7 @@ Implementation and code review — issues, PRs, waves, merges, and environment p
 
 **Skills:** `core`, `init`, `session`, `debug`, `merge-pr`, `promote`, `review-pr`, `ship-issue`, `ship-pr`, `wave`, `work-issue`, `work-pr`
 
-**Commands:** `debug`, `merge-pr`, `promote`, `review-pr`, `wave`, `work-issue`, `work-pr`
+**Commands:** `merge-pr`, `promote`, `review-pr`, `wave`, `work-issue`, `work-pr`
 
 ---
 
@@ -97,8 +97,6 @@ Code audit — security, accessibility, performance, and tech debt.
 
 **Skills:** `audit`, `audit-accessibility`, `audit-performance`, `audit-security`, `audit-tech-debt`
 
-**Commands:** `audit`
-
 ---
 
 ### `planner`
@@ -106,16 +104,12 @@ Planning and brainstorming — open-ended thinking sessions through to sized iss
 
 **Skills:** `init`, `session`, `brainstorm`, `planning`
 
-**Commands:** `brainstorm`, `planning`, `write-plan`
-
 ---
 
 ### `dispatcher`
 Manager utilities for automated work allocation — issue scoring, wave grouping, and failure diagnosis.
 
 **Skills:** `init`, `session`, `score-issues`, `group-issues`, `diagnose-failure`
-
-**Commands:** `score-issues`, `group-issues`, `diagnose-failure`
 
 ---
 
