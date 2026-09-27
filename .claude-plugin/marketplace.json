@@ -21,6 +21,8 @@
         "./skill/merge-pr",
         "./skill/promote",
         "./skill/review-pr",
+        "./skill/ship-issue",
+        "./skill/ship-pr",
         "./skill/wave",
         "./skill/work-issue",
         "./skill/work-pr"

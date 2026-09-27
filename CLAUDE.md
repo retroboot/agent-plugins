@@ -86,7 +86,7 @@ there.
 ### `dev`
 Implementation and code review — issues, PRs, waves, merges, and environment promotions.
 
-**Skills:** `core`, `init`, `session`, `debug`, `merge-pr`, `promote`, `review-pr`, `wave`, `work-issue`, `work-pr`
+**Skills:** `core`, `init`, `session`, `debug`, `merge-pr`, `promote`, `review-pr`, `ship-issue`, `ship-pr`, `wave`, `work-issue`, `work-pr`
 
 **Commands:** `debug`, `merge-pr`, `promote`, `review-pr`, `wave`, `work-issue`, `work-pr`
 
