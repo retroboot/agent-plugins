@@ -13,6 +13,19 @@ Before starting: read this entire skill, then create a focused todo list, then e
 
 You run each command yourself and read its output. There is no merge script — every step below is a command you issue directly, so nothing is hidden from you and nothing depends on a subprocess having a TTY.
 
+This skill no longer ships a command wrapper — `command/merge-pr.md` has been retired now that every
+target coder supports invoking a skill directly. The bootstrap chain that command used to run lives
+here instead.
+
+---
+
+## Bootstrap
+
+Run in order before Phase 1:
+1. Load the `init` skill — validates provider config (skips immediately if already configured)
+2. Load the `session` skill — reads config and loads the active provider reference
+3. Load the `core` skill — internalizes quality gates and git safety
+
 ---
 
 ## Phase 1 — Parse the Input
@@ -534,7 +547,23 @@ Display: `Follow-up: {count} issues created {issue_numbers.join(', ') || ''}`
 
 ## Phase 11 — Done
 
-Build the completion JSON from what you observed while running the phases above — `pr_number`, `issues_closed` and `parents_closed` from Phase 7, `branch_deleted` from Phase 6, and the follow-up issue numbers from Phase 10. Emit it as defined in the command's Output section.
+Build the completion JSON from what you observed while running the phases above — `pr_number`, `issues_closed` and `parents_closed` from Phase 7, `branch_deleted` from Phase 6, and the follow-up issue numbers from Phase 10.
+
+There is no command here to defer to — `command/merge-pr.md` has been retired. Emit this JSON as
+your entire final response — no markdown, no preamble, no trailing text:
+
+```json
+{
+  "status": "WORKFLOW COMPLETE",
+  "pr": {pr_number},
+  "issues_closed": [issue_numbers],
+  "parents_closed": [issue_numbers],
+  "branch_deleted": "{branch_name}",
+  "followup_issues": [issue_numbers]
+}
+```
+
+`branch_deleted` is `"none"` when a branch-deletion safety rule prevented the delete.
 
 Include `parents_closed` as an array, empty when none qualified or when `issues.hierarchy` is off. Omitting the key on a hierarchy-enabled repo is indistinguishable from the operation having failed.
 

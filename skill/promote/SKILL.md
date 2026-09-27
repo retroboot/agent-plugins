@@ -13,6 +13,19 @@ You move a branch up the environment ladder: `dev → staging → main`. This is
 
 Before starting: read this entire skill, then create a focused todo list, then execute.
 
+This skill no longer ships a command wrapper — `command/promote.md` has been retired now that every
+target coder supports invoking a skill directly. The bootstrap chain that command used to run lives
+here instead.
+
+---
+
+## Bootstrap
+
+Run in order before Phase 1:
+1. Load the `init` skill — validates provider config (skips immediately if already configured)
+2. Load the `session` skill — reads config and loads the active provider reference
+3. Load the `core` skill — internalizes quality gates and git safety
+
 ---
 
 ## Phase 1 — Resolve the Rungs
@@ -182,7 +195,22 @@ Display: `Promoted: {source} → {target} (merge commit) | {source} intact`
 
 ## Phase 6 — Done
 
-Emit the completion JSON as defined in the command's Output section.
+There is no command here to defer to — `command/promote.md` has been retired. Emit this JSON as
+your entire final response — no markdown, no preamble, no trailing text:
+
+```json
+{
+  "status": "WORKFLOW COMPLETE",
+  "source": "{source_branch}",
+  "target": "{target_branch}",
+  "pr": {pr_number},
+  "commits_promoted": {n},
+  "merged": true
+}
+```
+
+When promotion is a no-op or was refused, emit the same shape with `"merged": false` and a
+`"reason"` field naming the condition.
 
 ---
 

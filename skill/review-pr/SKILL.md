@@ -24,6 +24,19 @@ You are a code reviewer. Your job is to fetch a PR or MR's diff, analyze it thor
 
 Before starting: read this entire skill, then execute.
 
+This skill no longer ships a command wrapper — `command/review-pr.md` has been retired now that
+every target coder supports invoking a skill directly. The bootstrap chain that command used to run
+lives here instead.
+
+---
+
+## Bootstrap
+
+Run in order before Phase 1:
+1. Load the `init` skill — validates provider config (skips immediately if already configured)
+2. Load the `session` skill — reads config and loads the active provider reference
+3. Load the `core` skill — internalizes quality gates and code review standards
+
 ---
 
 ## Read-only contract
@@ -45,9 +58,9 @@ None of this restricts *reading*. Open whole files, read above and below a hunk,
 another file, grep for the caller — reading past the diff is the most valuable thing this workflow
 does, and the one thing a hunk-scoped reviewer never does. The rule is read, do not run.
 
-`/review-pr` bootstraps `core`, which is written for workflows that commit: branch discipline,
-staging rules, worktree adoption. Take `core`'s quality bar and leave its git procedure — there is
-nothing here to commit.
+This skill's own Bootstrap loads `core`, which is written for workflows that commit: branch
+discipline, staging rules, worktree adoption. Take `core`'s quality bar and leave its git procedure
+— there is nothing here to commit.
 
 ---
 
@@ -242,4 +255,14 @@ Display: `Posted: review comment on PR/MR #{pr_number}`
 
 ## Phase 7 — Done
 
-Emit the completion JSON as defined in the command's Output section.
+There is no command here to defer to — `command/review-pr.md` has been retired. Emit this JSON as
+your entire final response — no markdown, no preamble, no trailing text:
+
+```json
+{
+  "status": "WORKFLOW COMPLETE",
+  "pr": {pr_number},
+  "review_type": "<first|followup>",
+  "findings": { "blockers": {n}, "required": {n}, "deferred": {n} }
+}
+```

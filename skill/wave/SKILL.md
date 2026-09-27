@@ -14,6 +14,14 @@ You receive:
 - The fetched data for each issue (title, body, labels)
 - `auto_mode` — whether to skip confirmation prompts
 
+`command/wave.md` has been retired now that every target coder supports invoking a skill directly.
+That command's own bootstrap (`init`, `session`, `core`) and its completion JSON were never this
+skill's own — the command loaded `work-issue` with the unified wave strategy, and `work-issue`
+handled both. Retiring the command changes nothing here: call `work-issue` with a related, small
+group of issue numbers to reach this skill, per its own [`## Bootstrap`](../work-issue/SKILL.md) and
+[`## Phase 12 — Done`](../work-issue/SKILL.md), whose output shape is the same
+`{status, pr, pr_url, branch, issues}` `command/wave.md` used to document.
+
 ---
 
 ## Step 1 — Determine the Branch Name

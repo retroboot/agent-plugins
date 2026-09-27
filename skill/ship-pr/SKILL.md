@@ -55,14 +55,13 @@ Display: `Input: PR #{pr_number} | no-merge: {no_merge}`
 Up to 3 rounds. For each round, in order:
 
 1. Load the `review-pr` skill with `pr_number` — pass `inline_context` on round 1 only; it is a hint
-   for the first look, not something to repeat verbatim on a re-review. `review-pr`'s last phase
-   says to emit its completion JSON as defined in "the command's Output section" — there is no
-   command here, so take that to be `{status, pr, review_type, findings: {blockers, required,
-   deferred}}`, the contract in `command/review-pr.md`.
+   for the first look, not something to repeat verbatim on a re-review. `review-pr` ships with no
+   command wrapper — its `## Phase 7 — Done` inlines the completion JSON directly: `{status, pr,
+   review_type, findings: {blockers, required, deferred}}`.
 2. Record `{round, blockers, required, deferred}` in `findings_history`.
 3. **All three zero** → the PR is clean. Go to Phase 3.
-4. **Otherwise** → load the `work-pr` skill with `pr_number` and `--auto`; its contract is
-   `{status, pr, branch, feedback_addressed}` from `command/work-pr.md`. Then start the next round.
+4. **Otherwise** → load the `work-pr` skill with `pr_number` and `--auto`; its `## Phase 12 — Done`
+   inlines the contract `{status, pr, branch, feedback_addressed}`. Then start the next round.
 
 **After 3 rounds without reaching zero:** stop. Do not load `merge-pr`. Set `state` to `stuck`, keep
 all 3 rounds in `findings_history`, and go straight to Phase 4.
@@ -75,8 +74,8 @@ Display each round: `Round {n}: blockers={b} required={r} deferred={d}`
 
 Skip this phase — and set `state` to `clean_unmerged` — when `no_merge` is true.
 
-Load the `merge-pr` skill with `pr_number` and `--auto`. Its contract is `{status, pr, issues_closed,
-parents_closed, branch_deleted, followup_issues}` from `command/merge-pr.md`.
+Load the `merge-pr` skill with `pr_number` and `--auto`. Its `## Phase 11 — Done` inlines the
+contract `{status, pr, issues_closed, parents_closed, branch_deleted, followup_issues}`.
 
 `merge-pr` has its own hard stops — a closed PR, or CI that is failing or still running. If it stops
 rather than merging, do not report a merge that didn't happen: set `state` to `stuck` and carry
