@@ -136,10 +136,20 @@ rfm=$(awk 'NR == 1 && $0 == "---" { p = 1; next } p && $0 == "---" { exit } p' \
 if ! printf '%s\n' "$rfm" | grep -q '^allowed-tools:'; then
     echo "REVIEW NOT READ-ONLY skills/review-pr/SKILL.md (no allowed-tools)"
   else
-    printf '%s\n' "$rfm" | grep -qE '^ *-? *(Edit|Write|NotebookEdit|Bash) *$' \
+    # Match the value, not the line shape — YAML allows both a block sequence
+    # (allowed-tools:\n  - Read) and an inline flow list (allowed-tools: Read, Bash),
+    # and a line-shaped grep only ever matched the first. Extract the inline
+    # remainder plus every indented continuation line, then split on commas so
+    # both forms reduce to one trimmed tool name per line.
+    tools=$(printf '%s\n' "$rfm" | awk '
+        /^allowed-tools:/ { sub(/^allowed-tools:[ \t]*/, ""); if (length($0)) print; v = 1; next }
+        v && /^[ \t]/ { print; next }
+        v { exit }
+      ' | tr ',' '\n' | sed -e 's/^[ \t]*-\{0,1\}[ \t]*//' -e 's/[ \t]*$//' | grep .)
+    printf '%s\n' "$tools" | grep -qE '^(Edit|Write|NotebookEdit|Bash)$' \
       && echo "REVIEW MAY WRITE skills/review-pr/SKILL.md (allowed-tools grants an unrestricted tool)"
     # Bash(git:*) covers checkout, stash, commit, and clean; Bash(git remote:*) keeps a space
-    printf '%s\n' "$rfm" | grep -qE '^ *-? *Bash\(git[:)]' \
+    printf '%s\n' "$tools" | grep -qE '^Bash\(git[:)]' \
       && echo "REVIEW MAY WRITE skills/review-pr/SKILL.md (allowed-tools grants unscoped git)"
   fi
 
