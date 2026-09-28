@@ -188,6 +188,13 @@ See **Path resolution** in `CLAUDE.md` for the contract the first three checks e
 
 A few mechanics worth knowing before editing this block:
 
+- **Test a detection-logic change against synthetic input before editing the real target.**
+  Construct the true-positive and true-negative cases a check needs to tell apart — as literal
+  strings in a scratch file, or a temporary edit to the real target that you revert before
+  committing — and confirm the new logic distinguishes them *before* touching the file the check
+  actually inspects (e.g. `skills/review-pr/SKILL.md`'s frontmatter, for the check below). A fix
+  validated against constructed cases first needs zero review rounds to find what it missed; one
+  written straight against the real file and reviewed after routinely needs at least one.
 - **This fence *is* `verify.test`.** `.hivrr.json` extracts it at run time and pipes it to `bash` —
   there is no second copy to keep in sync. Editing a check here changes what runs, immediately.
 - **Run with stdin closed, always.** The loader passes the block as an argument and runs it with

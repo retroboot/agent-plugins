@@ -73,6 +73,11 @@ Display: `Fetched: {count} issue(s), {comment_count} comment(s)`
 
 ## Phase 3 — Group by Relatedness
 
+**Skip the grouping logic below when there is only one issue** — store `groups` as that issue's
+single group of one and continue to Phase 4. This mirrors `work-issue`'s Phase 2, which skips its own
+multi-issue routing the same way and for the same reason: relatedness has nothing to compare a lone
+issue against.
+
 Group issues using `wave`'s existing criteria: issues that share mentioned files, share labels, or
 reference the same origin PR belong in one group. An issue with no relationship to any other forms
 its own group of one.
@@ -84,6 +89,9 @@ Display: `Groups: {count}`
 ---
 
 ## Phase 4 — Order Groups
+
+**Skip the ordering logic below when there is only one issue** — store `ordered_groups` as that
+single group and continue to Phase 5. A lone group has nothing to topologically sort against.
 
 Scan every issue's body and comments (from Phase 2) for `Depends on #N`. When `#N` belongs to a
 different group in this run, that group must not start until the group containing `#N` has shipped.
