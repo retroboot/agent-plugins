@@ -3,3 +3,7 @@ node_modules/
 
 # Worker session scratch — memory fallback written by the planning and work-issue skills
 .ai/
+
+# Per-checkout config scaffolded by the init skill — never shared via git, see
+# skills/init/references/config.md
+.hivrr.json

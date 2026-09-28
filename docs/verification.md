@@ -7,6 +7,10 @@ JSON and Markdown, so verification is structural.
 the fenced block below at run time and pipes it to `bash`. There is no second copy to keep in sync;
 editing a check here changes what runs, immediately.
 
+**The loader takes the *first* fenced block in this file** — see the mechanics notes below the check
+table — so nothing before the checks fence may itself be a fenced block, including the bootstrap
+value documented at the end of this file.
+
 Skills and commands resolve by different rules, so check them separately — a single `[ -e ]` test
 passes on a command entry that has lost its `.md`, and that command then fails to load silently.
 Let git enumerate the JSON files rather than listing them, so the check cannot drift from the repo:
@@ -179,9 +183,11 @@ A few mechanics worth knowing before editing this block:
 - **Run with stdin closed, always.** The loader passes the block as an argument and runs it with
   `</dev/null`. A check that reads stdin would otherwise swallow the rest of the block silently —
   none does today, but no check may depend on stdin being open.
-- **This must be the only fence in this file.** The loader takes the *first* fenced block after the
+- **No fence may appear before this one.** The loader takes the *first* fenced block after the
   `# Verification` heading and stops at its closing fence — a stray fence-shaped line at column 0
-  inside a check would truncate the block silently.
+  inside a check would truncate the block silently, and a fence placed earlier in the file (like the
+  bootstrap example at the end of this document) would be extracted *instead of* the real checks. A
+  fence *after* this one is safe; the loader has already exited by the time it would reach it.
 - **`$json_files` in the first check is deliberately unquoted** — that's what splits multiple paths
   into separate `jq` arguments. No filename in this repo has whitespace.
 - **One column-0 `# ` comment per check.** The eighth check counts these to keep `CLAUDE.md`'s stated
@@ -194,3 +200,23 @@ A few mechanics worth knowing before editing this block:
 - **Checks 6, 9, and 11 read sections of `README.md`** (the per-plugin skill tables, the `## Commands`
   usage block, and the `## Overview` table) even though this fence lives here — those are checks on
   README's own content, not on this file, so they stay pointed at README.md.
+
+## Bootstrapping `.hivrr.json` on a fresh checkout
+
+**`.hivrr.json` is gitignored, not committed** (see `skills/init/references/config.md`), so a fresh
+checkout has none, and `init` Phase 4's generic detection tables have no row for "structural checks
+documented in a Markdown fence" — left undetected, Phase 4 would write `verify.test: null`, which
+means "checked, there is nothing" and makes `work-issue`/`work-pr` silently skip verification on a
+repo that has it. When scaffolding `.hivrr.json` here, set `verify.detectedFrom` to `["manual"]` and
+`verify.test` to exactly this:
+
+```
+bash -c 'cd "$(git rev-parse --show-toplevel)" || exit 1; FENCE=$(printf "\140\140\140"); HIVRR_VERIFY_BLOCK=$(awk -v fence="$FENCE" "/^# Verification/ { v = 1; next } v && !f && /^## / { exit } v && index(\$0, fence) == 1 { if (f) exit; f = 1; next } v && f" docs/verification.md 2>/dev/null); export HIVRR_VERIFY_BLOCK; bad=$( { for f in .claude-plugin/marketplace.json docs/shared-lines-allowlist.txt docs/verification.md skills/work-pr/SKILL.md skills/work-issue/SKILL.md skills/init/SKILL.md CLAUDE.md README.md; do [ -f "$f" ] || echo "MISSING INPUT $f"; done; if [ -n "$HIVRR_VERIFY_BLOCK" ]; then bash -c "$HIVRR_VERIFY_BLOCK" </dev/null; else echo "NO VERIFY BLOCK docs/verification.md has no fenced bash block under # Verification"; fi; } 2>&1 ); [ -z "$bad" ] && echo "structural checks pass" || { echo "$bad"; exit 1; }'
+```
+
+**This fence must stay below the checks fence, never above it.** It contains a triple-backtick
+sequence nowhere in its own text, but it *is itself* the loader command — if it were extracted and
+run instead of the real checks, it would re-run this same extraction against this same file, find
+this same bootstrap fence again (nothing changed), and recurse without bound, forking until the
+process limit is exhausted. That is not hypothetical: it happened once, while this section briefly
+sat above the checks fence during this very rewrite.
