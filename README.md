@@ -143,7 +143,7 @@ execution skills report `skipped` and an unattended run skips verification on a 
 
 Run `init` to scaffold the file from detected repo state. It never overwrites an existing one.
 
-Full reference: [`skill/init/references/config.md`](skill/init/references/config.md).
+Full reference: [`skills/init/references/config.md`](skills/init/references/config.md).
 
 ## Setup
 
@@ -171,7 +171,7 @@ Or reference the local path during development:
 
 ## Verification
 
-This repo ships no shell scripts — see the script policy in `skill/core/SKILL.md`. Its product is JSON and Markdown, so verification is structural.
+This repo ships no shell scripts — see the script policy in `skills/core/SKILL.md`. Its product is JSON and Markdown, so verification is structural.
 
 The fenced block below is not an exception to that policy. It is read-only, non-interactive, and
 single-purpose, and it is not a `.sh` on disk — it is documentation in this file, which
@@ -204,7 +204,7 @@ jq -r '.plugins[] | (.commands // [])[]' .claude-plugin/marketplace.json | sort 
     done
 
 # work-issue and work-pr do not duplicate each other's verify procedure
-grep -Fxf skill/work-pr/SKILL.md skill/work-issue/SKILL.md \
+grep -Fxf skills/work-pr/SKILL.md skills/work-issue/SKILL.md \
   | awk 'length > 60' \
   | grep -vFxf docs/shared-lines-allowlist.txt \
   | grep . && echo "DUPLICATED — extract to a shared reference" || true
@@ -246,7 +246,7 @@ jq -r '.plugins[].name' .claude-plugin/marketplace.json | while read -r p; do
 w2n() { case "$1" in one) echo 1;; two) echo 2;; three) echo 3;; four) echo 4;; five) echo 5;;
         six) echo 6;; seven) echo 7;; eight) echo 8;; nine) echo 9;; ten) echo 10;;
         eleven) echo 11;; twelve) echo 12;; thirteen) echo 13;; *) echo 0;; esac; }
-for f in skill/*/SKILL.md; do
+for f in skills/*/SKILL.md; do
     nums=$(grep '^## Phase [0-9]' "$f" | sed 's/^## Phase *\([0-9][0-9]*\).*/\1/' | sort -n -u)
     cnt=$(printf '%s\n' "$nums" | grep -c .)
     [ "$cnt" -eq 0 ] && continue
@@ -278,13 +278,13 @@ printf '%s\n' "$doc_c" | grep . | while read -r c; do
     printf '%s\n' "$reg_c" | grep -qxF "$c" || echo "COMMAND NOT REGISTERED $c"
   done
 
-# CLAUDE.md's init phase count matches skill/init/SKILL.md's phase headings
-ip_n=$(grep '^## Phase [0-9]' skill/init/SKILL.md \
+# CLAUDE.md's init phase count matches skills/init/SKILL.md's phase headings
+ip_n=$(grep '^## Phase [0-9]' skills/init/SKILL.md \
          | sed 's/^## Phase *\([0-9][0-9]*\).*/\1/' | sort -n -u | grep -c .)
 ip_said=$(sed -n 's/.*[^A-Za-z]\([A-Za-z][a-z]*\) ordered phases.*/\1/p' CLAUDE.md \
             | head -1 | tr 'A-Z' 'a-z')
 [ "$(w2n "$ip_said")" = "$ip_n" ] \
-  || echo "INIT PHASE COUNT DRIFT CLAUDE.md says $ip_said, skill/init/SKILL.md has $ip_n"
+  || echo "INIT PHASE COUNT DRIFT CLAUDE.md says $ip_said, skills/init/SKILL.md has $ip_n"
 
 # README's Overview table names exactly the registered plugins
 reg_p=$(jq -r '.plugins[].name' .claude-plugin/marketplace.json | sort -u)
@@ -299,15 +299,15 @@ printf '%s\n' "$ov_p" | grep . | while read -r p; do
 
 # the PR review declares itself read-only and grants no unrestricted tool
 rfm=$(awk 'NR == 1 && $0 == "---" { p = 1; next } p && $0 == "---" { exit } p' \
-        skill/review-pr/SKILL.md)
+        skills/review-pr/SKILL.md)
 if ! printf '%s\n' "$rfm" | grep -q '^allowed-tools:'; then
-    echo "REVIEW NOT READ-ONLY skill/review-pr/SKILL.md (no allowed-tools)"
+    echo "REVIEW NOT READ-ONLY skills/review-pr/SKILL.md (no allowed-tools)"
   else
     printf '%s\n' "$rfm" | grep -qE '^ *-? *(Edit|Write|NotebookEdit|Bash) *$' \
-      && echo "REVIEW MAY WRITE skill/review-pr/SKILL.md (allowed-tools grants an unrestricted tool)"
+      && echo "REVIEW MAY WRITE skills/review-pr/SKILL.md (allowed-tools grants an unrestricted tool)"
     # Bash(git:*) covers checkout, stash, commit, and clean; Bash(git remote:*) keeps a space
     printf '%s\n' "$rfm" | grep -qE '^ *-? *Bash\(git[:)]' \
-      && echo "REVIEW MAY WRITE skill/review-pr/SKILL.md (allowed-tools grants unscoped git)"
+      && echo "REVIEW MAY WRITE skills/review-pr/SKILL.md (allowed-tools grants unscoped git)"
   fi
 ```
 
@@ -336,7 +336,7 @@ The fourth check guards against the failure the others cannot see: two skills ca
 procedure in prose. Markdown that parses and resolves is still wrong if it says the same thing
 twice and the two copies disagree. `docs/shared-lines-allowlist.txt` holds the lines the two
 execution skills are *meant* to share — a flag, a warning, a framing sentence, and the pointer at
-`skill/init/references/verify.md`. Adding a line to it is a deliberate claim that the duplication is
+`skills/init/references/verify.md`. Adding a line to it is a deliberate claim that the duplication is
 correct; if you cannot make that claim, extract the line instead. Never raise the `length > 60`
 threshold to make the check pass — that hides future duplication silently, which is the failure the
 check exists to catch.
@@ -437,7 +437,7 @@ that does, and the check is silent on every other skill.
 way.** The `sed` after it only rewrites lines containing a number, so an unanchored match passes a
 heading like `## Phase Contract` through whole, into the list of phase *numbers*, where it inflates
 the count and reports a sequence failure against a file that has none. That heading is not
-hypothetical: `skill/init/SKILL.md` opens with a bolded **"Phase contract"** paragraph, and promoting
+hypothetical: `skills/init/SKILL.md` opens with a bolded **"Phase contract"** paragraph, and promoting
 it to a heading is an ordinary edit. A check that reports drift which does not exist gets switched
 off, which costs more than never having written it.
 
@@ -510,7 +510,7 @@ same meaning and cannot drift. `CLAUDE.md`'s count survives because it earns it:
 the checks, so adding one forces the sentence to describe it.
 
 To re-run the three: remove a skill from a plugin in `marketplace.json`, delete a `README.md` table
-row, delete an entry from a `**Skills:**` line, state the wrong phase count in `skill/init/SKILL.md`,
+row, delete an entry from a `**Skills:**` line, state the wrong phase count in `skills/init/SKILL.md`,
 renumber a phase heading to leave a gap, and change the number word in `CLAUDE.md`. Each must produce
 its own message.
 
@@ -559,12 +559,12 @@ one item inside it. And it takes the **leading token only**, so `/write-plan "ad
 yields `write-plan`; comparing whole lines would report drift every time an example's arguments were
 reworded.
 
-The tenth check is the seventh one file over. The seventh holds `skill/init/SKILL.md`'s own stated
+The tenth check is the seventh one file over. The seventh holds `skills/init/SKILL.md`'s own stated
 phase count against its own headings — but `init` states that count in `CLAUDE.md` as well, and
 `CLAUDE.md` is loaded verbatim as project instructions for every session in this repo. A count that
 reads low *there* tells an agent the run is over before it is, which is the failure #170 was about,
 in the file with the widest blast radius. So the tenth reads the number word before `ordered phases`
-in `CLAUDE.md` and compares it against the distinct `## Phase N` headings in `skill/init/SKILL.md`,
+in `CLAUDE.md` and compares it against the distinct `## Phase N` headings in `skills/init/SKILL.md`,
 reusing `w2n` from the seventh — so the same warning applies: do not move one without the other.
 
 It checks the **count, not the list**. `CLAUDE.md` names the seven phases in order, and comparing a
@@ -649,20 +649,20 @@ To re-run it: delete a row from the Overview table, and add a row for a plugin `
 does not list. Each must produce its own message.
 
 **Extracting does not always mean a new reference file.** The blanket-staging prohibition was
-allowlisted and then extracted to the **Git Safety** section of `skill/core/SKILL.md`, because every
+allowlisted and then extracted to the **Git Safety** section of `skills/core/SKILL.md`, because every
 `dev` command already loads `core` as its third bootstrap step. A rule that lands there costs no new
 file and no new indirection — the destination is already in context when the skill runs. Prefer it
-over `skill/*/references/` for anything that is a *policy* rather than a *procedure*, and note that
+over `skills/*/references/` for anything that is a *policy* rather than a *procedure*, and note that
 it is only reachable from plugins that ship `core` — which today is `dev` alone.
 
-`skill/planning/references/plan-writing.md` and `skill/init/SKILL.md` therefore state the staging
+`skills/planning/references/plan-writing.md` and `skills/init/SKILL.md` therefore state the staging
 rule in their own words. For `plan-writing.md` the reason is that `planner` does not ship `core`.
 For `init` it is the same reason and it is stronger, because `init` ships in `dev`, `planner`, and
 `dispatcher`, and the last two of those do not carry `core`. **Load order is not what keeps that copy
 inline.** A plugin install contains only the skills its `marketplace.json` entry names, so
 reordering the bootstrap to load `core` before `init` would still leave `../core/SKILL.md`
 unresolvable in two installs out of three. Do not "fix" either copy into a link; the way to remove
-one is to add `./skill/core` to the plugin that needs it — and, if the rule has to be *in context*
+one is to add `./skills/core` to the plugin that needs it — and, if the rule has to be *in context*
 rather than merely reachable, to load it before the skill that cites it. Packaging is what makes the
 link resolve; bootstrap order is what makes it free.
 
