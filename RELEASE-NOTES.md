@@ -1,5 +1,14 @@
 # Agent Plugins Release Notes
 
+## v1.3.2 (2026-09-28)
+
+### Verification fix and a ship-workflow retrospective
+
+- **Check 12 (`review-pr` read-only / `allowed-tools`) now parses the actual YAML value instead of assuming block-sequence line shape.** The old grep patterns only matched one entry per line and missed the equally valid inline flow form (`allowed-tools: Read, Bash`) entirely — an inline declaration granting bare `Bash` or `Bash(git:*)` would have passed verification silently. The fix extracts the value (inline remainder or indented continuation lines, split on commas) so both YAML forms reduce to the same token stream before the existing patterns test it.
+- `ship-issue`'s Phase 3 (grouping) and Phase 4 (ordering) now state an explicit single-issue early-out, matching `work-issue`'s Phase 2, instead of silently reducing to a no-op with no line saying so.
+- New "Skill Composition" section in `core`: "load the X skill" means invoke it fresh, even when this session already ran X and its contract is fully remembered. This applies with equal force to a skill loaded through composition (`ship-pr` loading `review-pr`/`merge-pr`, `ship-issue` loading `work-issue`/`ship-pr`), not only one loaded directly by the user.
+- `docs/verification.md`'s mechanics notes now lead with: test a detection-logic change against synthetic input before editing the real target.
+
 ## v1.3.1 (2026-09-28)
 
 ### Documentation cleanup and a config-tracking reversal
