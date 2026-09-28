@@ -192,7 +192,7 @@ A few mechanics worth knowing before editing this block:
   Construct the true-positive and true-negative cases a check needs to tell apart — as literal
   strings in a scratch file, or a temporary edit to the real target that you revert before
   committing — and confirm the new logic distinguishes them *before* touching the file the check
-  actually inspects (e.g. `skills/review-pr/SKILL.md`'s frontmatter, for the check below). A fix
+  actually inspects (e.g. `skills/review-pr/SKILL.md`'s frontmatter, for check 12 above). A fix
   validated against constructed cases first needs zero review rounds to find what it missed; one
   written straight against the real file and reviewed after routinely needs at least one.
 - **This fence *is* `verify.test`.** `.hivrr.json` extracts it at run time and pipes it to `bash` —
