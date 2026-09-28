@@ -57,20 +57,6 @@
       "commands": []
     },
     {
-      "name": "dispatcher",
-      "description": "Manager utilities for automated work allocation \u2014 issue scoring, wave grouping, and failure diagnosis",
-      "source": "./",
-      "strict": true,
-      "skills": [
-        "./skills/init",
-        "./skills/session",
-        "./skills/score-issues",
-        "./skills/group-issues",
-        "./skills/diagnose-failure"
-      ],
-      "commands": []
-    },
-    {
       "name": "data-platform",
       "description": "Full data platform \u2014 data science, engineering, analysis, AI engineering, Snowflake, and PostgreSQL, covering the complete stack from ingestion and pipelines to ML, LLMs, dashboards, and database administration",
       "source": "./",
