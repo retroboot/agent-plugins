@@ -309,6 +309,18 @@ if ! printf '%s\n' "$rfm" | grep -q '^allowed-tools:'; then
     printf '%s\n' "$rfm" | grep -qE '^ *-? *Bash\(git[:)]' \
       && echo "REVIEW MAY WRITE skills/review-pr/SKILL.md (allowed-tools grants unscoped git)"
   fi
+
+# every skills/ directory has a matching, valid .agents/skills/ symlink, and no dangling extras
+skill_dirs=$(find skills -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort -u)
+agent_links=$(find .agents/skills -mindepth 1 -maxdepth 1 -exec basename {} \; 2>/dev/null | sort -u)
+printf '%s\n' "$skill_dirs" | while read -r name; do
+    printf '%s\n' "$agent_links" | grep -qxF "$name" || echo "AGENTS SKILL MISSING $name"
+  done
+printf '%s\n' "$agent_links" | grep . | while read -r name; do
+    p=".agents/skills/$name"
+    [ -L "$p" ] || { echo "AGENTS SKILL NOT SYMLINK $name"; continue; }
+    [ -d "$p" ] || echo "AGENTS SKILL DANGLING $name"
+  done
 ```
 
 Silence from all of them means everything registered resolves, nothing is duplicated, the phase
