@@ -237,8 +237,16 @@ Each file has one clear responsibility. Lock in decomposition decisions here —
 
 ## Phase 7 — Write the Plan Document
 
-Save to: `docs/plans/YYYY-MM-DD-<feature-name>.md`
-(If `docs/plans/` does not exist, create it.)
+Save to: `.ai/plans/prd-{NNN}.md`, where `{NNN}` is the next sequential number, zero-padded to
+three digits (`prd-001`, `prd-002`, …). Derive it rather than guessing:
+
+```bash
+mkdir -p .ai/plans
+last=$(ls .ai/plans/prd-*.md 2>/dev/null | sed -n 's/.*prd-\([0-9][0-9]*\)\.md/\1/p' | sort -n | tail -1)
+printf 'prd-%03d\n' "$((10#${last:-0} + 1))"
+```
+
+Store the result as `{filename}` (without the `.md` extension) for the displays in Phases 9 and 13.
 
 See [references/plan-writing.md](references/plan-writing.md) for the full task structure and no-placeholders rules.
 
@@ -416,7 +424,7 @@ PLANNING DRAFT
 ──────────────
 Complexity: {tier}
 Topic: {topic}
-Plan doc: docs/plans/{filename}.md
+Plan doc: .ai/plans/{filename}.md
 
 Issues:
   1. [{size}] {title}
@@ -605,14 +613,14 @@ Display:
 WORKFLOW COMPLETE
 ─────────────────
 Session:   {session_uuid}
-Plan doc:  docs/plans/{filename}.md
+Plan doc:  .ai/plans/{filename}.md
 GitHub:    {issue_numbers or 'plan-only mode — no issues created'}
 Epic:      #{epic_number} — {n}/{total} children attached | not applicable
 Linear:    {linear_ids or 'not configured'}
 Board:     {n}/{total} added as Todo | not configured | {n} failed — see warnings above
 
 Next: /work-issue {first_issue_number}    ← standard mode
-Next: review docs/plans/{filename}.md     ← plan-only mode (no issues created)
+Next: review .ai/plans/{filename}.md      ← plan-only mode (no issues created)
 ```
 
 Return control to the user.
