@@ -126,13 +126,6 @@ Planning and brainstorming — open-ended thinking sessions through to sized iss
 
 ---
 
-### `dispatcher`
-Manager utilities for automated work allocation — issue scoring, wave grouping, and failure diagnosis.
-
-**Skills:** `init`, `session`, `score-issues`, `group-issues`, `diagnose-failure`
-
----
-
 ### `data-platform`
 Full data platform — data science, engineering, analysis, AI engineering, Snowflake, and PostgreSQL, covering the complete stack from ingestion and pipelines to ML, LLMs, dashboards, and database administration.
 
@@ -142,7 +135,7 @@ Full data platform — data science, engineering, analysis, AI engineering, Snow
 
 ## Shared setup skills
 
-`init` and `session` are included by `dev`, `planner`, and `dispatcher`, and every command loads them before its main skill.
+`init` and `session` are included by `dev` and `planner`, and every command loads them before its main skill.
 
 - **`init`** — seven ordered phases: provider config, repo labels, `.hivrr.json` scaffold, verify-command detection, project board ID resolution, keeping `.hivrr.json` out of git, and orphan-worktree reporting. The phases run **in order, every time**; a phase with nothing to do reports and continues rather than ending the skill. Keep the count and the list here matching the `## Phase` headings in `skills/init/SKILL.md` and the `init` row in `README.md`. A count that reads low tells an agent the run is over before it is — which is exactly what happened, when that skill said `five` against seven headings. **The seventh structural check holds `skills/init/SKILL.md`'s own count** against its own headings, and **the tenth holds the count in this sentence** against those same headings, so a low count can no longer ship from either file. Neither reads the *list*: comparing prose names against heading titles needs a normalization nobody would trust, so keep the list here matching `skills/init/SKILL.md` by hand. The `init` row in `README.md` enumerates the same phases and states no count deliberately — it has no bare number to drift, so do not add one for symmetry with this line.
 - **`session`** — reads config and loads the active provider reference for the session.
@@ -158,8 +151,8 @@ errors. Precedence resolves **per key**: `.hivrr.json` → global `providerConfi
 implies the other.
 
 Issue hierarchy (GitHub sub-issues) is opt-in via `issues.hierarchy` and is GitHub-only. When it is
-off, `planning` emits a flat issue set and `group-issues` falls back to parsing `Depends on #N` from
-issue bodies. See `skills/init/references/config.md`.
+off, `planning` emits a flat issue set instead of a parent epic, and dependency ordering falls back to
+parsing `Depends on #N` from issue bodies (see `ship-issue`). See `skills/init/references/config.md`.
 
 **This repo does not enable it** — the `issues` key is absent from `.hivrr.json`, so the fallback
 above is the behavior here rather than a hypothetical. Like the absent project board and the

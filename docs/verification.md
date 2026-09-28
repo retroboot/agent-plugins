@@ -195,8 +195,8 @@ A few mechanics worth knowing before editing this block:
 - **The digit anchor `^## Phase [0-9]` (check 7) must stay anchored** — an unanchored `^## Phase`
   would also match a heading like `## Phase Contract` and miscount.
 - **The duplication check (4) covers one pair, deliberately.** Other same-named skills share lines
-  over the threshold today (`planning`/`brainstorm`, `score-issues`/`group-issues`); widening it needs
-  a per-pair allowlist since some sharing is required rather than accidental.
+  over the threshold today (`planning`/`brainstorm`); widening it needs a per-pair allowlist since
+  some sharing is required rather than accidental.
 - **Checks 6, 9, and 11 read sections of `README.md`** (the per-plugin skill tables, the `## Commands`
   usage block, and the `## Overview` table) even though this fence lives here — those are checks on
   README's own content, not on this file, so they stay pointed at README.md.

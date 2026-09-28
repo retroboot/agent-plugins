@@ -16,10 +16,9 @@ The plugin is split into focused packages:
 | `dev` | Implementation and code review — issues, PRs, waves, merges, and promotions |
 | `auditor` | Code audit skills — security, accessibility, performance, and tech debt |
 | `planner` | Planning and brainstorming — thinking sessions through to sized issues and plan documents |
-| `dispatcher` | Manager utilities for automated work allocation — scoring, grouping, and failure diagnosis |
 | `data-platform` | Full data platform skills — the complete stack from ingestion and pipelines to ML, LLMs, dashboards, and database administration |
 
-`init` and `session` are shared setup skills included by `dev`, `planner`, and `dispatcher`. Every command loads them before its main skill.
+`init` and `session` are shared setup skills included by `dev` and `planner`. Every command loads them before its main skill.
 
 ## Skills
 
@@ -58,16 +57,6 @@ The plugin is split into focused packages:
 | `session` | Shared setup skill — see `dev` |
 | `brainstorm` | Collaborative thinking session on a technical problem |
 | `planning` | Triage a feature into sized issues, and place them on the project board |
-
-### `dispatcher`
-
-| Skill | Description |
-|-------|-------------|
-| `init` | Shared setup skill — see `dev` |
-| `session` | Shared setup skill — see `dev` |
-| `score-issues` | Score issues by urgency on a documented 0–99 rubric |
-| `group-issues` | Group issues into implementation waves by dependency and file overlap |
-| `diagnose-failure` | Diagnose a failed worker job and recommend `RETRY` / `SKIP` / `HUMAN_REVIEW` |
 
 ### `data-platform`
 

@@ -75,13 +75,13 @@ Every top-level key is optional. A file containing only `{}` is valid and resolv
 | `branches.integration` | string | repo default branch | `work-issue`, `wave` |
 | `branches.ladder` | string[] | `[default branch]` | `merge-pr`, `promote` |
 | `branches.protected` | string[] | `["main", "master", "dev", "develop", "staging", "release/*"]` | `merge-pr`, `core`, `promote` |
-| `project` | object \| absent | absent — all board operations are silent no-ops | `planning`, `work-issue`, `merge-pr`, `score-issues`, `group-issues` |
+| `project` | object \| absent | absent — all board operations are silent no-ops | `planning`, `work-issue`, `merge-pr` |
 | `project.owner` | string | — | board operations |
 | `project.number` | number | — | board operations |
 | `project.id` | string (`PVT_…`) | — | `gh project item-edit --project-id` |
 | `project.statusFieldId` | string (`PVTSSF_…`) | — | board status transitions |
 | `project.status.todo` \| `.inProgress` \| `.done` | string (option id) | — | board status transitions |
-| `issues` | object \| absent | absent — all hierarchy operations are silent no-ops | `planning`, `work-issue`, `merge-pr`, `score-issues`, `group-issues` |
+| `issues` | object \| absent | absent — all hierarchy operations are silent no-ops | `planning`, `work-issue`, `merge-pr` |
 | `issues.hierarchy` | boolean | `false` | all hierarchy operations |
 | `issues.epicThreshold` | number | `4` | `planning` |
 | `worktree` | object \| absent | absent — no worktree behavior | `work-issue`, `wave`, `merge-pr`, `init` |
@@ -151,9 +151,8 @@ Isolation for mutating sessions. When `enabled` is true, `work-issue` and `wave`
 worktree instead of the shared checkout, so two concurrent sessions cannot stage or commit each
 other's changes. Absent or `false` means every worktree operation is a **silent no-op**.
 
-Only mutating skills use this. `review-pr`, `audit`, `score-issues`, `group-issues`, and
-`diagnose-failure` are read-only — they cannot collide, so a worktree there is setup cost for no
-benefit.
+Only mutating skills use this. `review-pr` and `audit` are read-only — they cannot collide, so a
+worktree there is setup cost for no benefit.
 
 **`enabled` alone is not sufficient.** The harness `EnterWorktree` tool acts only when the user says
 "worktree" explicitly or when the repo's own `CLAUDE.md` instructs it. A repo that sets `enabled`
@@ -414,7 +413,7 @@ Re-resolve **only** when an ID is absent, or when explicitly asked to. Do not re
 
 ## Board operations
 
-The operations every board-aware skill performs, defined once. `planning`, `work-issue`, `merge-pr`, `score-issues`, and `group-issues` all use these rather than each carrying its own GraphQL.
+The operations every board-aware skill performs, defined once. `planning`, `work-issue`, and `merge-pr` all use these rather than each carrying its own GraphQL.
 
 ### The universal rule
 

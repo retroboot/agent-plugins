@@ -378,11 +378,11 @@ for a staged deletion the same way it does for a staged addition. If Step 2 foun
 the pathspec simply matches nothing extra and the commit carries `.gitignore` alone.
 
 **Why this rule is restated here rather than linked.** `core` states it once, under **Staging**, and
-`work-issue` and `work-pr` link to it. `init` cannot: it ships in `dev`, `planner`, **and**
-`dispatcher`, and only `dev` ships `core` — a plugin install carries just the skills its
-`marketplace.json` entry names, so `../core/SKILL.md` resolves to nothing in two installs out of
-three. Reordering the bootstrap so `core` loads before `init` would not change that; the constraint
-is packaging, not load order. Keep the copy inline, and keep it phase-agnostic — the phase numbers
+`work-issue` and `work-pr` link to it. `init` cannot: it ships in **both** `dev` and `planner`, and
+only `dev` ships `core` — a plugin install carries just the skills its `marketplace.json` entry
+names, so `../core/SKILL.md` resolves to nothing in one install out of two. Reordering the bootstrap
+so `core` loads before `init` would not change that; the constraint is packaging, not load order.
+Keep the copy inline, and keep it phase-agnostic — the phase numbers
 in the other two skills are hand-maintained and nothing verifies a prose reference to them.
 
 Then confirm the commit carries only `.gitignore` and, if Step 2 ran, `.hivrr.json`'s removal:
