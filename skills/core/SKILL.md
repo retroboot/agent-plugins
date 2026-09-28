@@ -122,6 +122,18 @@ each real output, and nothing is hidden behind an exit code.
 Follow existing patterns in the codebase. One pattern well-applied is better than five variations.
 Ask rather than assume on architectural decisions.
 
+## Skill Composition
+
+When a skill's step says "load the X skill," invoke it fresh — even when this session already ran X
+earlier and its contract is fully remembered. A skill file can change between invocations (a plugin
+update, a mid-session edit), and reasoning from memory instead of the file on disk risks silently
+drifting from what actually ships.
+
+This applies with equal force to a skill loaded through composition — `ship-pr` loading `review-pr`
+and `merge-pr`, `ship-issue` loading `work-issue` and `ship-pr` — as to one loaded directly by the
+user. Composing several skills in one run is not a reason to shortcut any one of them; the whole
+point of composition is that each step is the real thing, not a cached impression of it.
+
 ## File Verification
 
 Never assume a file path. Before editing any file:
