@@ -27,7 +27,7 @@ The plugin is split into focused packages:
 
 | Skill | Description |
 |-------|-------------|
-| `init` | One-time setup — provider config, repo labels, `.hivrr.json` scaffold, verify commands, project board IDs, config reconciliation, orphan-worktree reporting |
+| `init` | One-time setup — provider config, repo labels, `.hivrr.json` scaffold, verify commands, project board IDs, keeping `.hivrr.json` out of git, orphan-worktree reporting |
 | `session` | Loads config and the active provider reference for the session |
 | `core` | Coding philosophy — quality gates, git safety, script policy, and task completion standards |
 | `work-issue` | Implement an issue end-to-end and open a PR/MR |
@@ -83,7 +83,9 @@ The plugin is split into focused packages:
 
 ## Configuration — `.hivrr.json`
 
-Per-repo settings live in a committed `.hivrr.json` at the repository root, so they travel with the code and every teammate, agent, and CI runner resolves the same values. **The file is entirely optional** — a repo without one gets documented defaults, not errors.
+Per-repo settings live in a `.hivrr.json` at the repository root — **gitignored, not committed**.
+Every teammate, agent, and CI run derives its own copy by running `init`; nothing travels via git.
+**The file is entirely optional** — a repo without one gets documented defaults, not errors.
 
 ```json
 {

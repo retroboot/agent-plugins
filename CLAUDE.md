@@ -144,12 +144,18 @@ Full data platform — data science, engineering, analysis, AI engineering, Snow
 
 `init` and `session` are included by `dev`, `planner`, and `dispatcher`, and every command loads them before its main skill.
 
-- **`init`** — seven ordered phases: provider config, repo labels, `.hivrr.json` scaffold, verify-command detection, project board ID resolution, config reconciliation, and orphan-worktree reporting. The phases run **in order, every time**; a phase with nothing to do reports and continues rather than ending the skill. Keep the count and the list here matching the `## Phase` headings in `skills/init/SKILL.md` and the `init` row in `README.md`. A count that reads low tells an agent the run is over before it is — which is exactly what happened, when that skill said `five` against seven headings. **The seventh structural check holds `skills/init/SKILL.md`'s own count** against its own headings, and **the tenth holds the count in this sentence** against those same headings, so a low count can no longer ship from either file. Neither reads the *list*: comparing prose names against heading titles needs a normalization nobody would trust, so keep the list here matching `skills/init/SKILL.md` by hand. The `init` row in `README.md` enumerates the same phases and states no count deliberately — it has no bare number to drift, so do not add one for symmetry with this line.
+- **`init`** — seven ordered phases: provider config, repo labels, `.hivrr.json` scaffold, verify-command detection, project board ID resolution, keeping `.hivrr.json` out of git, and orphan-worktree reporting. The phases run **in order, every time**; a phase with nothing to do reports and continues rather than ending the skill. Keep the count and the list here matching the `## Phase` headings in `skills/init/SKILL.md` and the `init` row in `README.md`. A count that reads low tells an agent the run is over before it is — which is exactly what happened, when that skill said `five` against seven headings. **The seventh structural check holds `skills/init/SKILL.md`'s own count** against its own headings, and **the tenth holds the count in this sentence** against those same headings, so a low count can no longer ship from either file. Neither reads the *list*: comparing prose names against heading titles needs a normalization nobody would trust, so keep the list here matching `skills/init/SKILL.md` by hand. The `init` row in `README.md` enumerates the same phases and states no count deliberately — it has no bare number to drift, so do not add one for symmetry with this line.
 - **`session`** — reads config and loads the active provider reference for the session.
 
 ## Repo configuration
 
-Per-repo settings live in a committed `.hivrr.json`. The file is optional — a repo without one gets documented defaults, not errors. Precedence resolves **per key**: `.hivrr.json` → global `providerConfig` → hardcoded default. `provider` and `issueTracker` resolve independently, so state both here rather than assuming one implies the other.
+Per-repo settings live in a `.hivrr.json` at the repository root — **gitignored, not committed**;
+`init` Phase 6 keeps it that way, adding the `.gitignore` line and untracking the file if it was ever
+committed. Every teammate, agent, and CI run resolves its own copy by running `init`, rather than
+inheriting one from git. The file is optional — a repo without one gets documented defaults, not
+errors. Precedence resolves **per key**: `.hivrr.json` → global `providerConfig` → hardcoded default.
+`provider` and `issueTracker` resolve independently, so state both here rather than assuming one
+implies the other.
 
 Issue hierarchy (GitHub sub-issues) is opt-in via `issues.hierarchy` and is GitHub-only. When it is
 off, `planning` emits a flat issue set and `group-issues` falls back to parsing `Depends on #N` from
@@ -160,6 +166,15 @@ above is the behavior here rather than a hypothetical. Like the absent project b
 unadopted worktrees below, that is a decision.
 
 Full schema, defaults, board operations, and Projects v2 ID resolution: `skills/init/references/config.md`.
+
+### This repo's verify command can't be auto-detected — scaffold it by hand
+
+`.hivrr.json` being gitignored means `init` Phase 4 runs its generic detection on every fresh
+checkout, and this repo has no `package.json`/`Makefile`/`pytest.ini` at the root for it to match —
+verification lives in a Markdown fence instead, which Phase 4's tables have no row for. Left alone it
+writes `verify.test: null`, which silently disables verification. `docs/verification.md` documents
+the exact `verify.detectedFrom: ["manual"]` and `verify.test` value to set instead — read it when
+scaffolding `.hivrr.json` here.
 
 ### This repo has no project board — deliberately
 

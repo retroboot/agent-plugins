@@ -11,7 +11,7 @@ Ensure provider config, labels, repo config, and verify commands are in place be
 
 **Phase contract — read this before anything else.** The seven phases run **in order, every time**. A phase that finds its work already done reports and **continues to the next phase**; it does not end the skill. Only an unrecoverable error stops `init`.
 
-**The count in that sentence is load-bearing.** It is what tells you the run is not finished, so a wrong number truncates the skill silently — stopping after Phase 5 would skip Phase 6, which is what commits `.hivrr.json`. Nothing verifies it. If you add or remove a phase here, update this line, the `init` row in `README.md`, and the `init` bullet under **Shared setup skills** in `CLAUDE.md` in the same commit.
+**The count in that sentence is load-bearing.** It is what tells you the run is not finished, so a wrong number truncates the skill silently — stopping after Phase 5 would skip Phase 6, which is what keeps `.hivrr.json` out of git. Nothing verifies it. If you add or remove a phase here, update this line, the `init` row in `README.md`, and the `init` bullet under **Shared setup skills** in `CLAUDE.md` in the same commit.
 
 "Idempotent" here means each phase is cheap and safe to re-run, not that the skill exits early. Phase 4 in particular exists to catch repo drift and is worthless if an earlier phase short-circuits past it.
 
@@ -125,7 +125,10 @@ Emit: `INIT: labels bootstrapped for {OWNER}/{REPO}`
 
 ## Phase 3 — Scaffold `.hivrr.json`
 
-Offer the repo a committed config file so branch, board, and verify settings travel with the code instead of living in per-user global settings.
+Offer the repo a local config file so branch, board, and verify settings are derived once per
+checkout instead of living in per-user global settings or being re-guessed on every command. The
+file is **gitignored, never committed** — see Phase 6 — so each teammate, agent, and CI run
+scaffolds its own copy by running `init`, rather than inheriting one that travels with the code.
 
 **Step 1 — Load the config reference**
 
@@ -296,47 +299,83 @@ Emit one of:
 
 ---
 
-## Phase 6 — Reconcile the Config
+## Phase 6 — Keep `.hivrr.json` Out of Git
 
-`.hivrr.json` is only useful if it travels with the code — an untracked config resolves to defaults
-for every teammate, agent, and CI runner, which is the failure this file exists to prevent. Phases
-3, 4, and 5 may all have written it, so reconcile once here rather than per phase.
+`.hivrr.json` is per-checkout, not shared — each teammate, agent, and CI run derives its own copy by
+running `init`, the same way each of them has their own `~/.claude/settings.json`. A copy that leaks
+into git via a missing `.gitignore` entry gives every clone a stale, silently-inherited config
+instead of one derived from that machine's actual repo state — which is exactly how this plugin's own
+repo ended up with a committed `.hivrr.json` before this phase existed. This phase exists to make
+that failure mode structurally impossible rather than something a `.gitignore` review might catch.
 
 This phase is gated on nothing but the file itself. It runs whether or not the repo has a project
 board, a verify command, or a worktree.
 
-**Skip silently** when the file is unchanged:
+**Step 1 — Check whether `.hivrr.json` is already ignored**
 
 ```bash
-git status --porcelain .hivrr.json
+git check-ignore -q .hivrr.json && echo ignored || echo not-ignored
 ```
 
-Empty output means nothing to do.
+**If ignored:** continue to Step 2 — the file may still be tracked from before this phase existed, or
+from before `.gitignore` had the line at all, and being ignored going forward does not untrack
+something git already knows about.
 
-Otherwise resolve the current branch and the protected set — `branches.protected` from
-`.hivrr.json`, falling back to the documented default (`main`, `master`, `dev`, `develop`,
-`staging`, `release/*`):
+**If not ignored:** append it and record that fact for Step 3's commit message:
+
+```bash
+printf '%s\n' '.hivrr.json' >> .gitignore
+```
+
+Append rather than overwrite — `.gitignore` routinely already excludes `node_modules/`, `.env`, or
+this plugin's own `.claude/`/`.ai/` entries, and this phase's job is one more line, not a rewrite.
+
+**Step 2 — Check whether `.hivrr.json` is tracked**
+
+```bash
+git ls-files --error-unmatch .hivrr.json >/dev/null 2>&1 && echo tracked || echo untracked
+```
+
+**If tracked:** untrack it without touching the working-tree file:
+
+```bash
+git rm --cached .hivrr.json
+```
+
+This stages a deletion *from the index only* — the file stays on disk with its current content, so
+no config is lost. The commit in Step 3 is what actually removes it from the repo's history going
+forward (past commits still have it; that is expected and not this phase's job to rewrite).
+
+**If untracked:** nothing to do here.
+
+**Skip Step 3 entirely** when neither Step 1 nor Step 2 changed anything — `.gitignore` already had
+the line and `.hivrr.json` was already untracked. Emit `INIT: .hivrr.json gitignored` and continue to
+Phase 7.
+
+**Step 3 — Commit the change**
+
+Resolve the current branch and the protected set — `branches.protected` from `.hivrr.json` (read it
+before Step 2's `git rm --cached` if you need it, the working-tree file is unaffected either way),
+falling back to the documented default (`main`, `master`, `dev`, `develop`, `staging`, `release/*`):
 
 ```bash
 git branch --show-current
 ```
 
-**On a branch that is not protected** — stage and commit it alone:
+**On a branch that is not protected** — stage and commit exactly the two paths this phase can touch:
 
 ```bash
-git add .hivrr.json
-git commit -m "chore(config): record .hivrr.json settings" -- .hivrr.json
+git add .gitignore
+git commit -m "chore(config): keep .hivrr.json out of git" -- .gitignore .hivrr.json
 ```
 
-**The trailing pathspec is required, not decoration.** `git add .hivrr.json` stages one file, but a
-bare `git commit` commits the **whole index** — including anything staged before `init` ran, by the
-user or by an interrupted workflow. `init` runs as the first bootstrap step of every command, so it
-routinely executes mid-workflow in a checkout with a populated index. Without the pathspec this
-commit sweeps a feature's staged files in under a config message, which is the exact bug the commit
-phases of `work-issue` and `work-pr` no longer permit.
-
-Keep the `git add` as well: `git commit -- {path}` fails on a never-tracked file, and a freshly
-scaffolded `.hivrr.json` is exactly that.
+**The trailing pathspec is required, not decoration**, for the same reason it always is in this
+plugin: a bare `git commit` commits the **whole index**, including anything staged before `init` ran
+by the user or an interrupted workflow, and `init` runs as the first bootstrap step of every command
+— so it routinely executes mid-workflow in a checkout with a populated index. Passing `.hivrr.json`
+in the pathspec here commits its *removal* (from Step 2) when that happened; git accepts a pathspec
+for a staged deletion the same way it does for a staged addition. If Step 2 found nothing tracked,
+the pathspec simply matches nothing extra and the commit carries `.gitignore` alone.
 
 **Why this rule is restated here rather than linked.** `core` states it once, under **Staging**, and
 `work-issue` and `work-pr` link to it. `init` cannot: it ships in `dev`, `planner`, **and**
@@ -346,30 +385,29 @@ three. Reordering the bootstrap so `core` loads before `init` would not change t
 is packaging, not load order. Keep the copy inline, and keep it phase-agnostic — the phase numbers
 in the other two skills are hand-maintained and nothing verifies a prose reference to them.
 
-Then confirm the commit carries one path and no more:
+Then confirm the commit carries only `.gitignore` and, if Step 2 ran, `.hivrr.json`'s removal:
 
 ```bash
 git show --stat --oneline HEAD
 ```
 
-If anything but `.hivrr.json` is listed, report it and stop. Do not report a clean config commit.
+If anything else is listed, report it and stop. Do not report a clean config commit.
 
-**On a protected branch** — do not commit. Stage it and report:
+**On a protected branch** — do not commit. Stage what changed and report:
 
 ```bash
-git add .hivrr.json
+git add .gitignore
 ```
 
 `core` forbids committing directly to a protected branch, so the decision is the user's: commit it
-from a feature branch, or run `git commit -m "chore(config): record .hivrr.json settings" --
-.hivrr.json` deliberately.
+from a feature branch, or run the Step 3 commit deliberately.
 
 **Never push.** `init` is setup, not delivery, and a push from a setup phase is a surprise.
 
 Emit one of:
-- `INIT: .hivrr.json committed on {branch}`
-- `INIT: .hivrr.json staged — {branch} is protected, commit deliberately`
-- `INIT: .hivrr.json unchanged`
+- `INIT: .hivrr.json gitignored ({branch})` — `.gitignore` updated, and untracked if it was tracked
+- `INIT: .hivrr.json gitignored — {branch} is protected, commit deliberately`
+- `INIT: .hivrr.json gitignored` — already ignored and already untracked, nothing to do
 
 ---
 

@@ -1,16 +1,29 @@
 # `.hivrr.json` — Repo-Local Configuration
 
-`.hivrr.json` lives at the repository root and is **committed**. It travels with the code, so every teammate, agent, and CI runner resolves the same values.
+`.hivrr.json` lives at the repository root and is **gitignored** — `init` Phase 6 keeps it out of
+git deliberately. It is per-checkout, not committed: every teammate, agent, and CI run derives its
+own copy by running `init`, rather than inheriting one that travels with the code.
 
 There is no loader script. This file is the contract: skills read `.hivrr.json` directly and apply the precedence rule below.
 
 ---
 
-## Why repo-local
+## Why repo-local, and why gitignored
 
 Per-repo facts do not belong in a global config. Global `~/.claude/settings.json` `providerConfig` is per-*user*, so a user whose global config says `repoProvider: gitlab` gets GitLab behavior while standing in a GitHub repo — label bootstrap skips and the wrong provider reference loads.
 
 Global `providerConfig` survives for values that genuinely are user-shaped: `gitlabGroup`, `githubOrg`, `linearTeam`, `repoTarget`, `bootstrappedRepos`.
+
+**Repo-local does not mean committed.** An earlier version of this file argued the opposite — that
+`.hivrr.json` should travel with the code so every teammate, agent, and CI runner resolves the same
+values — and this plugin's own repo did exactly that. In practice a committed config is a copy of
+whatever was true on whichever machine last ran `init`, not a live fact about the repo; the branch
+ladder, verify commands, and board IDs it holds are all things `init` can re-derive on any machine in
+seconds, in `--auto` mode with no prompting. Committing it buys nothing a fresh `init` run doesn't
+already provide, and it costs a stale copy silently drifting from what a real `init` run would
+produce — which is how it ended up committed here in the first place, before Phase 6 existed to stop
+it. Every teammate, agent, and CI run is expected to run `init` for itself; that is what keeps them
+in sync, not git.
 
 ---
 
@@ -282,13 +295,16 @@ These are deliberately different, and conflating them is a bug:
 
 `init` Phase 3 offers to write a `.hivrr.json` derived from detected repo state. It **never overwrites an existing file** — if one is present, init reports it and moves on. Editing an existing config is the user's job.
 
-`init` Phase 6 stages and commits `.hivrr.json` whenever a phase changed it — but **only on a
-non-protected branch**. On a protected branch it stages the file and reports, because `core` forbids
-committing directly to protected branches and a setup phase is the wrong place to break that rule.
+`init` Phase 6 ensures `.hivrr.json` is gitignored and untracked — adding the `.gitignore` line and
+running `git rm --cached` if the file was ever committed — and commits *that* change, never
+`.hivrr.json`'s own content. On a protected branch it stages the `.gitignore` change and reports,
+because `core` forbids committing directly to protected branches and a setup phase is the wrong place
+to break that rule.
 
-This is what makes the "is committed" claim at the top of this document true rather than aspirational.
-A repo whose `.hivrr.json` is untracked resolves every key to its default for every other teammate,
-agent, and CI runner — silently, and looking exactly like a repo that chose those defaults.
+This is what makes the "is gitignored" claim at the top of this document true rather than
+aspirational, and it is what fixes a repo — like this plugin's own — that committed `.hivrr.json`
+before this phase existed. Every teammate, agent, and CI run is expected to resolve its own copy by
+running `init`, not by reading one out of git.
 
 ---
 
