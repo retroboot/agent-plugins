@@ -95,6 +95,16 @@ reports `AGENTS SKILL MISSING {name}` (and `AGENTS SKILL DANGLING {name}` for on
 This is discoverability only — no session-start auto-trigger or bootstrap injection for either
 vendor; a user or agent invokes a skill by name, the same as this repo's existing design.
 
+### Version tracking
+
+Only `.claude-plugin/marketplace.json`'s `metadata.version` carries this repo's version. Codex CLI
+and Antigravity both discover skills through the bare `.agents/skills/` symlink tree above, which has
+no manifest of its own and therefore no second version field to keep in lockstep. One version, one
+file, no drift is possible — do not add a version-bump script or a second version-carrying file for
+symmetry with vendors that don't need one. If a future vendor's discovery mechanism ever requires its
+own manifest with a version field, that is when a lockstep/drift-check mechanism earns its place, not
+before.
+
 ### `dev`
 Implementation and code review — issues, PRs, waves, merges, and environment promotions.
 
