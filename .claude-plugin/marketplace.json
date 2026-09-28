@@ -14,18 +14,18 @@
       "source": "./",
       "strict": true,
       "skills": [
-        "./skill/core",
-        "./skill/init",
-        "./skill/session",
-        "./skill/debug",
-        "./skill/merge-pr",
-        "./skill/promote",
-        "./skill/review-pr",
-        "./skill/ship-issue",
-        "./skill/ship-pr",
-        "./skill/wave",
-        "./skill/work-issue",
-        "./skill/work-pr"
+        "./skills/core",
+        "./skills/init",
+        "./skills/session",
+        "./skills/debug",
+        "./skills/merge-pr",
+        "./skills/promote",
+        "./skills/review-pr",
+        "./skills/ship-issue",
+        "./skills/ship-pr",
+        "./skills/wave",
+        "./skills/work-issue",
+        "./skills/work-pr"
       ],
       "commands": []
     },
@@ -35,11 +35,11 @@
       "source": "./",
       "strict": true,
       "skills": [
-        "./skill/audit",
-        "./skill/audit-accessibility",
-        "./skill/audit-performance",
-        "./skill/audit-security",
-        "./skill/audit-tech-debt"
+        "./skills/audit",
+        "./skills/audit-accessibility",
+        "./skills/audit-performance",
+        "./skills/audit-security",
+        "./skills/audit-tech-debt"
       ],
       "commands": []
     },
@@ -49,10 +49,10 @@
       "source": "./",
       "strict": true,
       "skills": [
-        "./skill/init",
-        "./skill/session",
-        "./skill/brainstorm",
-        "./skill/planning"
+        "./skills/init",
+        "./skills/session",
+        "./skills/brainstorm",
+        "./skills/planning"
       ],
       "commands": []
     },
@@ -62,11 +62,11 @@
       "source": "./",
       "strict": true,
       "skills": [
-        "./skill/init",
-        "./skill/session",
-        "./skill/score-issues",
-        "./skill/group-issues",
-        "./skill/diagnose-failure"
+        "./skills/init",
+        "./skills/session",
+        "./skills/score-issues",
+        "./skills/group-issues",
+        "./skills/diagnose-failure"
       ],
       "commands": []
     },
@@ -76,13 +76,13 @@
       "source": "./",
       "strict": true,
       "skills": [
-        "./skill/senior-data-scientist",
-        "./skill/senior-data-engineer",
-        "./skill/senior-data-analyst",
-        "./skill/senior-ai-engineer",
-        "./skill/snowflake",
-        "./skill/postgres",
-        "./skill/postgres-query"
+        "./skills/senior-data-scientist",
+        "./skills/senior-data-engineer",
+        "./skills/senior-data-analyst",
+        "./skills/senior-ai-engineer",
+        "./skills/snowflake",
+        "./skills/postgres",
+        "./skills/postgres-query"
       ],
       "commands": []
     }

@@ -155,7 +155,7 @@ reasoning, take the task-id fallback below, and continue — do not warn about a
 
 **Local file fallback:** `.ai/session/{SESSION_UUID}/plan.md`, written by the `planning` skill when
 memory was unavailable to it. `planning` ships in `planner`, so a `dev`-only install has no
-`skill/planning/` to read — the keys below are the whole contract, and the file is self-describing.
+`skills/planning/` to read — the keys below are the whole contract, and the file is self-describing.
 
 The fallback is not lossless. `planning` writes the keys above separately to memory but
 collapses its file fallback into a single `plan.md`, so `decisions` may be absent when reading from
