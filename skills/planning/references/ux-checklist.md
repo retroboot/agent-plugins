@@ -1,159 +1,143 @@
 # UX Checklist Reference
 
-How to add UI/UX coverage to implementation plans. Used when any issue or feature description involves user-facing interface changes.
+Guidance for the `ui` modifier of a plan pack. The modifier has six parts, and this file says what
+a good version of each looks like. At size M and larger the parts live in the pack's `ux.md`
+([template](templates/ux.md)), linked from `design.md` **Modifier: ui**. At size S they go in that
+modifier section of the README.
+
+Every example below sits in a `text` fence or a table, because a pack may hold no other kind of
+fence (see [`pack-format.md`](pack-format.md) §6). Wireframes are layout, not markup.
 
 ---
 
 ## When to Apply
 
-Trigger this checklist when the issue body, feature description, or user input contains any of:
+Propose the `ui` modifier at Route when the work changes what a user sees or touches. Signals in
+the input include:
 
 `UI`, `UX`, `frontend`, `page`, `screen`, `component`, `dashboard`, `form`, `modal`, `button`, `design`, `layout`, `responsive`, `user interface`, `view`, `widget`, `panel`, `sidebar`, `navigation`, `nav`, `menu`, `dialog`, `tooltip`, `animation`, `style`, `theme`, `color`, `icon`
 
-If triggered, append a **UI/UX Plan** section to the implementation plan document.
+The developer confirms the modifier; a keyword alone never adds it.
 
 ---
 
-## Information Hierarchy
+## Part 1 — Screen Inventory
 
-Every screen or component has a hierarchy. Document what the user sees first, second, third.
+List every screen or standalone component the work adds or changes, before drawing any of them. A
+screen missing from the inventory is a screen an executor invents.
 
-**Bad:** "Display the user's profile information"
+| Screen | Purpose | Entry points | New or changed |
+|---|---|---|---|
+| Issue list | Find and open an issue | Sidebar "Issues", deep link | changed |
+| New issue dialog | Create an issue | "New issue" button on the list | new |
 
-**Good:**
-```
-Profile screen hierarchy:
-  1. Avatar + name (identity — establish trust immediately)
-  2. Active status / last seen (context)
-  3. Primary action (message / follow button — what most users do next)
-  4. Secondary content (bio, stats)
-  5. Tertiary: settings / edit (rare action — bottom of the page)
-```
-
-Ask: if the user has 3 seconds, what must they see? If they have 30 seconds? Document both.
+One row per screen. A dialog, drawer or full-page empty state with its own layout counts as a
+screen.
 
 ---
 
-## Interaction States Table
+## Part 2 — Navigation Flow
 
-Every user-facing feature has multiple states. Leaving any state unspecified means the engineer ships whatever they feel like — usually "No items found." in plain text.
+A Mermaid `flowchart` with one node per inventory row and one edge per transition. Label each edge
+with the action that causes it, so the flow doubles as the list of interactions to build.
 
-For each UI feature in the plan, fill in this table:
-
-```markdown
-| Feature | Loading | Empty | Error | Success | Partial |
-|---------|---------|-------|-------|---------|---------|
-| Issue list | Skeleton rows (3 placeholder items) | "No issues yet. Create one to get started." + New Issue button | "Failed to load issues. Retry?" + retry button | Issues render immediately | Shows loaded issues + spinner for remaining pages |
-| Search results | Inline spinner in input | "No results for '{query}'" + clear search link | "Search failed. Try again." | Results list | First 10 results + "Load more" |
+```mermaid
+flowchart LR
+  List[Issue list] -- "New issue" --> Dialog[New issue dialog]
+  Dialog -- "Create" --> Detail[Issue detail]
+  Dialog -- "Cancel or Escape" --> List
 ```
 
-**Empty state rules:**
-- "No items found." alone is never acceptable
-- Every empty state needs: a warm message, context (why it's empty), and a primary action
-- Example: "Your team hasn't created any issues yet. Start by describing what you want to build." + "Create first issue" button
-
-**Error state rules:**
-- Always include a recovery action (retry, go back, contact support)
-- Never show a raw error message to the user — translate to human language
-- Log the technical error; show a friendly summary
+Every screen in the inventory appears in the flow, and every node in the flow is in the inventory.
 
 ---
 
-## Responsive Behavior
+## Part 3 — Wireframes
 
-"Stacks on mobile" is not responsive design. For each screen or component, specify what changes at each breakpoint:
+One `text` fence per screen. Show regions in order of visual priority and mark the primary action.
+Ask: if the user has 3 seconds, what must they see? If they have 30 seconds?
 
-```markdown
-### Responsive: Issue List
-
-**Desktop (≥1024px):** Two-column layout — issue list (70%) + filter sidebar (30%)
-**Tablet (768-1023px):** Single column — filter sidebar collapses to filter button + drawer
-**Mobile (<768px):** Single column — filter drawer full-screen, list items show title + status only (no description preview)
+```text
+Issue list
++----------------------------------------------+
+| [1] Title "Issues"            [New issue] (P) |
+| [2] Filter bar: status, label, search         |
+| [3] Rows: title | status | assignee | age     |
+| [4] Pagination                                |
++----------------------------------------------+
+(P) primary action. Numbers are visual priority.
 ```
 
-Document:
-- What gets hidden vs. collapsed vs. reorganized at each breakpoint
-- Touch-friendly tap targets (44×44px minimum)
-- Any interactions that work differently on touch (hover → tap, drag → swipe)
+Bad: "Display the user's profile information." Good: the regions above, in order, with the one
+action most users take next.
 
----
-
-## Accessibility Requirements
-
-Specify per component, not as a general goal:
-
-```markdown
-### Accessibility: Issue Form
-
-**Keyboard:** Tab order follows visual order: Title → Description → Labels → Submit
-**Focus:** Visible focus ring on all interactive elements (2px solid, #3B82F6)
-**Screen reader:** Form labels are associated (htmlFor), error messages use aria-describedby
-**ARIA:** Modal uses role="dialog" + aria-modal="true" + focus trap; closes on Escape
-**Contrast:** Body text #1a1a1a on white: 17:1 ratio (WCAG AAA). Button text white on #2563EB: 5.7:1 (WCAG AA).
-**Touch:** All buttons/inputs minimum 44×44px hit target
-```
-
-**Minimum bar (WCAG 2.1 AA):**
-- Text contrast ≥ 4.5:1 (3:1 for large text)
-- All functionality reachable by keyboard
-- Focus visible on all interactive elements
-- Meaningful alt text on images
-- Form inputs have associated labels
-
----
-
-## AI Slop Patterns to Avoid
-
-These patterns make the UI feel generic and untrustworthy. Flag them in the plan if they appear:
+**Patterns to flag in a wireframe.** These make a UI feel generic. Name the replacement in the plan.
 
 | Pattern | Problem | Fix |
-|---------|---------|-----|
-| Generic 3-column feature grid (icon + bold title + 2-line description, repeated) | Screams "generated template" | Use a layout that reflects the actual content relationships |
-| "Clean, modern UI" in the plan | Not a design decision | Specify: font, spacing, color, interaction pattern |
-| Centered everything | Loss of visual hierarchy | Use deliberate alignment — not everything should be centered |
-| Cards for everything | Overuse loses meaning — cards should be interactions, not containers | Ask: does this actually need to be a card? |
-| Uniform border-radius on every element | Everything looks alike, no visual weight | Differentiate: buttons vs. inputs vs. containers |
-| Colored left border on cards | Dated SaaS aesthetic | Use a different differentiation pattern |
-| Hero section with generic copy ("Unlock the power of...") | Not your product | Write copy that describes what this actually does |
-| Loading spinner with no skeleton | Jarring layout shift when content appears | Use skeleton screens that match the final layout |
+|---|---|---|
+| Generic 3-column feature grid (icon, bold title, 2-line description, repeated) | Reads as a template | A layout that reflects the content's real relationships |
+| "Clean, modern UI" | Not a design decision | Name the font, spacing, colour and interaction pattern |
+| Centered everything | No visual hierarchy | Deliberate alignment |
+| Cards for everything | Cards stop meaning "interactive" | Use a card only where the whole block is an action |
+| Uniform border-radius everywhere | Nothing has visual weight | Differentiate buttons, inputs and containers |
+| Hero copy such as "Unlock the power of…" | Not this product | Copy that says what it does |
+| Spinner with no skeleton | Layout shift when content arrives | A skeleton that matches the final layout |
 
 ---
 
-## UI/UX Plan Section Template
+## Part 4 — States
 
-Add this section to the implementation plan document (after the main tasks):
+One table per screen with all five states. Leaving a state unspecified means the executor ships
+whatever comes to mind, usually "No items found." in plain text.
 
-```markdown
-## UI/UX Plan
+| State | What the user sees | Action offered |
+|---|---|---|
+| Loading | Three skeleton rows matching the row layout | none |
+| Empty | "No issues yet. Describe what you want to build to get started." | "Create first issue" |
+| Error | "Couldn't load issues." | "Retry" |
+| Success | Rows render | open a row |
+| Partial | Loaded rows, plus a spinner for the next page | "Load more" |
 
-### Information Hierarchy
+- **Empty:** a warm message, the reason it is empty, and a primary action. "No items found." alone
+  is never acceptable.
+- **Error:** always a recovery action (retry, go back, contact support). Never show a raw error; log
+  the technical detail and show a human summary.
 
-[For each new or modified screen, list what the user sees in order of visual priority]
+---
 
-### Interaction States
+## Part 5 — Responsive Behaviour
 
-| Feature | Loading | Empty | Error | Success | Partial |
-|---------|---------|-------|-------|---------|---------|
-| [feature] | [spec] | [spec] | [spec] | [spec] | [spec] |
+"Stacks on mobile" is not responsive design. For each screen, say what is hidden, collapsed or
+reorganised at each breakpoint.
 
-### Responsive Behavior
+| Screen | Desktop (≥1024px) | Tablet (768–1023px) | Mobile (<768px) |
+|---|---|---|---|
+| Issue list | List 70%, filter sidebar 30% | Sidebar becomes a filter button and drawer | Full-screen filter drawer; rows show title and status only |
 
-| Screen/Component | Desktop (≥1024px) | Tablet (768-1023px) | Mobile (<768px) |
-|-----------------|-------------------|---------------------|-----------------|
-| [component] | [layout] | [layout] | [layout] |
+Also state touch targets (44×44px minimum) and any interaction that differs on touch (hover becomes
+tap, drag becomes swipe).
 
-### Accessibility
+---
 
-| Component | Keyboard | Screen Reader | Contrast | Touch |
-|-----------|----------|---------------|----------|-------|
-| [component] | [Tab order, shortcuts] | [ARIA roles, labels] | [ratio] | [44px?] |
+## Part 6 — Accessibility
 
-### Design Decisions Locked In
+Specify per component, not as a general goal.
 
-[List explicit decisions that prevent scope creep or "we'll figure it out later" situations]
-- Empty states: [what they contain]
-- Error recovery: [how users recover]
-- Loading experience: [skeleton vs. spinner vs. nothing]
-- Font stack: [specific font names, not "sans-serif"]
-- Breakpoints: [px values]
-```
+| Component | Keyboard | Screen reader | Contrast | Touch |
+|---|---|---|---|---|
+| New issue dialog | Tab order Title → Description → Labels → Create; Escape closes; focus is trapped | Dialog role, modal, labelled by its title; errors described by their field | Body text ≥4.5:1, large text ≥3:1 | 44×44px targets |
+
+Minimum bar (WCAG 2.1 AA):
+
+- Text contrast at least 4.5:1, or 3:1 for large text.
+- All functionality reachable by keyboard.
+- Focus visible on every interactive element.
+- Meaningful alt text on images.
+- Every form input has an associated label.
+
+---
+
+## Mockups
+
+A high-fidelity mockup is linked from `ux.md`, never embedded: no images, exports or markup in the
+pack. The wireframe and state tables stay the contract; the mockup is reference.
