@@ -36,7 +36,8 @@ Rules that hold in every phase:
 ## Bootstrap
 
 Run before Phase 1:
-1. Load the `core` skill — internalizes quality standards and architectural principles
+1. If this install ships the `core` skill, load it — it internalizes quality standards and
+   architectural principles. `planner` does not ship it; when it is absent, continue without it.
 
 ---
 
@@ -58,8 +59,8 @@ Read `pack-format.md` §2 (routing matrix, size, modifiers, content sections, re
 |---|---|---|
 | `discovered` | any | Not routed yet. Say `Route not confirmed: run planning to confirm the Route first.` Go to Phase 10 |
 | `routed` | Spike | **Spike question** |
-| `specified` | Spike, and `decisions/` holds no ADR | **Spike outcome** |
-| `specified` | Spike, and `decisions/` holds an ADR | Say `Spike outcome already recorded; re-route it with planning.` Go to Phase 10 |
+| `specified` | Spike, and `decisions/` holds no `accepted` ADR | **Spike outcome** (a `proposed` outcome ADR resumes at the Phase 5 ADR checkpoint) |
+| `specified` | Spike, and `decisions/` holds an `accepted` ADR | Say `Spike outcome already recorded; re-route it with planning.` Go to Phase 10 |
 | `routed` | any other | **Specify** |
 | `specified`, `sliced`, `reviewed` or `approved` | any other | **Re-route** (below) |
 | `published`, `executing` or `done` | any | Read-only. Say `Pack is at Status {status}; spec will not edit a published pack.` Go to Phase 10 |
@@ -148,25 +149,13 @@ examples. Go to Phase 4.
 
 ### prd.md
 
-When prd is required, write it from `templates/prd.md`. Each section's trigger is in the template
-and in `pack-format.md` §2, Content sections:
+When prd is required, write it from `templates/prd.md`. Include each section **exactly** when its
+trigger in `pack-format.md` §2, **Content sections**, applies to the route (Story map, Stories,
+Behaviour-preservation contract, Regression criteria, Rules and examples, Failure modes), plus the
+template's always-present sections. Beyond those triggers:
 
-- **Always:** Problem, Goals (`G1`…), Non-goals and Success measures (`M1`…).
-- **Always with a prd:** Users and jobs; **Non-functional requirements** with every quality as a
-  row, each a measurable target or `none` with a short reason — a quality with no need is listed as
-  `none`, never omitted; **Assumptions**, each with how to validate it and what changes if false.
-- **Story map:** Feature, Greenfield and Rewrite at size M or larger. Journey steps left to right,
-  the stories under each step.
-- **Stories:** Feature, Greenfield, Rewrite and Migration. One story per heading, criteria
-  `S-NN.k` as Given/When/Then.
-- **Behaviour-preservation contract:** Refactor, in place of Stories. Criteria `S-NN.k` grouped by
-  area, each a behaviour that must not change.
-- **Regression criteria:** Bug at size M or larger. The fixed behaviour, and what must not regress
-  around it, as criteria `S-NN.k`.
-- **Rules and examples:** whenever there are stories, a preservation contract or regression
-  criteria. See the rules below.
-- **Failure modes:** whenever there are stories, and for every Bug. Each row has the failure, its
-  trigger, the expected behaviour, what the user sees and the criterion.
+- **Non-functional requirements:** every quality is a row; one with no need is `none` with a short
+  reason, never omitted.
 
 At size S, Rules and examples and Failure modes are not written in the prd. They go in the README
 Slice (below), and the prd keeps everything else.
@@ -279,49 +268,37 @@ keeping the section for this type and deleting the other.
 ### design.md
 
 Required for Refactor, Migration, Greenfield and Rewrite, and for Feature at size M or larger.
-Optional for Bug: when the fix crosses components or carries modifiers, propose it to the
-developer before writing, saying what it would hold, and write it only on a yes. Write it from
-`templates/design.md`. Each section is included **exactly** when its trigger applies, and deleted
-when it does not:
+Bug: required at size M or larger when the route has modifiers, so their sections always have a
+home in design.md. Otherwise optional: when the fix crosses components, propose it before writing,
+saying what it would hold, and write it only on a yes. Write it from `templates/design.md`,
+including each section (Domain model, State machines, Flows, Test strategy, Pre-mortem) **exactly**
+when its trigger in `pack-format.md` §2, **Content sections**, applies, and deleting it when it
+does not. Beyond those triggers:
 
-| Section | Included when |
-|---|---|
-| Architecture, Contracts, Risks | always |
-| Domain model (`erDiagram`, names matching the glossary) | the work adds or changes persisted entities or core types |
-| State machines (`stateDiagram-v2` per entity, then its illegal transitions) | any entity with a lifecycle is touched |
-| Flows (`sequenceDiagram` per main flow) | two or more components interact |
-| Test strategy | always |
-| Pre-mortem | size M or larger |
-
-- **Contracts** are tables: name, inputs, outputs, errors, invariants.
 - **State machines:** list every illegal transition, including each move back to an earlier state
   that the lifecycle forbids.
-- **Test strategy:** the levels used, what each proves, the fixtures and test data, and the level
-  each example row in the prd is proven at.
+- **Test strategy:** name the level each example row in the prd is proven at.
 - **Pre-mortem:** "It is six months later and this failed. Why?" Each item maps to a mitigation, a
   risk row, or a stop condition. Slices do not exist yet, so name the slice by what it does — "stop
   condition in the slice that runs the migration" — for `slice` to carry into that slice.
-- **Rewrite:** add the cutover plan. **Migration and Rewrite:** the rollback approach each slice
-  will apply.
+- **Rewrite:** add the cutover plan as a `### Cutover` subsection under **Architecture**.
+  **Migration and Rewrite:** the rollback approach each slice will apply.
 
 ### Modifier sections
 
-Each modifier on the route adds one `## Modifier: <name>` section, stating what `pack-format.md`
-§2, Modifiers, requires for it. The section goes in `design.md`; where the pack has no design.md,
-it goes in the README instead, after the Slice section and before Route.
+Each modifier on the route adds one `## Modifier: <name>` section, stating everything
+`pack-format.md` §2, **Modifiers**, requires for it. The section goes in `design.md`; where the pack
+has no design.md (only at size S), it goes in the README, after the Slice section and before Route.
 
 - **ui, size M or larger:** write `ux.md` from `templates/ux.md`, following
   `$CLAUDE_SKILL_DIR/../planning/references/ux-checklist.md`, and link it from the modifier section.
   One wireframe (`text` fence) and one state table (loading, empty, error, success, partial) per
   screen in the inventory, so 3 screens give 3 of each. A high-fidelity mockup is a link under
   **Mockups**, never embedded; delete Mockups when there are none.
-- **ui, size S:** the same six parts — screen inventory, navigation flow (Mermaid), wireframes,
-  state tables, responsive behaviour, accessibility — inline in the modifier section.
-- **observability:** the events logged with their levels, and what must never be logged (secrets,
-  credentials, payment and personal data — for example, log a payment webhook's event ID, never its
-  card data); the metrics; alerts, each with a numeric threshold; and how to tell in production
-  that it works, tied to the prd's success measures (at size S without a prd, to the Slice
-  Outcome).
+- **ui, size S:** the same six parts inline in the modifier section.
+- **observability:** name what must never be logged concretely (for example, log a payment
+  webhook's event ID, never its card data), give every alert a numeric threshold, and tie the
+  production check to the prd's success measures (at size S without a prd, to the Slice Outcome).
 
 ### README Slice, at size S
 
@@ -348,7 +325,8 @@ Fix anything that fails before showing it.
 ## Phase 8 — Design Checkpoint
 
 Show `design.md`, `ux.md`, `inventory.md`, the README modifier sections and, at size S, the rest of
-the Slice — whichever were written. In a re-route, show each revised section and its Open
+the Slice — whichever were written. Also show each prd criterion Phase 6 added, with its story,
+since the acceptance checkpoint never saw it. In a re-route, show each revised section and its Open
 questions line.
 
 Ask: **approve**, **change** or **stop**.
@@ -385,7 +363,7 @@ Write `null` bare, never as the string `"null"`.
 
 ```json
 {
-  "status": "SPEC COMPLETE",
+  "status": "SPEC COMPLETE | SPEC STOPPED",
   "pack": "docs/plans/{slug}",
   "pack_status": "{README Status after the run}",
   "files": ["docs/plans/{slug}/{file}"]
@@ -394,6 +372,8 @@ Write `null` bare, never as the string `"null"`.
 
 - `files` lists every path this run wrote or extended, README included when it was extended, in
   the order written. ADRs are listed one path each. It is `[]` when nothing was written.
-- After a stop at a checkpoint, `pack_status` is the unchanged Status, and `files` lists what was
-  written before the stop. A wrapper tells a finished Specify from a stopped one by `pack_status`.
+- `SPEC COMPLETE` only when this run reached Phase 9, its last checkpoint approved.
+- `SPEC STOPPED` for every other path to this phase: a stop at a checkpoint, a refused mode (no
+  README, `discovered`, read-only, XL parent, Spike outcome already recorded) or a format gap.
+  `pack_status` is the unchanged Status and `files` lists what was written before the stop.
 - With no README at the path, `pack_status` is bare `null`.

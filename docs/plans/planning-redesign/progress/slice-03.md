@@ -33,48 +33,48 @@ Pack read from `origin/main` at `2720a40`; the working copy matched it.
 
 ## Acceptance
 
-Line numbers refer to the new `skills/spec/SKILL.md` (399 lines). Fixtures for (a) and (c) were
-built in a scratchpad directory outside the repository and not committed.
+Line numbers refer to `skills/spec/SKILL.md` after review round 1 (379 lines). Fixtures for (a) and
+(c) were built in a scratchpad directory outside the repository and not committed.
 
 | ID | How it was shown |
 |---|---|
-| S-03.1 | Dry run per type at M: Phase 1 lines 73–76 take the R entries (with "at M+" applied), drop README and plan, and add O files only on a yes. Bug M → prd (R at M+), context; design and decisions proposed (282, 229). Feature M → prd, context, design; decisions proposed. Refactor M → prd, context, design. Migration M → prd, context, design, decisions, inventory. Greenfield M → prd, context, design, decisions. Rewrite M → prd, context, design, decisions, inventory. Each matches its matrix row minus README and plan |
-| S-03.1.e1 | Dry run (a), Feature M with `ui`: lines 73–77 give prd, context, design and `ux.md` (ui at M+); decisions O declined. Scratchpad pack listed README, context, design, prd, ux. plan is `slice`'s (Slice 4), which completes the row |
-| S-03.2 | Change S: no prd, context, design or inventory in its row, so Phase 2 writes no file (121), Phase 3 writes the README Slice (188–201), Phase 7 completes it (326–332). decisions is O (229): README alone unless the developer accepts an ADR |
-| S-03.2.e1 | Change S: README only; its Slice Acceptance is rules and examples with at least 2 rows (195–197, 180) and Verify is exact `bash` commands with expected output (329–330) |
-| S-03.3 | Dry run (b), Rewrite M: inventory required (73), Phase 6 writes **Behaviour inventory** (269–271) and **Parity matrix** (272–273) from `templates/inventory.md`, deleting Usage sites (264) |
-| S-03.3.e1 | Rewrite L: same files as Rewrite M (no "at M+" qualifier applies), plus `inventory.md` with both sections; design adds the cutover plan (304) |
-| S-03.4 | Dry run (c), Feature M at `specified` re-routed to Rewrite: Phase 1 mode Re-route (64). Missing inventory and decisions are written new (90); existing files get sections added and revised only where the route changes them (91–94), never deleted or rewritten; Status unchanged (100, 374) |
-| S-03.4.e1 | Same: in the scratchpad, all five earlier files present after the run; `diff` of the listings shows only `decisions` and `inventory.md` added. prd gains behaviour criteria (94, 271); each revision gets an Open questions line (95–98) shown at Phase 4 (212) and removed on approval (216) |
-| S-03.5 | Dry run (d), Spike before: Status `routed` → mode Spike question (60); Phase 3 writes **Question** with question and timebox (144–147); Phase 4 approve → Phase 9 (217); Status `specified` (373). After: Status `specified`, no ADR → mode Spike outcome (61); Phase 2 skipped (112); Phase 5 writes the outcome ADR (240–244); Status stays `specified` and the display points to re-route (375) |
-| S-03.5.e1 | Spike, outcome "use library X": Phase 5 writes `decisions/ADR-001-…` (226–227, numbering from 001), Status `accepted` when the developer states it (244). The re-route offer is the wrapper's (Slice 6); spec's display names it (375) |
-| 3.1 | Dry run (e): Phase 2 collects every API, helper, pattern and convention with `path:line` (117–119), and context.md must cite each one, opened in this run, or drop it (125–127); a re-read check closes the phase (136). Greenfield cites the ADR that chose a convention (132–134) |
-| 3.2 | Dry run (f), PRD checkpoint rejected: Phase 4 (205) comes before Phase 5's ADR checkpoint (246) and Phase 8's design checkpoint (348). **Change** revises and re-shows (218); **Stop** goes to Phase 10 with Status unchanged and files on disk (219, 397). Status is written only in Phase 9, reached only when every checkpoint was approved (368). Matches S-02.3.e1: `prd.md` on disk, Status still `routed` |
-| 3.3 | Rule at lines 29–31: each created file gets its Read order entry in the same step; Phase 7 self-check (342) and Phase 9 (370) confirm it |
-| 3.4 | Size S, every type: line 78 and Phase 3 (188–201) and Phase 7 (326–332) write Slice with Outcome, Acceptance, Contracts, Stop conditions, Verify, Pattern to follow, Suggested path and Files |
-| S-04.2 | Spec side, size S: Phase 7 self-check (340–341) rejects a Slice missing any of the eight headings, or with one empty, before the Phase 8 checkpoint. Same shape as S-04.2.e1 for `slice` (Slice 4) |
-| S-10.1 | Phase 3 Rules and examples (174–186): a rule per story, an examples table, at least 2 rows with an edge or failure case, row IDs extending the criterion ID |
-| S-10.1.e1 | A rule with only happy-path rows: line 184 adds a failure row, or asks the developer why none applies (186) and shows it at the checkpoint (211) |
-| S-10.2 | NFRs, Assumptions (155–157) and Failure modes (168–169) in the prd |
-| S-10.2.e1 | PRD with no observability needs: line 156–157, every quality is a row, `none` never omitted |
-| S-10.4 | Refactor: preservation contract (162–163) and characterization rows (182–183); Bug: regression criteria (164–165) written as rules and examples (166–167), in the README Slice at S (196–197) |
-| S-10.4.e1 | Refactor of a date parser: characterization rows record the output the current code really gives, cited, with at least one invalid input (182–183); the rule's 2-row minimum (180) and the example's 3 inputs both fit |
-| S-11.1 | Test strategy always with a design (293, 299–300) |
-| S-11.2 | State machines when a lifecycle entity is touched (291), with illegal transitions (297–298) |
-| S-11.2.e1 | Order draft/paid/shipped: lifecycle touched, so a `stateDiagram-v2`; "each move back to an earlier state that the lifecycle forbids" lists shipped → draft (297–298) |
-| S-11.3 | Domain model when persisted entities or core types change (290); Flows when two or more components interact (292) |
-| S-11.3.e1 | Text-only copy change: a Change has no design at all (S-03.2). Routed as Feature M instead, neither trigger applies, so both sections are deleted (284–285, "exactly") |
-| S-11.4 | Pre-mortem at size M+ (294), each item mapped (301–303) |
-| S-11.4.e1 | "Migration locks the table": maps to "stop condition in the slice that runs the migration" (302–303), named by what the slice does for `slice` to carry |
-| S-11.5 | Prd side: Story map for Feature, Greenfield and Rewrite at M+ (158–159) |
-| S-12.1 | `ui` at M+ writes `ux.md` and links it (313–317); at S the six parts go inline in the modifier section (318–319) |
-| S-12.1.e1 | Feature M, `ui`, 3 screens: one wireframe and one state table per screen, "so 3 screens give 3 of each" (315–316) |
-| S-12.1.e2 | A Figma link: a link under **Mockups**, never embedded (316–317) |
-| S-12.2 | `observability` section: events with levels, never-logged data, metrics, numeric alert thresholds, production check tied to success measures (320–324) |
-| S-12.2.e1 | Payment webhook: "log a payment webhook's event ID, never its card data", alert with a numeric threshold (321–322) |
-| Stop condition | Not triggered: every file the route asks for is in the routing matrix. The skill carries the same rule (80–83) |
+| S-03.1 | Dry run per type at M: Phase 1 lines 74–77 take the R entries (with "at M+" applied), drop README and plan, and add O files only on a yes. Bug M → prd (R at M+), context; design required when the route has modifiers, otherwise proposed (271–273); decisions proposed (218–220). Feature M → prd, context, design; decisions proposed. Refactor M → prd, context, design. Migration M → prd, context, design, decisions, inventory. Greenfield M → prd, context, design, decisions. Rewrite M → prd, context, design, decisions, inventory. Each matches its matrix row minus README and plan |
+| S-03.1.e1 | Dry run (a), Feature M with `ui`: lines 74–78 give prd, context, design and `ux.md` (ui at M+); decisions O declined. Scratchpad pack listed README, context, design, prd, ux. plan is `slice`'s (Slice 4), which completes the row |
+| S-03.2 | Change S: no prd, context, design or inventory in its row, so Phase 2 writes no file (122), Phase 3 writes the README Slice (177–190), Phase 7 completes it (303–309). decisions is O (218): README alone unless the developer accepts an ADR |
+| S-03.2.e1 | Change S: README only; its Slice Acceptance is rules and examples with at least 2 rows (184–186, 169) and Verify is exact `bash` commands with expected output (307–308) |
+| S-03.3 | Dry run (b), Rewrite M: inventory required (74), Phase 6 writes **Behaviour inventory** (258–260) and **Parity matrix** (261–262) from `templates/inventory.md`, deleting Usage sites (253); criteria Phase 6 adds are shown at the design checkpoint (328–329) |
+| S-03.3.e1 | Rewrite L: same files as Rewrite M (no "at M+" qualifier applies), plus `inventory.md` with both sections; design adds the cutover plan as `### Cutover` under Architecture (284) |
+| S-03.4 | Dry run (c), Feature M at `specified` re-routed to Rewrite: Phase 1 mode Re-route (65). Missing inventory and decisions are written new (91); existing files get sections added and revised only where the route changes them (92–95), never deleted or rewritten; Status unchanged (101, 352) |
+| S-03.4.e1 | Same: in the scratchpad, all five earlier files present after the run; `diff` of the listings shows only `decisions` and `inventory.md` added. prd gains behaviour criteria (95, 260); each revision gets an Open questions line (96–99) shown at Phase 4 (201) and Phase 8 (329–330), removed on approval (205, 334) |
+| S-03.5 | Dry run (d), Spike before: Status `routed` → mode Spike question (61); Phase 3 writes **Question** with question and timebox (145–148); Phase 4 approve → Phase 9 (205–206); Status `specified` (351). After: Status `specified`, no `accepted` ADR → mode Spike outcome (62); Phase 2 skipped (113); Phase 5 writes the outcome ADR (229–233). A `proposed` outcome ADR left by a stopped run resumes at the ADR checkpoint (62, 237); once one is `accepted`, a further run says it is recorded (63). Status stays `specified` and the display points to re-route (353) |
+| S-03.5.e1 | Spike, outcome "use library X": Phase 5 writes `decisions/ADR-001-…` (214–216, numbering from 001), Status `accepted` when the developer states it (233). The re-route offer is the wrapper's (Slice 6); spec's display names it (353) |
+| 3.1 | Dry run (e): Phase 2 collects every API, helper, pattern and convention with `path:line` (118–120), and context.md must cite each one, opened in this run, or drop it (126–128); a re-read check closes the phase (137). Greenfield cites the ADR that chose a convention (133–135) |
+| 3.2 | Dry run (f), PRD checkpoint rejected: Phase 4 (194) comes before Phase 5's ADR checkpoint (235) and Phase 8's design checkpoint (325). **Change** revises and re-shows (207); **Stop** goes to Phase 10 with Status unchanged and files on disk (208), emitting `SPEC STOPPED` (376–378). Status is written only in Phase 9, reached only when every checkpoint was approved (346). Matches S-02.3.e1: `prd.md` on disk, Status still `routed` |
+| 3.3 | Rule at lines 29–31: each created file gets its Read order entry in the same step; Phase 7 self-check (319) and Phase 9 (348) confirm it |
+| 3.4 | Size S, every type: line 79, Phase 3 (177–190) and Phase 7 (303–309) write Slice with Outcome, Acceptance, Contracts, Stop conditions, Verify, Pattern to follow, Suggested path and Files |
+| S-04.2 | Spec side, size S: Phase 7 self-check (317–318) rejects a Slice missing any of the eight headings, or with one empty, before the Phase 8 checkpoint. Same shape as S-04.2.e1 for `slice` (Slice 4) |
+| S-10.1 | Phase 3 Rules and examples (163–175): a rule per story, an examples table, at least 2 rows with an edge or failure case, row IDs extending the criterion ID |
+| S-10.1.e1 | A rule with only happy-path rows: line 173 adds a failure row, or asks the developer why none applies (174–175) and shows it at the checkpoint (200) |
+| S-10.2 | NFRs, Assumptions and Failure modes are included exactly as `pack-format.md` §2 Content sections triggers them (152–155) |
+| S-10.2.e1 | PRD with no observability needs: lines 157–158, every quality is a row, `none` never omitted |
+| S-10.4 | Refactor: preservation contract and Bug regression criteria by their §2 triggers (152–155), written as rules and examples (165, 171–172); in the README Slice at S (160–161, 185–186) |
+| S-10.4.e1 | Refactor of a date parser: characterization rows record the output the current code really gives, cited, with at least one invalid input (171–172); the 2-row minimum (169) and the example's 3 inputs both fit |
+| S-11.1 | Test strategy by its §2 trigger, always with a design (274–275), naming each example row's level (280) |
+| S-11.2 | State machines by their §2 trigger (274–275), with every illegal transition listed (278–279) |
+| S-11.2.e1 | Order draft/paid/shipped: lifecycle touched, so a state machine; "each move back to an earlier state that the lifecycle forbids" lists shipped → draft (278–279) |
+| S-11.3 | Domain model and Flows by their §2 triggers, included exactly when they apply (274–276) |
+| S-11.3.e1 | Text-only copy change: a Change has no design at all (S-03.2). Routed as Feature M instead, neither trigger applies, so both sections are deleted (275–276) |
+| S-11.4 | Pre-mortem by its §2 trigger, size M+ (274–275), each item mapped (281–283) |
+| S-11.4.e1 | "Migration locks the table": maps to "stop condition in the slice that runs the migration" (282–283), named by what the slice does for `slice` to carry |
+| S-11.5 | Prd side: Story map by its §2 trigger, Feature, Greenfield and Rewrite at M+ (152–154) |
+| S-12.1 | `ui` at M+ writes `ux.md` and links it (293–297); at S the six parts go inline in the modifier section (298) |
+| S-12.1.e1 | Feature M, `ui`, 3 screens: one wireframe and one state table per screen, "so 3 screens give 3 of each" (295–296) |
+| S-12.1.e2 | A Figma link: a link under **Mockups**, never embedded (296–297) |
+| S-12.2 | `observability` section states everything §2 Modifiers requires (289–290), with never-logged data named, numeric thresholds and the production check tied to success measures (299–301) |
+| S-12.2.e1 | Payment webhook: "log a payment webhook's event ID, never its card data", every alert with a numeric threshold (299–300) |
+| Stop condition | Not triggered: every file the route asks for is in the routing matrix. The skill carries the same rule (81–84) |
 | Structural | `eval "$(jq -r .verify.test .hivrr.json)"`: `structural checks pass`. Phases `## Phase 1`–`## Phase 10`, no stated count. Scratchpad packs: check 14's fence rule printed nothing |
-| NFR Size | `skills/spec/SKILL.md` is 399 lines, under the 400-line limit |
+| NFR Size | `skills/spec/SKILL.md` is 379 lines, under the 400-line limit |
 
 ## Deviations
 
@@ -83,12 +83,14 @@ built in a scratchpad directory outside the repository and not committed.
 | `context.md` §2: `ux-checklist.md` is 159 lines | 143 lines, six parts | Slice 1 restructured it; the Modifiers contract only names the path | n |
 | Suggested path: design and modifiers, then inventory | Inventory (Phase 6) before design (Phase 7), with ten phases and three checkpoints in their own phases | Inventory is shown at the design checkpoint, and design's cutover and rollback build on it. Every mandatory item still holds | n |
 | Shared contract: `pack_status` is a string | With no README at the input path, `pack_status` is `null` | No Status exists to report. Same case and choice as Slice 2's accepted deviation | y |
+| Shared contract: `status` is `SPEC COMPLETE` | Shared contract amended: spec adds `SPEC STOPPED`; accepted by orchestrator in review | Review round 1: in Re-route and Spike-outcome modes `pack_status` is the same before and after, so it cannot tell a finished run from a stopped or refused one | y |
 
 ## Decisions
 
-- **Stop at a checkpoint** emits `SPEC COMPLETE` with the unchanged `pack_status` and the files
-  written so far, rather than a new status value, so the Shared contract keeps its listed values.
-  The wrapper tells finished from stopped by `pack_status`.
+- **`SPEC STOPPED`** (review round 1) is emitted for a stop at a checkpoint, a refused mode (no
+  README, `discovered`, read-only, XL parent, Spike outcome already recorded) or a format gap, with
+  the unchanged `pack_status` and the files written so far. `SPEC COMPLETE` means the run reached
+  Phase 9 with its last checkpoint approved.
 - **Checkpoints:** Phase 4 is the "PRD" checkpoint. It also shows `context.md` and, at size S, the
   Slice's Outcome and Acceptance (or a Spike's Question). The design checkpoint also shows
   `inventory.md`, `ux.md`, README modifier sections and, at S, the rest of the Slice.
@@ -108,7 +110,18 @@ built in a scratchpad directory outside the repository and not committed.
 - **Spike outcome ADR** is `accepted` when the developer states the outcome outright, otherwise
   `proposed` and checkpointed. Spec leaves Status `specified`; the wrapper sets `done` or `routed`.
 - **Migration usage sites** get `pending` in the Slice column, since no slices exist yet.
-- **Bootstrap** loads `core` only, as `brainstorm` does; nothing needs tracker context.
+- **Bootstrap** (review round 1) loads `core` only when the install ships it; `planner` does not,
+  so a planner-only install continues without it. Nothing needs tracker context.
+- **Spike resume** (review round 1) matches on an `accepted` ADR, so a `proposed` outcome ADR left
+  by a stopped run resumes at the ADR checkpoint.
+- **Cutover plan** (review round 1) lives in a `### Cutover` subsection under design.md's
+  **Architecture** section.
+- **Bug with modifiers at size M+** (review round 1) requires design.md, so modifier sections only
+  ever go in the README at size S.
+- **Criteria added in Phase 6** (Rewrite behaviour inventory) are shown at the design checkpoint,
+  with their story, since the acceptance checkpoint never saw them.
+- **Content-section and modifier triggers** (review round 1) are not restated: the skill points to
+  `pack-format.md` §2 and keeps only what is specific to `spec`.
 - **Registration order:** `spec` after `brainstorm` in `marketplace.json`, the `**Skills:**` line
   and the README table.
 
@@ -119,11 +132,14 @@ built in a scratchpad directory outside the repository and not committed.
   stop condition in that slice.
 - **For Slice 4 or 6:** `spec` adds only the files it writes to Read order. `plan.md`, `progress/`
   and `cold-read.md` are still unowned there, including at size S, where `slice` is skipped.
-- **For Slice 6:** after `spec`, read `pack_status`, not `status`, to tell whether Specify finished.
-  `pack_status` is `null` when the path has no README.
+- **For Slice 6:** the wrapper must treat `SPEC STOPPED` as a stop: do not advance to Slice, and
+  show the developer the reason. `pack_status` is `null` when the path has no README.
+- **Issue #221** tracks the same unconditional `core` load in `brainstorm` and `planning`, and the
+  option of shipping `core` in `planner`. `brainstorm` was not changed here.
 - **For Slice 6:** for a Spike, `spec` leaves Status `specified` after writing the outcome ADR, and
   the wrapper sets `done` or `routed`. A re-routed Spike's Question section and ADR stay.
 - **For Slice 6:** a Bug's **Repro and root cause** is still not written by `spec`; the wrapper
   owns it, per Slice 2's Discoveries.
-- The NFR's 400-line limit was tight: the first draft was 406 lines. Any further detail should go
-  into a `references/` file.
+- The NFR's 400-line limit was tight: the first draft was 406 lines. After review round 1 pointed
+  the trigger lists at `pack-format.md` §2, it is 379. Any further detail should go into a
+  `references/` file.
