@@ -46,6 +46,24 @@ contradict each other or an external credential is missing.
 
 ---
 
+## Pack mode
+
+**Skip this section when no issue carries a marker** (Phase 3, **Detect a pack marker**). Every
+pack-mode block below opens the same way, and without a marker each phase runs exactly as written.
+
+A marker makes the issue one slice of a plan pack, a committed folder `docs/plans/<slug>/`. The pack
+is self-describing: its README's **How to execute this pack** rules are the contract for the run,
+and everything this skill needs comes from the pack and the repository. Never read another plugin's
+files to interpret a pack. Where the executed pack's own README rules differ from what this skill
+says, follow the README: a pack is executed under the rules it was planned against.
+
+The pack wins over the issue body, which is only a summary of the slice; issue comments still
+override scope. Throughout the run, keep notes for the progress file: deviations (plan said /
+reality / why / contract affected), decisions the plan left open, and discoveries for the next slice
+or the retro.
+
+---
+
 ## Phase 1 — Parse the Input
 
 The input will be one of these forms:
@@ -83,6 +101,12 @@ For multiple issues, decide how to execute them before doing anything else.
 **Choose a strategy:**
 - **Unified** — one shared wave branch per group: use when all issues in a group are simple or medium complexity and the group has 5 or fewer issues. The `wave` skill handles execution.
 - **Sequential** — a separate `issue/{N}` branch per issue, processed one at a time: use when any issue is complex, groups are completely unrelated, or the provider is Linear (Linear does not support wave branching).
+
+**Pack slices (conditional).** Skip this when no issue in the list carries a marker (Phase 3,
+**Detect a pack marker**). This phase already scans the issue bodies; fetch them now with the **Get
+issue** command if you have not. When any issue carries a marker, the strategy is `sequential`
+whatever the rules above say: a slice is one issue, one branch and one PR, and `wave` never runs a
+slice.
 
 Store: `wave_strategy` ("unified" or "sequential"), `wave_groups` (the ordered groups of issue numbers).
 
@@ -131,72 +155,47 @@ documentation or wrap-up task.
 
 Display: `Fetched: {count} issue(s) from {repo_owner}/{repo_name}`
 
-### Load session context
+### Detect a pack marker
 
-**Skip this entire section when `SESSION_UUID` is not set.** An issue worked directly from GitHub or
-Linear has no session behind it, and that is the normal case — say nothing and continue to Phase 4.
+**Skip this section when no line of any issue body starts with `Plan: `.** Say nothing and continue.
+A body that mentions a plan mid-sentence, such as `Plan: TBD` inside a paragraph, has no such line.
 
-When it is set, this issue is one task in a planning session, and the reasoning that produced it
-lives in memory. Read it before planning so the implementation stays coherent with the original
-intent rather than re-deriving it from the issue body alone.
+For each issue, look at the lines that start with `Plan: `. Matching is case-sensitive.
 
-**Memory read (primary):**
-```
-session/{SESSION_UUID}/prd         full PRD text
-session/{SESSION_UUID}/plan        the task graph
-session/{SESSION_UUID}/plan_only   true when the session ran --plan-only and created no issues
-session/{SESSION_UUID}/plan_doc    path to the plan document — the payload in plan-only mode
-session/{SESSION_UUID}/decisions   architectural choices made during decomposition
-```
+- **Marker.** The first line that starts with `Plan: docs/plans/`, in the form
+  `Plan: docs/plans/<slug> · Slice: <N>`. The separator may be `·` or `|`. Store `pack_slug`, with
+  any trailing `/` removed, and `slice_number` for that issue. If no `Slice: <N>` can be read from
+  the line, stop: `marker on #{number} names no slice — fix the issue body`.
+- **Not a marker.** A `Plan: ` line that is not a `docs/plans/` path, such as `Plan: docs/plan/x`.
+  When no line of the body is a marker, display `unrecognised Plan: line — legacy mode` and treat
+  that issue as having no marker. When another line is a marker, ignore it silently.
 
-**An empty `plan` alongside `plan_only = true` is not a failure.** That session wrote a plan document
-rather than issues, so there is no task graph to match this issue against. Read `plan_doc` for the
-reasoning, take the task-id fallback below, and continue — do not warn about a missing plan.
+### Load the pack
 
-**Local file fallback:** `.ai/session/{SESSION_UUID}/plan.md`, written by the `planning` skill when
-memory was unavailable to it. `planning` ships in `planner`, so a `dev`-only install has no
-`skills/planning/` to read — the keys below are the whole contract, and the file is self-describing.
+**Skip this section when no issue carries a marker.** For each issue that does:
 
-The fallback is not lossless. `planning` writes the keys above separately to memory but
-collapses its file fallback into a single `plan.md`, so `decisions` may be absent when reading from
-disk. Treat that as a missing key — the warn-and-continue rule below already covers it — rather than
-as a read failure.
+1. Resolve `{integration}` now, by the rule Phase 5 uses (`branches.integration`, then the
+   repository default branch, then `origin/HEAD`, then `main`). Phase 5 reuses this value.
+2. Run `git fetch origin {integration}`.
+3. Read the README with `git show origin/{integration}:docs/plans/{pack_slug}/README.md`. If it is
+   not there, stop: `pack docs/plans/{pack_slug} is not on {integration}; merge its PR first`.
+4. Read the files in the README's **Read order** the same way. For a directory entry, such as
+   `decisions/` or `progress/`, list it with
+   `git ls-tree --name-only origin/{integration} docs/plans/{pack_slug}/{dir}/` and read each file.
+   An entry that does not exist yet, such as `progress/` before the first slice, is skipped.
+5. Find the slice: the `## Slice {slice_number}` section of `plan.md`. A pack with no `plan.md`
+   (size S) has one slice, `Slice: 1`, which is the README's **Slice** section. If the slice is not
+   there, stop: `pack docs/plans/{pack_slug} has no Slice {slice_number}`.
 
-`plan_only` survives the collapse as the `Mode:` line `planning` writes at the top of `plan.md`.
-Read it from there. **When no `Mode:` line is present, assume standard mode** — that is what a
-`plan.md` written before this line existed means, and assuming plan-only would suppress a real
-missing-plan warning.
+Read from `origin/{integration}`, never the working copy: that is what the branch will fork from.
+These stops come before any branch exists, so there is nothing to commit; report them as Error
+Handling says.
 
-Hold the result as `session_context` and carry it through Phase 6 planning and Phase 7
-implementation. It is context, not instruction: where `session_context` and the issue body conflict,
-the issue body wins — it is the more recent statement of intent.
+Hold `pack_context` for the issue: the README's **How to execute this pack** rules and Size, the
+slice section, the text of every criterion it lists and the example rows under them, and any
+Discoveries other slices' progress files address to this one.
 
-**Resolve the task id.** The writes below are keyed by `task_id`, not by issue number. Each entry in
-`plan` carries both a `task_id` and a `github_issue_url`, so match the URL of the issue being worked
-against `plan[].github_issue_url` and take that entry's `task_id`. When no entry matches — the issue
-was created outside this session, or `plan` was unreadable — fall back to the issue number itself and
-note it: `Session: no plan entry for #{number}, keying task by issue number`.
-
-Resolve one `task_id` per issue in the group, not one for the group. A wave produces a single PR for
-several issues, and the session tracks each of those issues as its own task.
-
-**Memory write:** for each issue in the group,
-```
-session/{SESSION_UUID}/task/{task_id}/status = "running"
-```
-
-**Local file fallback:** `.ai/session/{SESSION_UUID}/task/{task_id}/status.md`
-
-**Every failure here is a warning, never a stop.** Memory unreachable, session keys absent (this is
-the first task in a new session), a malformed `plan` — in every case log the warning, leave
-`session_context` empty, and continue. A worker that cannot reach memory must still be able to
-implement the issue in front of it.
-
-Log the fallback exactly as the `planning` skill does:
-`WARNING: Memory unavailable, using local file fallback at .ai/session/{SESSION_UUID}/`
-
-Display: `Session context loaded: {N} memory entries` — or, when nothing was found,
-`Session: {SESSION_UUID} — no prior context`
+Display: `Pack: docs/plans/{pack_slug} · Slice {slice_number} (from origin/{integration})`
 
 ---
 
@@ -212,6 +211,12 @@ For multiple issues, assess each one and use the highest classification to drive
 
 If `--auto` is set and you're unsure, default to `medium` and continue.
 If `--auto` is not set and you're genuinely unsure, ask the user one focused question.
+
+**Pack slice (conditional).** Skip this when the issue carries no marker. Do not classify and do not
+ask: map the README's Size row. S is `simple`, M is `medium` and L is `complex`. A Change is always
+S, and an XL pack never reaches here because it is split into child packs. Phase 6 always runs in
+pack mode, whatever the complexity, because it holds the preflight. Display
+`Complexity: {simple|medium|complex} (pack size {S|M|L})` in place of the line below.
 
 Display: `Complexity: {simple|medium|complex}`
 
@@ -363,6 +368,24 @@ Display: `Board: {n} issue(s) → In Progress` or nothing when unconfigured
 
 ## Phase 6 — Plan (medium and complex only)
 
+**Pack slice (conditional).** Skip this block when the issue carries no marker. In pack mode this
+phase runs at every complexity, `simple` included, because preflight cannot be skipped:
+
+1. **Preflight** (README rule 2), against the branch's working tree, which now exists. Check every
+   path and symbol `context.md` cites that this slice touches, plus those the slice itself cites,
+   and record each as holds or differs. A difference is a deviation. A difference that touches the
+   slice's **Contracts** is a stop: take **Pack mode — Blocked path**.
+2. **Resumed after a block.** If the branch already holds this slice's progress file with Status
+   `blocked`, read its **Blocked on** first. Unless the issue comments or the pack on
+   `origin/{integration}` now answer the question, the stop still holds: take the blocked path
+   again without further work. When it is answered, set the progress file's Status to
+   `in-progress`, record the answer as a decision, and continue.
+3. **The slice is the plan.** Its Outcome, Acceptance, Contracts, Stop conditions and Verify are
+   mandatory. Pattern to follow, Suggested path and Files are guidance: you may leave them if every
+   mandatory item still holds, and record why as a deviation. Write no separate plan.
+
+Display `Plan: pack slice {slice_number}` in place of `Plan: ready`, and skip the rest of this phase.
+
 For **simple** tasks: skip this phase, go straight to implementing.
 
 For **medium and complex** tasks: before touching any code, write out your implementation plan. Include:
@@ -394,6 +417,17 @@ If you hit a blocker that cannot be resolved by reading the codebase:
 - Style, naming, missing tests → decide autonomously using existing conventions
 - Contradictory acceptance criteria or missing external credentials → surface the blocker clearly and stop; leave the branch intact
 
+**Pack slice (conditional).** Skip this when the issue carries no marker. These join the blocker
+rules above as hard stops:
+
+- every bullet under the slice's **Stop conditions**;
+- README rule 6: the PRD, an ADR, `design.md` or another slice turns out to be wrong in a way that
+  changes a contract.
+
+When one triggers, do not work around it and do not ask, with or without `--auto`: take **Pack mode
+— Blocked path**. A plan that is wrong without changing a contract is a deviation: record it and
+continue. Never edit the pack's plan files to match what you built.
+
 For sequential multi-issue, process each issue fully through Phase 11 (Create PR) before starting the next one.
 
 When done, display: `Implement: complete | files changed: {count}`
@@ -409,6 +443,20 @@ run-and-show-real-output rule, the skip criteria, and the reporting format.
 - Do the changes actually satisfy the acceptance criteria from the issue(s)?
 - Is there anything obviously wrong, missing, or broken?
 - Fix what you find.
+
+**Pack slice (conditional).** Skip this when the issue carries no marker. Also run every command in
+the slice's **Verify** and show its real output. Then collect a proof, to be written in Phase 10,
+for each of these:
+
+- every acceptance ID the slice lists, PRD criteria (`S-NN.k`) and slice-local ones (`N.k`) alike;
+- every example row in `prd.md` **Rules and examples** whose ID extends one of those criteria
+  (`S-NN.k.eN` under `S-NN.k`). A criterion the slice limits ("for X only") limits its rows too.
+
+A proof is a test that names the ID or, where the repo has no test runner, a verification step at
+the level the design's **Test strategy** gives the row: a structural check or grep, or a recorded
+dry run that reads the changed files against the row's Given and names the phase, file and line
+that produce its Then. An ID without a proof means the slice is not done: go back to Phase 7. If it
+cannot hold without changing a contract, that is a stop under Phase 7's rules.
 
 ---
 
@@ -442,11 +490,23 @@ What `core` leaves to this skill is the file list. Build it from what you actual
 - **Wave runs:** use the per-issue file lists recorded in Step 3 of the `wave` skill.
 - **Single-issue runs:** use the files you edited, plus any you created.
 
-**Never name the session fallback directory in that list.** When memory was unavailable, Phase 3 and
-Phase 12 write under `.ai/session/{SESSION_UUID}/`. That is worker scratch state, not part of the
-change. Explicit staging means it can no longer be swept in — it can only be added by naming it, so
-do not. Suggest the repo add `.ai/` to its `.gitignore` so it stops appearing in `git status`, but do
-not edit `.gitignore` as part of an unrelated issue's commit.
+**Pack slice (conditional).** Skip this when the issue carries no marker. Before staging, write the
+pack files below, then add each one you wrote to the list by name.
+
+1. **The progress file,** `docs/plans/{pack_slug}/progress/slice-NN.md` (`NN` is `slice_number`
+   zero-padded to two digits). Its sections and their order come from the executed pack's README
+   rule 7, never from any other source. Status `done`, the issue, PR `this PR` (the PR is opened in
+   Phase 11 and is found from the branch), the executor model if known, and the date. Then the
+   Phase 6 preflight, the Phase 8 proofs with one row per criterion ID and example ID, and the
+   deviations, decisions and discoveries noted since Phase 6. Omit **Blocked on**.
+2. **README Status.** If it is `published`, set it to `executing`.
+3. **Last slice.** Read `progress/slice-NN.md` with `git show origin/{integration}:…` for every
+   other slice listed in `plan.md`. If all of them say `done`, this is the last slice; at size S
+   there is no other slice, so the single slice is always the last. Any other slice whose file is
+   missing or says `in-progress` or `blocked` means this is not the last slice, whatever its number:
+   write no Retro. For the last slice, replace the README's **Retro** placeholder with a Retro that
+   compares `cold-read.md` with the deviations recorded across every progress file, this one
+   included: what the cold read predicted, and what really diverged. Then set README Status `done`.
 
 Write a conventional commit message:
 - Format: `{type}({scope}): {description}`
@@ -477,51 +537,9 @@ Display: `PR: {url} (base: {integration})`
 
 ## Phase 12 — Done
 
-### Write the session result
-
-**Skip this section when `SESSION_UUID` is not set**, exactly as Phase 3 does.
-
-The PR now exists, and the session has no other way to learn that. Write the outcome before exiting,
-once per issue in the group, using the same `task_id` resolved in Phase 3:
-
-**Memory write:**
-```
-session/{SESSION_UUID}/task/{task_id}/status = "complete"
-session/{SESSION_UUID}/task/{task_id}/result = {
-  pr_url,          the PR/MR that closed this issue — see the pairing rule below
-  pr_number,
-  summary,         what changed and why, a few sentences
-  files_changed,   git diff --name-only origin/{integration}...HEAD
-  key_decisions    choices made during implementation that the issue did not specify
-}
-```
-
-`files_changed` needs the explicit range. By this phase the work is committed and pushed, so a bare
-`git diff --name-only` compares the working tree against `HEAD` and reports nothing — an empty list
-that reads as a successful write rather than a failed one.
-
-**Local file fallback:** `.ai/session/{SESSION_UUID}/task/{task_id}/result.json`
-
-**Pair each task with the PR that actually closed it.** The two multi-issue strategies differ here:
-
-- **Unified (wave)** — one PR closes the whole group, so every task shares the same `pr_url`.
-- **Sequential** — each issue went through Phase 11 separately and has its own PR. Pair each
-  `task_id` with that issue's PR, **not** with the most recently created one. Writing the last URL
-  across all of them would mark every task complete against a PR that does not contain its work,
-  and nothing downstream could detect that.
-
-Give each issue its own `summary` and `key_decisions` covering that issue's slice of the change; a
-shared summary repeated N times tells the session nothing it did not already know from the plan.
-
-`key_decisions` is the field worth care. Phase 7 resolves style, naming, and test-shape questions
-autonomously and does not otherwise record that it did. This is where those resolutions become
-visible to whatever reads the session next.
-
-**Warn and continue on any failure.** The PR has already been created; a memory write that fails
-cannot be allowed to make a completed task look failed. Log the warning and emit the completion JSON
-regardless.
-
-Display: `Session result written to memory` — or the fallback warning from Phase 3.
+**Pack slice (conditional).** Skip this when the issue carries no marker. A slice that reached this
+phase emits the JSON below unchanged. A slice that stopped emits the same keys with
+`status: "BLOCKED"`, from **Pack mode — Blocked path**; `BLOCKED` is the only other status value.
 
 ### Emit the result
 
@@ -540,6 +558,31 @@ your entire final response — no markdown, no preamble, no trailing text:
 
 ---
 
+## Pack mode — Blocked path
+
+**Skip this section when the issue carries no marker.** Legacy blockers stop as Phase 7 and Error
+Handling describe.
+
+Take this path when a stop condition triggers in Phase 6 or Phase 7, with or without `--auto`:
+
+1. Skip Phases 8, 9 and 11.
+2. Write the progress file as Phase 10 describes, with Status `blocked`, PR
+   `none (no PR is opened)`, everything shown so far, and what is partial. Fill in **Blocked on**:
+   the question, and the stop condition that triggered (quote the slice's bullet, or name the
+   README rule). Leave README Status and the Retro alone.
+3. Stage the partial work and the progress file by name, following **Staging** in `core`, and make
+   one commit: `wip: slice {slice_number} {what it does} (blocked)`, with the question and the
+   progress file's path in the body, then `Refs #{number}`. Not `Closes`: nothing is ready to close.
+   The state now survives a new session or machine.
+4. Push the branch: `git push -u origin {branch_name}`.
+5. Open no PR. Display `Blocked: slice {slice_number} — {question}`, then emit the Phase 12 JSON
+   with `"status": "BLOCKED"`, `"pr": null` and `"pr_url": null`. The keys are unchanged. Under
+   the sequential strategy, no later issue starts.
+
+A rerun resumes this branch through Phase 5, and Phase 6 checks whether the question is answered.
+
+---
+
 ## Error Handling
 
 If any phase fails:
@@ -547,3 +590,7 @@ If any phase fails:
 - Display what went wrong clearly
 - Don't silently swallow errors
 - Don't retry indefinitely — 3 attempts max on any single fix
+
+**Pack slice (conditional).** Skip this when the issue carries no marker. A stop condition is not a
+failure to retry: take **Pack mode — Blocked path**, which ends with `status: "BLOCKED"` and opens
+no PR. Slice 8 of the planning redesign makes `ship-issue` treat that value as stuck.
