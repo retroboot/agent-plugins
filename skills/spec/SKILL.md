@@ -150,9 +150,9 @@ examples. Go to Phase 4.
 ### prd.md
 
 When prd is required, write it from `templates/prd.md`. Include each section **exactly** when its
-trigger in `pack-format.md` §2, **Content sections**, applies to the route (Story map, Stories,
-Behaviour-preservation contract, Regression criteria, Rules and examples, Failure modes), plus the
-template's always-present sections. Beyond those triggers:
+trigger applies to the route: `pack-format.md` §2 **Content sections** for Story map, Stories, Rules
+and examples and Failure modes; the routing-matrix notes and `templates/prd.md` for the
+Behaviour-preservation contract and Regression criteria. Add the template's always-present sections. Beyond those triggers:
 
 - **Non-functional requirements:** every quality is a row; one with no need is `none` with a short
   reason, never omitted.
@@ -228,7 +228,8 @@ stated in the Brief or at Phase 4, and choices you made while writing the prd an
 
 ### Spike outcome
 
-Ask the developer what the spike found. Write the outcome as the next ADR: the Context is the
+If `decisions/` already holds a `proposed` outcome ADR, go straight to its checkpoint below; never
+write a second one. Otherwise ask the developer what the spike found, and write the outcome as the next ADR: the Context is the
 Question and timebox, the Options are what was tried or considered, and the Decision is the
 outcome. Status `accepted` when the developer states the outcome outright, otherwise `proposed`.
 
