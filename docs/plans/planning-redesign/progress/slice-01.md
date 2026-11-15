@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| **Status** | blocked |
+| **Status** | done |
 | **Issue** | #207 |
-| **PR** | none yet (blocked before Phase 11) |
+| **PR** | this PR |
 | **Executor model** | Claude Opus 5.5 (`claude-opus-5-5`), via `ship-issue 207` → `work-issue 207 --auto`, pack rules followed by hand |
-| **Date** | 2026-11-13 |
+| **Date** | 2026-11-13 (blocked), 2026-11-14 (done) |
 
 ## Preflight
 
@@ -21,8 +21,6 @@
 
 ## Acceptance
 
-Proofs so far. Nothing below 1.1 is final until the block is resolved and the full checks pass.
-
 | ID | How it was shown |
 |---|---|
 | S-03.1 | `pack-format.md` §2 holds the routing matrix, size table and modifier table copied from `design.md` §3 |
@@ -36,17 +34,21 @@ Proofs so far. Nothing below 1.1 is final until the block is resolved and the fu
 | S-11.1–S-11.4 | `templates/design.md`: Domain model, State machines, Flows, Test strategy, Pre-mortem, each headed by its trigger |
 | S-12.1 | `ux-checklist.md` restructured into six parts (inventory, flow, wireframes, states, responsive, accessibility); `templates/ux.md` holds the same six |
 | S-12.2 | `pack-format.md` §2, Modifiers, defines `observability` |
-| 1.1 | Scratchpad run of check 14's lines: python fence → `PACK CODE FENCE`; untagged → `PACK CODE FENCE`; `json` → `PACK CODE FENCE`; second fence after a valid one → caught at its line; folder without README → `PACK NO README docs/plans/y`; no `docs/plans/` → nothing; this repository → nothing. **Full checks not passing; see Blocked on** |
+| 1.1 | Scratchpad run of check 14's lines: python fence → `PACK CODE FENCE`; untagged → `PACK CODE FENCE`; `json` → `PACK CODE FENCE`; second fence after a valid one → caught at its line; folder without README → `PACK NO README docs/plans/y`; no `docs/plans/` → nothing; this repository → nothing. Full structural checks: `structural checks pass` |
+| Check count | `CLAUDE.md:215` says "Fourteen checks" and names check 14; checks pass. Negative: changing it to "Fifteen" prints `CHECK COUNT DRIFT CLAUDE.md says fifteen, verification doc has 14` |
 
 ## Deviations
 
 | Plan said | Reality | Why | Contract affected |
 |---|---|---|---|
-| Change `CLAUDE.md:215` to "Fourteen checks" | Check 8 then fails: `CHECK COUNT DRIFT CLAUDE.md says fourteen, verification doc has 14` | Check 8 turns the word into a number through `w2n()`, defined in check 7 (`docs/verification.md`, around line 79), whose table stops at `thirteen` | y (Check count contract) |
+| Change `CLAUDE.md:215` to "Fourteen checks" | Check 8 then fails: `CHECK COUNT DRIFT CLAUDE.md says fourteen, verification doc has 14` | Check 8 turns the word into a number through `w2n()`, defined in check 7 (`docs/verification.md`, around line 79), whose table stops at `thirteen` | y (Check count contract). Stopped; resolved by the developer's decision below |
 | Ten templates, including `ux.md` | Done; templates also carry Spike **Question**, Bug **Repro and root cause** and a Retro table | Round 4 cold read flagged the Spike README shape and Retro shape as undefined (S3-Q1, S7-Q4) | n |
 
 ## Decisions
 
+- **Developer, 2026-11-14:** extend `w2n()` in check 7 with `fourteen` through `twenty`. Only
+  the lookup table changed; no check's logic did. This overrides the stop condition "Stop if any of
+  the 13 existing checks needs changing" for this one edit.
 - Template guidance lines are italic and start with `_Guidance:`, so a skill can tell them from
   content and replace them.
 - `ux-checklist.md` keeps the "patterns to flag" table under Part 3, Wireframes, rather than as a
@@ -63,14 +65,6 @@ Proofs so far. Nothing below 1.1 is final until the block is resolved and the fu
 
 ## Blocked on
 
-**Stop condition:** "Stop if any of the 13 existing checks needs changing to make room. That is out
-of scope." (plan.md, Slice 1.)
-
-**Question for the developer:** may Slice 1 extend `w2n()` in check 7 by adding `fourteen) echo 14`
-(or up to `twenty`, for headroom)? It is a lookup-table entry; no check's logic changes. The
-alternative is to change the Check count contract so `CLAUDE.md` states the count another way,
-which also edits check 8.
-
-**Partial in the `wip:` commit:** `pack-format.md`, the ten templates, the rewritten
-`ux-checklist.md`, check 14 with its table row and mechanics note, and the `CLAUDE.md` sentence
-already saying "Fourteen checks". Everything except check 8 passing is done.
+Resolved. The slice stopped on 2026-11-13 at "Stop if any of the 13 existing checks needs changing to
+make room", with partial work in `wip:` commit `5658c2d`. The developer approved extending `w2n()`
+on 2026-11-14 (see Decisions), and the slice was finished on the same branch.

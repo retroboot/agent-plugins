@@ -78,7 +78,9 @@ jq -r '.plugins[].name' .claude-plugin/marketplace.json | while read -r p; do
 # every skill's phase headings run 1..N, and any stated count matches them
 w2n() { case "$1" in one) echo 1;; two) echo 2;; three) echo 3;; four) echo 4;; five) echo 5;;
         six) echo 6;; seven) echo 7;; eight) echo 8;; nine) echo 9;; ten) echo 10;;
-        eleven) echo 11;; twelve) echo 12;; thirteen) echo 13;; *) echo 0;; esac; }
+        eleven) echo 11;; twelve) echo 12;; thirteen) echo 13;; fourteen) echo 14;;
+        fifteen) echo 15;; sixteen) echo 16;; seventeen) echo 17;; eighteen) echo 18;;
+        nineteen) echo 19;; twenty) echo 20;; *) echo 0;; esac; }
 for f in skills/*/SKILL.md; do
     nums=$(grep '^## Phase [0-9]' "$f" | sed 's/^## Phase *\([0-9][0-9]*\).*/\1/' | sort -n -u)
     cnt=$(printf '%s\n' "$nums" | grep -c .)
