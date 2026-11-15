@@ -54,6 +54,7 @@
         "./skills/brainstorm",
         "./skills/spec",
         "./skills/slice",
+        "./skills/cold-read",
         "./skills/planning"
       ],
       "commands": []
