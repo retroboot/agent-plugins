@@ -104,6 +104,9 @@ List every PRD criterion ID — each bold `S-NN.k` that opens a criterion in `pr
 grep -oE '\*\*S-[0-9]+\.[0-9]+\*\*' docs/plans/{slug}/prd.md | tr -d '*' | sort -u
 ```
 
+**No criteria:** when `prd.md` exists but the command prints nothing, say
+`Format gap: prd.md states no bold S-NN.k criteria; nothing was written.` and go to Phase 7.
+
 Display: `Pack: {path} | Status: {status} | Route: {type}, {size}, {modifiers} | Mode: {mode} | Criteria: {count}`.
 
 ---
@@ -164,7 +167,8 @@ The slice contract, `pack-format.md` §4, with the eight headings in order:
 
 - **Header line:** `Issue: # · Depends on: {Slice N, … or none} · Stories: {S-NN, …} · Map: {steps}`.
   The issue number stays `#` for Publish to fill. `Map:` is present only when the prd has a Story
-  map; it names the map steps (column headings) the slice's stories sit under.
+  map; it names the journey steps (the map's column headings) that the slice's Outcome changes —
+  the steps it touches — whichever step its stories sit under.
 - **Outcome** (mandatory): one or two sentences describing the observable result.
 - **Acceptance** (mandatory): the PRD criterion IDs, each in bold as its own bullet, then the local
   criteria.
@@ -229,25 +233,26 @@ with the slice number that covers that site. In a Re-slice, update the numbers t
 Before the checkpoint, check the draft on disk. A draft that fails any check is rejected: fix it and
 check again. Never show a failing draft as ready.
 
-**Headings (S-04.2).** Every slice has all eight headings. This prints each one missing; expected
-no output:
+**Headings (S-04.2).** Every slice has the eight headings, exactly and in order. This prints
+each slice whose headings differ, with the headings it has; expected no output:
 
 ```bash
 awk -v want="Outcome|Acceptance|Contracts|Stop conditions|Verify|Pattern to follow|Suggested path|Files" '
-  function chk(  n, w, i) { n = split(want, w, "|"); for (i = 1; i <= n; i++) if (!(w[i] in h)) print s ": missing " w[i] }
-  /^## / { if (s) chk(); s = ""; split("", h) }
+  function chk() { if (got != want) print s ": headings " got }
+  /^## / { if (s) chk(); s = ""; got = "" }
   /^## Slice / { s = $0 }
-  /^### / { h[substr($0, 5)] = 1 }
+  s && /^### / { got = got (got == "" ? "" : "|") substr($0, 5) }
   END { if (s) chk() }' docs/plans/{slug}/plan.md
 ```
 
 Then read each slice: every heading has content, and the header line has the fields above.
 
-**Fences (S-04.3).** Every opening fence is tagged `bash`, `sh`, `mermaid` or `text`. This prints
-each one that is not, untagged included; expected no output:
+**Fences (S-04.3).** Every opening fence, at any indentation and with backticks or tildes, is
+tagged `bash`, `sh`, `mermaid` or `text`. This prints each one that is not, untagged included;
+expected no output:
 
 ```bash
-awk '/^```/ { if (open) { open = 0; next } open = 1; t = substr($0, 4); sub(/[ \t\r]+$/, "", t)
+awk '/^[ \t]*(```|~~~)/ { if (open) { open = 0; next } open = 1; t = $0; sub(/^[ \t]*(```|~~~)[`~]*/, "", t); sub(/[ \t\r]+$/, "", t)
   if (t != "bash" && t != "sh" && t != "mermaid" && t != "text") print FILENAME ":" FNR ": fence \"" t "\"" }' docs/plans/{slug}/plan.md
 ```
 
@@ -255,29 +260,40 @@ Then read each fence: a `bash` or `sh` fence sits under a Verify heading and hol
 `mermaid` holds a diagram, `text` a tree or layout. Code in any language is rejected, whatever its
 tag — move what it meant into a contract table, a Given/When/Then, or a `path:line` pointer.
 
-**Trace (S-04.4).** Every PRD criterion ID is in at least one slice's Acceptance. The first command
-prints each one that is not, the second each ID a slice lists that the prd does not have; expected
-no output from either:
+**Trace (S-04.4).** Only a bold criterion ID counts as listing it; a mention such as "like
+S-05.3.e1" in prose does not. The first command prints each PRD criterion no slice's Acceptance
+lists, the second each one missing from the Traceability table's first column (example IDs there do
+not count), the third each bold ID a slice lists that the prd does not have; expected no output from
+any:
 
 ```bash
 p=docs/plans/{slug}
-comm -23 <(grep -oE '\*\*S-[0-9]+\.[0-9]+\*\*' "$p/prd.md" | tr -d '*' | sort -u) \
-  <(awk '/^#/ { a = ($0 == "### Acceptance") } a' "$p/plan.md" | grep -oE 'S-[0-9]+\.[0-9]+' | sort -u)
-comm -13 <(grep -oE '\*\*S-[0-9]+\.[0-9]+\*\*' "$p/prd.md" | tr -d '*' | sort -u) \
-  <(grep -oE 'S-[0-9]+\.[0-9]+' "$p/plan.md" | sort -u)
+crit() { grep -oE '\*\*S-[0-9]+\.[0-9]+\*\*' "$@" | tr -d '*' | sort -u; }
+comm -23 <(crit "$p/prd.md") <(awk '/^#/ { a = ($0 == "### Acceptance") } a' "$p/plan.md" | crit)
+comm -23 <(crit "$p/prd.md") <(awk -F'|' '/^#/ { t = ($0 == "## Traceability") } t && /^\|/ { print $2 }' "$p/plan.md" \
+  | grep -oE 'S-[0-9]+\.[0-9]+(\.e[0-9]+)?' | grep -v '\.e' | sort -u)
+comm -13 <(crit "$p/prd.md") <(awk '/^#/ { a = ($0 == "### Acceptance") } a' "$p/plan.md" | crit)
 ```
 
-Run the first again against the Traceability section, with `a = ($0 == "## Traceability")`; it
-must also print nothing, and each row's slices must match the slices that list its IDs. A missing ID
-is fixed by adding it to the slice that delivers it. When no slice could deliver it — it belongs to
-no outcome in the plan — leave it out and keep it as a **gap** for the checkpoint. Never drop it
+Each Traceability row's slices must also match the slices that list its IDs. A missing ID is fixed
+by adding it to the slice that delivers it. When no slice could deliver it — it belongs to no
+outcome in the plan — leave it out and keep it as a **gap** for the checkpoint. Never drop it
 silently.
+
+**Map (S-11.5).** When the prd has a Story map, every slice header has `Map:`, naming only the
+map's column headings, and every step is named by at least one slice. This prints each step no slice
+names; expected no output:
+
+```bash
+p=docs/plans/{slug}
+comm -23 <(awk '/^## /{m=($0=="## Story map")} m && /^\|/{print; exit}' "$p/prd.md" | tr '|' '\n' | sed 's/^ *//;s/ *$//' | grep . | sort -u) \
+  <(grep -E '^Issue:' "$p/plan.md" | grep -oE 'Map: .*' | sed 's/^Map: //' | tr ',' '\n' | sed 's/^ *//;s/ *$//' | sort -u)
+```
+
+Without a Story map, no header has `Map:`.
 
 **The rest.** Fix anything that fails:
 
-- **Map (S-11.5):** when the prd has a Story map, every slice header has `Map:`, naming only steps
-  that are column headings of the map, and every map step is named by at least one slice. Without a
-  Story map, no header has `Map:`.
 - **Size (4.1):** no slice is estimated above `size:l`.
 - **Type (4.2):** the Refactor or Greenfield Slice 1 rule, or a Rollback line in every Migration
   and Rewrite slice.
