@@ -163,11 +163,12 @@ A body that mentions a plan mid-sentence, such as `Plan: TBD` inside a paragraph
 For each issue, look at the lines that start with `Plan: `. Matching is case-sensitive.
 
 - **Marker.** The first line that starts with `Plan: docs/plans/`, in the form
-  `Plan: docs/plans/<slug> · Slice: <N>`. The separator may be `·` or `|`. Store `pack_slug` and
-  `slice_number` for that issue. If no `Slice: <N>` can be read from the line, stop:
-  `marker on #{number} names no slice — fix the issue body`.
+  `Plan: docs/plans/<slug> · Slice: <N>`. The separator may be `·` or `|`. Store `pack_slug`, with
+  any trailing `/` removed, and `slice_number` for that issue. If no `Slice: <N>` can be read from
+  the line, stop: `marker on #{number} names no slice — fix the issue body`.
 - **Not a marker.** A `Plan: ` line that is not a `docs/plans/` path, such as `Plan: docs/plan/x`.
-  Display `unrecognised Plan: line — legacy mode` and treat that issue as having no marker.
+  When no line of the body is a marker, display `unrecognised Plan: line — legacy mode` and treat
+  that issue as having no marker. When another line is a marker, ignore it silently.
 
 ### Load the pack
 
@@ -213,7 +214,8 @@ If `--auto` is not set and you're genuinely unsure, ask the user one focused que
 
 **Pack slice (conditional).** Skip this when the issue carries no marker. Do not classify and do not
 ask: map the README's Size row. S is `simple`, M is `medium` and L is `complex`. A Change is always
-S, and an XL pack never reaches here because it is split into child packs. Display
+S, and an XL pack never reaches here because it is split into child packs. Phase 6 always runs in
+pack mode, whatever the complexity, because it holds the preflight. Display
 `Complexity: {simple|medium|complex} (pack size {S|M|L})` in place of the line below.
 
 Display: `Complexity: {simple|medium|complex}`
@@ -376,7 +378,8 @@ phase runs at every complexity, `simple` included, because preflight cannot be s
 2. **Resumed after a block.** If the branch already holds this slice's progress file with Status
    `blocked`, read its **Blocked on** first. Unless the issue comments or the pack on
    `origin/{integration}` now answer the question, the stop still holds: take the blocked path
-   again without further work. When it is answered, record the answer as a decision and continue.
+   again without further work. When it is answered, set the progress file's Status to
+   `in-progress`, record the answer as a decision, and continue.
 3. **The slice is the plan.** Its Outcome, Acceptance, Contracts, Stop conditions and Verify are
    mandatory. Pattern to follow, Suggested path and Files are guidance: you may leave them if every
    mandatory item still holds, and record why as a deviation. Write no separate plan.
@@ -563,9 +566,10 @@ Handling describe.
 Take this path when a stop condition triggers in Phase 6 or Phase 7, with or without `--auto`:
 
 1. Skip Phases 8, 9 and 11.
-2. Write the progress file as Phase 10 describes, with Status `blocked`, everything shown so far,
-   and what is partial. Fill in **Blocked on**: the question, and the stop condition that triggered
-   (quote the slice's bullet, or name the README rule). Leave README Status and the Retro alone.
+2. Write the progress file as Phase 10 describes, with Status `blocked`, PR
+   `none (no PR is opened)`, everything shown so far, and what is partial. Fill in **Blocked on**:
+   the question, and the stop condition that triggered (quote the slice's bullet, or name the
+   README rule). Leave README Status and the Retro alone.
 3. Stage the partial work and the progress file by name, following **Staging** in `core`, and make
    one commit: `wip: slice {slice_number} {what it does} (blocked)`, with the question and the
    progress file's path in the body, then `Refs #{number}`. Not `Closes`: nothing is ready to close.
@@ -588,5 +592,5 @@ If any phase fails:
 - Don't retry indefinitely — 3 attempts max on any single fix
 
 **Pack slice (conditional).** Skip this when the issue carries no marker. A stop condition is not a
-failure to retry: take **Pack mode — Blocked path**, which ends with `status: "BLOCKED"`. A caller
-such as `ship-issue` treats that as stuck and opens no PR for it.
+failure to retry: take **Pack mode — Blocked path**, which ends with `status: "BLOCKED"` and opens
+no PR. Slice 8 of the planning redesign makes `ship-issue` treat that value as stuck.
