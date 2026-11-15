@@ -30,6 +30,11 @@ linear issue create --team {TEAM} --title "{T}" --description "{B}"
 linear issue update {ID} --label "{label}"
 ```
 
+**Edit** (replace an issue's description)
+```
+linear issue update {ID} --description "{B}"
+```
+
 **Close** (transition to Done state)
 ```
 linear issue update {ID} --state Done

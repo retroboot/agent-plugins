@@ -27,6 +27,11 @@ glab issue create --repo {PROJECT} --title "{T}" --description "{B}" --label "{l
 
 Use labels from the label reference loaded by init. Pick one or more that fit the issue type and priority.
 
+**Edit** (replace an issue's description)
+```
+glab issue update {N} --repo {PROJECT} --description "{B}"
+```
+
 **Close**
 ```
 glab issue close {N} --repo {PROJECT}

@@ -36,6 +36,14 @@ gh issue create --repo {OWNER}/{REPO} --title "{T}" --body "{B}" --label "{label
 
 Use labels from the label reference loaded by init. Pick one or more that fit the issue type and priority.
 
+**Edit** (replace an issue's body)
+```
+gh api --method PATCH repos/{OWNER}/{REPO}/issues/{N} -f body="{B}"
+```
+
+Use this rather than `gh issue edit`, for the same reason as **Edit a PR's title or body** below:
+the `gh api` form is version-independent.
+
 **Close**
 ```
 gh issue close {N} --repo {OWNER}/{REPO}
