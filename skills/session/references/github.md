@@ -34,7 +34,7 @@ cause is the `gh` version.
 gh issue create --repo {OWNER}/{REPO} --title "{T}" --body-file {file} --label "{labels}"
 ```
 
-Write the body to `{file}` first, with a single-quoted heredoc (`cat > {file} <<'EOF'`). A body
+Write the body to `{file}` first, outside the checkout (`mktemp`), with a single-quoted heredoc (`cat > {file} <<'EOF'`). A body
 passed as `--body "{B}"` loses every backticked span: the shell runs it as a command substitution.
 
 Use labels from the label reference loaded by init. Pick one or more that fit the issue type and priority.

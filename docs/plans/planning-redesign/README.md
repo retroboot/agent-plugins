@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | executing |
+| **Status** | done |
 | **Type** | Feature |
 | **Size** | L — 9 slices |
 | **Modifiers** | none |
@@ -103,4 +103,37 @@ Any assumption that could still be wrong is listed in `design.md` §9 (Risks).
 
 ## Retro
 
-_Written by the final slice._
+Written by Slice 9, comparing [`cold-read.md`](cold-read.md) (four Haiku rounds) with the
+deviations and discoveries in `progress/slice-01.md` to `slice-09.md`. All nine slices are `done`.
+
+| Cold read predicted | What diverged | Slice | Lesson for the next pack |
+|---|---|---|---|
+| Round 1: gaps at the boundary between the plugins (phase order in another skill, a format one plugin cannot read, a write with no owner) | Every boundary resolution held. `work-issue` and `ship-issue` read packs without reading `planner` files | 7, 8 | A reader that tries to execute a slice finds boundary gaps a checklist misses; keep the execute-the-slice prompt |
+| Round 2: ownership gaps (who writes which README field and Status) | Still open in execution: nobody owned the `progress/` and `cold-read.md` lines in Read order until the wrapper took them | 2, 3, 4, 6 | For every file the format lists, name the skill that writes it and the one that adds its Read-order line |
+| Round 3: producer gaps (size-S slice, Bug rules with no writer) | `brainstorm` and `spec` left **Child packs**, **Question**, **Repro and root cause** and **Slice** to later skills; each was handed on by a Discovery and landed | 2, 3, 6 | Hand-offs by Discovery work, but only because each later slice grepped for its own number |
+| Shared contract: `status` values and `pack_status` a string | `SPEC STOPPED`, `SLICE STOPPED`, `COLD READ STOPPED` were added and `pack_status`/`model` became nullable, as accepted contract deviations, then amended in `plan.md` by Slice 6 | 2–6 | A result contract needs a "stopped" value and a "no README" case from the start; every phase skill hit both |
+| Citations checked: 22 in round 4, 19 held, 3 in part, none failed | Line numbers and counts drifted as slices merged: check count 13 → 14, planner skills 4 → 7, `review-pr` 4–14 → 4–16, `ship-issue` Error Handling 170–179 → 170–178 | 3, 4, 5, 8, 9 | Cite section names plus a start line; a range ages badly and a count is stale after the first slice |
+| Rounds 1–4 checked citations by reading; none ran a Verify command | Faults found only by running: check 8's `w2n()` on "Fourteen" (Slice 1), an awk field number (Slice 5), the `origin/HEAD` read none of the listed commands provides (Slice 8) | 1, 5, 8 | Readers that run Verify commands catch what readers that only read cannot; make the cold read run them |
+| NFR: no new or rewritten `SKILL.md` over 400 lines | `spec` drafted at 406 (cut to 380), `planning` needed `references/publish.md` to stay at 383, `work-issue` is 596 (an extension, accepted) | 3, 6, 7 | Budget lines per skill in the design, and plan the `references/` split up front |
+| Size-S slice maps to `simple` (not predicted) | Legacy `simple` skips Phase 6, where preflight lives; settled as a Decision | 7 | Check that a new mode's mandatory step survives every legacy route through the skill |
+| `work-issue` pack mode would be the executor's procedure | It was used for real in Slices 6–9. Reading the whole pack (about 2,100–2,500 lines) is heavy; Bootstrap loads `init`, `session` and `core` by name, which resolves to the installed plugin, not the checkout; Phase 8's `verify.md` pointer added nothing in pack mode | 6, 8, 9 | Tell the executor to grep progress files for `Slice N` and read the rest selectively, and say which copy of a skill wins when the checkout changes it |
+
+### Follow-ups
+
+- **#218:** check 14 and `slice`'s fence command miss or mis-pair indented, `~~~` and
+  four-backtick fences.
+- **#227:** a rerun while a slice's PR is open keeps that slice, because its `done` progress file is
+  only on its branch, so `work-issue` would open a second PR.
+- `ship-issue` pack mode reads only `Issue: #N`, so a pack whose slice issues live in Linear cannot
+  run from a pack path; support `Issue: {identifier}`.
+- The PR commands in `skills/session/references/github.md` and `gitlab.md` (**Create PR**, **Post
+  comment**, **Edit a PR's title or body**) still pass `"{B}"` double-quoted bodies, with the
+  backtick hazard R5 fixed for issues.
+- `brainstorm`'s "not routed" end returns the same JSON as a discard; give it a distinct status or a
+  `reason` field.
+- `slice`'s checkpoint offers "revise the prd with `planning`", but the wrapper has no "revise the
+  spec, same route" step.
+- `ship-issue` does not check that a slice issue's marker names the same slice as `plan.md`; a
+  publish-side check would catch it.
+- `design.md` §2 could adopt the **Proposed by** line and `amended by` rule this pack's ADRs use.
+- `cold-read` on a dirty checkout sees context the pack does not hold; run it on a clean tree.

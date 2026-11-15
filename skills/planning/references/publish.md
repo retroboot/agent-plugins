@@ -13,8 +13,8 @@ created, and every step skips what the pack already records, so a run interrupte
 resumed with `planning docs/plans/{slug}` never creates an issue twice.
 
 **Bodies go through a file.** An issue or PR body holds backticked paths, which a shell would run
-as command substitutions inside `"{B}"`. Write each body to a scratch file with a single-quoted
-heredoc (`cat > {file} <<'EOF'`), and pass the file with the reference's file form. Where a
+as command substitutions inside `"{B}"`. Write each body to a scratch file outside the checkout
+(`mktemp`, so `core` **Staging** never sees it) with a single-quoted heredoc (`cat > {file} <<'EOF'`), and pass the file with the reference's file form. Where a
 reference command still shows `"{B}"` (the PR commands), pass `"$(cat {file})"` in its place: the
 output of `$(cat …)` is not expanded again. Never put a body's text in double quotes on the command
 line.

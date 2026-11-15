@@ -15,7 +15,7 @@ The plugin is split into focused packages:
 |--------|---------|
 | `dev` | Implementation and code review — issues, PRs, waves, merges, and promotions |
 | `auditor` | Code audit skills — security, accessibility, performance, and tech debt |
-| `planner` | Planning and brainstorming — thinking sessions through to sized issues and plan documents |
+| `planner` | Planning and brainstorming — thinking sessions, then plan packs that are specified, sliced, cold-read and published as one issue per slice |
 | `data-platform` | Full data platform skills — the complete stack from ingestion and pipelines to ML, LLMs, dashboards, and database administration |
 
 `init` and `session` are shared setup skills included by `dev` and `planner`. Every command loads them before its main skill.
@@ -29,12 +29,12 @@ The plugin is split into focused packages:
 | `init` | One-time setup — provider config, repo labels, `.hivrr.json` scaffold, verify commands, project board IDs, keeping `.hivrr.json` out of git, orphan-worktree reporting |
 | `session` | Loads config and the active provider reference for the session |
 | `core` | Coding philosophy — quality gates, git safety, script policy, and task completion standards |
-| `work-issue` | Implement an issue end-to-end and open a PR/MR |
+| `work-issue` | Implement an issue end-to-end and open a PR/MR; an issue marked as a plan pack slice is executed under the pack's rules |
 | `work-pr` | Address PR/MR review feedback end-to-end |
 | `review-pr` | Review a PR/MR and post a structured comment |
 | `merge-pr` | Merge a PR/MR, close linked issues, clean up branches, capture follow-up work |
 | `promote` | Promote one ladder rung to the next — `dev → staging → main` |
-| `ship-issue` | Drive a list of issues to merged PR(s), composing `work-issue` and `ship-pr` |
+| `ship-issue` | Drive a list of issues (grouped by relatedness) or a plan pack's slices (one PR each, in plan order) to merged PR(s), composing `work-issue` and `ship-pr` |
 | `ship-pr` | Drive an existing PR/MR to clean-or-merged, composing `review-pr`, `work-pr`, and `merge-pr` |
 | `wave` | Execute multiple related issues in order on a shared branch |
 | `debug` | Diagnose a bug without making changes |
@@ -55,11 +55,11 @@ The plugin is split into focused packages:
 |-------|-------------|
 | `init` | Shared setup skill — see `dev` |
 | `session` | Shared setup skill — see `dev` |
-| `brainstorm` | Collaborative thinking session on a technical problem |
+| `brainstorm` | Collaborative thinking session on a technical problem, kept as a plan pack README if you choose, so a fresh session can resume it |
 | `spec` | Write a plan pack's PRD, context, decisions and design for its route, each behind a checkpoint |
 | `slice` | Split a specified plan pack into PR-sized slices in `plan.md`, with a traceability table, behind a checkpoint |
 | `cold-read` | Prove a plan pack complete with a cold read by the smallest available model, fixing it until no blocking questions remain |
-| `planning` | Triage a feature into sized issues, and place them on the project board |
+| `planning` | Guided wrapper — runs `brainstorm`, `spec`, `slice` and `cold-read` for a plan pack's route, then publishes one issue per slice and a pack PR, resuming from the pack's README Status |
 
 ### `data-platform`
 
