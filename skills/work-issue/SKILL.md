@@ -593,4 +593,4 @@ If any phase fails:
 
 **Pack slice (conditional).** Skip this when the issue carries no marker. A stop condition is not a
 failure to retry: take **Pack mode — Blocked path**, which ends with `status: "BLOCKED"` and opens
-no PR. Slice 8 of the planning redesign makes `ship-issue` treat that value as stuck.
+no PR. `ship-issue` records that value as `stuck` and stops its run.
