@@ -81,7 +81,7 @@ committed) with a pack `x` of three slices, and on this pack on `origin/main`.
 - **`inline_context` and `--no-merge`** are accepted with a pack path and passed on as for issue
   numbers. Under `--no-merge`, the legacy dependency gate stops a dependent slice after a
   `clean_unmerged` prerequisite.
-- **XL parent pack** (review round 1): when the README **Size** row is `XL`, step 3 (79–81) stops
+- **XL parent pack** (review round 1): when the README **Size** row starts with `XL`, step 3 (79–81) stops
   with `XL parent pack: ship each child pack` before the size-S branch could read the parent's
   README as a single slice.
 - **`Issue: #N`** (review round 1) is read from the first non-blank line after the `## Slice N`

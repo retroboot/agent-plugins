@@ -76,7 +76,7 @@ anywhere else.
    No slice has started, so that line is the whole report.
 3. Build the slice list. Read each file with
    `git show origin/{integration}:docs/plans/{pack_slug}/{file}`.
-   - **XL parent:** when the README header table's **Size** row is `XL`, the pack has child packs and
+   - **XL parent:** when the README header table's **Size** row starts with `XL`, the pack has child packs and
      no slices of its own. Display `XL parent pack: ship each child pack` and stop before any slice
      starts.
    - **With `plan.md`:** one entry per `## Slice N — …` heading. Its issue is the `Issue: #N` on the
