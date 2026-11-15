@@ -112,7 +112,8 @@ filled in; expected no output from either.
 Every finding is a blocking item, recorded in the coming round's Questions table as an author
 finding, Id `A1`, `A2` …, so the round shows it. Fix it now, unless the mode is Record only or the
 fix is developer-only — one that changes what a criterion means, or drops one; hold those for
-Phase 5.
+Phase 5. A **held** finding is not excepted from the pass rule: it counts as Blocking for this
+round even if Phase 5 fixes it, because no reader has seen the fix.
 
 ---
 
@@ -204,7 +205,7 @@ Now read the earlier rounds in `cold-read.md` in full, and class every item in t
 | Contradiction | **Blocking** when two mandatory items (`pack-format.md` §4) or two contracts disagree, so no executor can satisfy both; otherwise non-blocking |
 | Citation that does not hold | **Blocking** when a slice's Contracts or Stop conditions rest on it; otherwise non-blocking |
 | Code in the pack | **Blocking**, always |
-| Author finding from Phase 2 | **Blocking**, already fixed |
+| Author finding from Phase 2 | **Blocking**; already fixed, unless held in Phase 2 |
 
 Then mark each blocking item **developer-only** when only the developer can answer it: a product
 decision (scope, a goal or non-goal, what a user sees), or confirming, changing or reversing an
@@ -264,8 +265,8 @@ closing `## Result` section, which stays the last section of the file.
 
 ### Next round, or stop
 
-- **No item classed Blocking in this round's Phase 4** (author findings excepted, since they were
-  fixed before the reader saw the pack): the pack **passes**. Go to Phase 6.
+- **No item classed Blocking in this round's Phase 4** (author findings fixed in Phase 2 excepted,
+  since the reader saw the fixed pack; a held one counts): the pack **passes**. Go to Phase 6.
 - **Blocking items, all resolved, fewer than 3 rounds this run, and not Record only:** go back to
   Phase 3 with a new reader. Only a new reader can show the fixes worked.
 - **Otherwise** — the third round of this run still had items classed Blocking, a developer-only
@@ -277,9 +278,9 @@ closing `## Result` section, which stays the last section of the file.
 ## Phase 6 — Result and Status
 
 `blocking` is the number of items classed **Blocking** in the last round's Phase 4, author
-findings excepted, each counted once — so an item the author re-classed blocking counts, one
-re-classed non-blocking with a cited pack location does not, and an unanswered developer-only
-question is already among them. It is 0 only on a pass.
+findings fixed in Phase 2 excepted (a held one counts), each counted once — so an item the author
+re-classed blocking counts, one re-classed non-blocking with a cited pack location does not, and an
+unanswered developer-only question is already among them. It is 0 only on a pass.
 
 **On a pass:** the closing **Result** says `Pass after {n} rounds.`
 
@@ -320,7 +321,9 @@ Write `null` bare, never as the string `"null"`.
 - `rounds` is the number of rounds this run recorded; `blocking` as Phase 6 defines it.
 - `COLD READ COMPLETE` only when the last round passed.
 - `COLD READ BLOCKED` when the run ended without a pass: the third round still had items classed
-  Blocking, a developer-only question is unanswered, or a Record only round had one.
+  Blocking (author findings fixed in Phase 2 excepted; a held one counts), a developer-only
+  question is unanswered, or a Record only round had one — in Record only mode every author
+  finding is held.
 - `COLD READ STOPPED` when no round could be recorded: no README, no subagent available, two
   incomplete reports, or a reader that changed the pack. `model` is bare `null` when no reader
   ran, `rounds` counts the rounds recorded before the stop, and `pack_status` is the unchanged
