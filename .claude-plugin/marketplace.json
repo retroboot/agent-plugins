@@ -53,6 +53,7 @@
         "./skills/session",
         "./skills/brainstorm",
         "./skills/spec",
+        "./skills/slice",
         "./skills/planning"
       ],
       "commands": []
