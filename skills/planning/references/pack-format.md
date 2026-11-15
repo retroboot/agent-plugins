@@ -50,8 +50,7 @@ Options (each rejected one with its reason), Decision and Consequences.
 |---|---|
 | The developer stated it outright | `accepted` |
 | The author made it; shown at the `spec` checkpoint (a "contested" ADR) | `proposed` |
-| The developer approved a proposed ADR | `accepted (developer, <date>)`, plus a **Proposed by** line |
-| A later ADR replaces part of it | Add `amended by ADR-NNN`; never edit the old decision away |
+| The developer approved a proposed ADR | `accepted (developer, <date>)` |
 
 ---
 
@@ -204,6 +203,8 @@ stateDiagram-v2
   executing --> done: last slice PR writes Retro
   done --> [*]
 ```
+
+**Resume.** The wrapper resumes at the phase after the current Status.
 
 Illegal transitions:
 

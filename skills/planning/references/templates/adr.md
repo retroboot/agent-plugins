@@ -4,12 +4,8 @@
 
 _Guidance: `accepted` when the developer stated the decision outright; `proposed` when the author
 made it and it is shown at the `spec` checkpoint. When the developer approves a proposed ADR,
-change the Status to `accepted (developer, <date>)` and keep the line below. When a later ADR
-replaces part of this one, add `amended by ADR-<NNN>` to the Status; never edit the decision away.
-Save the file as `decisions/ADR-<NNN>-<kebab-title>.md`. Numbers start at 001 and are never
-reused._
-
-**Proposed by:** <who, when the Status was proposed>
+change the Status to `accepted (developer, <date>)`. Save the file as
+`decisions/ADR-<NNN>-<kebab-title>.md`. Numbers start at 001 and are never reused._
 
 ## Context
 

@@ -87,7 +87,7 @@ for f in skills/*/SKILL.md; do
     [ "$cnt" -eq 0 ] && continue
     [ "$nums" = "$(seq 1 "$cnt")" ] \
       || echo "PHASE SEQUENCE $f (numbered $(echo $nums | tr '\n' ' ')- expected 1 to $cnt)"
-    said=$(sed -n 's/.*[Tt]he \**\(one\|two\|three\|four\|five\|six\|seven\|eight\|nine\|ten\|eleven\|twelve\|thirteen\)\** phases.*/\1/p' "$f" | head -1)
+    said=$(sed -n 's/.*[Tt]he \**\(one\|two\|three\|four\|five\|six\|seven\|eight\|nine\|ten\|eleven\|twelve\|thirteen\|fourteen\|fifteen\|sixteen\|seventeen\|eighteen\|nineteen\|twenty\)\** phases.*/\1/p' "$f" | head -1)
     [ -n "$said" ] || continue
     [ "$(w2n "$said")" = "$cnt" ] || echo "PHASE COUNT DRIFT $f (says $said, has $cnt)"
   done
@@ -169,7 +169,7 @@ printf '%s\n' "$agent_links" | grep . | while read -r name; do
 
 # every plan pack under docs/plans/ has a README, and its fences are tagged bash, sh, mermaid or text
 if [ -d docs/plans ]; then
-  for d in docs/plans/*/; do
+  for d in docs/plans/*/ docs/plans/.[!.]*/; do
     [ -d "$d" ] || continue
     [ -f "${d}README.md" ] || echo "PACK NO README ${d%/}"
   done
@@ -179,7 +179,7 @@ if [ -d docs/plans ]; then
       awk -v fence="$pack_fence" -v file="$f" '
         index($0, fence) != 1 { next }
         open { open = 0; next }
-        { open = 1; info = substr($0, 4); sub(/[ \t]+$/, "", info)
+        { open = 1; info = substr($0, 4); sub(/[ \t\r]+$/, "", info)
           if (info !~ /^(bash|sh|mermaid|text)$/) print "PACK CODE FENCE " file ":" NR }' "$f"
     done
 fi
@@ -237,7 +237,10 @@ A few mechanics worth knowing before editing this block:
 - **Check 14 builds its fence pattern with `printf`**, exactly as the loader does, so the block
   never holds a line that starts with three backticks. A literal one would end the extracted block
   early and silently drop every check after it. It prints nothing when `docs/plans/` is absent,
-  and a backtick run mid-line is not a fence. The rule it enforces is the plan-pack fence rule in
+  and a backtick run mid-line is not a fence. It reads column-0 backtick fences only: `~~~` and
+  indented fences are outside the rule it was specified with, and a four-backtick fence is reported
+  rather than passed, so the check fails closed. Trailing spaces, tabs and `\r` after the info
+  string are ignored. The rule it enforces is the plan-pack fence rule in
   `skills/planning/references/pack-format.md` §6.
 - **Checks 6, 9, and 11 read sections of `README.md`** (the per-plugin skill tables, the `## Commands`
   usage block, and the `## Overview` table) even though this fence lives here — those are checks on
