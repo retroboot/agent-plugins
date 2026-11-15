@@ -37,6 +37,7 @@ The input will be one of these forms:
 - Multiple numbers or a range: `123, 456` or `123-126`
 - A GitHub URL
 - A Linear identifier: `PROJ-123`
+- A plan pack path: `docs/plans/<slug>` (see **Pack path** below)
 - Any of the above followed by `: some context` for inline hints
 - An optional `--no-merge` flag
 
@@ -49,6 +50,47 @@ There is no `--auto` flag to parse. This skill always calls `work-issue` and `sh
 set — it exists specifically so nothing waits on a checkpoint.
 
 Display: `Input: {issue_numbers} | no-merge: {no_merge}`
+
+**Pack path (conditional).** Skip this when the input does not start with `docs/plans/`. A path that
+does names a plan pack, a committed folder `docs/plans/<slug>/` whose slices are published as
+issues, one PR each. Store `pack_slug`, the folder name after `docs/plans/` with any trailing `/`
+removed, and extract `inline_context` and `no_merge` as above. Display
+`Input: pack docs/plans/{pack_slug} | no-merge: {no_merge}` in place of the line above, then run
+**Load the pack** before Phase 2. It fills `issue_numbers`.
+
+### Load the pack
+
+**Skip this section when the input is not a pack path.** The pack describes itself: everything here
+comes from the pack's own files on the integration branch, never from the working tree and never
+from another plugin's files. This section only fetches and reads. It writes nothing, to the pack or
+anywhere else.
+
+1. Resolve `{integration}` by the rule `work-issue` Phase 5 uses: `branches.integration` from
+   `.hivrr.json`, then the repository default branch
+   (`gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'`), then the branch
+   `origin/HEAD` points at, then `main`. Run `git fetch origin {integration}`, which updates
+   remote-tracking refs only.
+2. Check that the pack is on the integration branch:
+   `git ls-tree origin/{integration} -- docs/plans/{pack_slug}/README.md`. No output means it is not
+   there. Display `pack docs/plans/{pack_slug} is not on {integration}; merge its PR first` and stop.
+   No slice has started, so that line is the whole report.
+3. Build the slice list. Read each file with
+   `git show origin/{integration}:docs/plans/{pack_slug}/{file}`.
+   - **With `plan.md`:** one entry per `## Slice N — …` heading. Its issue is the `Issue: #N` on the
+     line under the heading, and its prerequisites are that line's `Depends on:` field (`Slice 1`,
+     `Slices 6, 8`, or `none`).
+   - **Without `plan.md` (size S):** one entry, Slice 1, with no prerequisites. Its issue is the
+     README header table's **Issues** row.
+   If a slice has no issue number to read, stop before any slice starts:
+   `pack docs/plans/{pack_slug}: Slice {N} has no issue — publish the pack first`.
+4. Drop every slice whose `progress/slice-NN.md` (`NN` zero-padded to two digits) on
+   `origin/{integration}` has Status `done`. A missing file, `in-progress` or `blocked` keeps the
+   slice, because it is unfinished. A prerequisite that was dropped counts as satisfied.
+5. Store `pack_slices`, the remaining slices with their number, issue and prerequisites, and set
+   `issue_numbers` to their issues in slice-number order. If none remain, display
+   `Pack: docs/plans/{pack_slug} — every slice is done` and go straight to Phase 6 with no groups.
+
+Display: `Pack: docs/plans/{pack_slug} · {remaining}/{total} slice(s) to ship (from origin/{integration})`
 
 ---
 
@@ -78,6 +120,11 @@ single group of one and continue to Phase 4. This mirrors `work-issue`'s Phase 2
 multi-issue routing the same way and for the same reason: relatedness has nothing to compare a lone
 issue against.
 
+**Pack slices (conditional).** Skip this when the input is not a pack path. Do not group by
+relatedness. Each slice in `pack_slices` is its own group of one, even when slices share files or
+labels, because a slice is one issue, one branch and one PR. Store `groups` that way and continue to
+Phase 4.
+
 Group issues using `wave`'s existing criteria: issues that share mentioned files, share labels, or
 reference the same origin PR belong in one group. An issue with no relationship to any other forms
 its own group of one.
@@ -92,6 +139,13 @@ Display: `Groups: {count}`
 
 **Skip the ordering logic below when there is only one issue** — store `ordered_groups` as that
 single group and continue to Phase 5. A lone group has nothing to topologically sort against.
+
+**Pack slices (conditional).** Skip this when the input is not a pack path. Order by the
+prerequisites `plan.md` gives (Phase 1, **Load the pack**), not by `Depends on #N`: a slice does not
+start until every remaining slice it depends on has shipped. When several slices are free to start,
+take the lowest slice number first, so independent slices still run in plan order, one at a time.
+The cycle rule below applies unchanged. Display `Order: Slice {N} (#{issue}), …` in place of the line
+below.
 
 Scan every issue's body and comments (from Phase 2) for `Depends on #N`. When `#N` belongs to a
 different group in this run, that group must not start until the group containing `#N` has shipped.
@@ -123,6 +177,14 @@ would from a direct `work-issue` invocation.
 `work-issue` ships with no command wrapper — its `## Phase 12 — Done` inlines the completion JSON
 directly (`{pr, pr_url, branch, issues}`). Capture it directly from the skill's own completion.
 
+**A blocked slice.** Skip this when `work-issue` returns any status other than `BLOCKED`.
+`work-issue` returns `"status": "BLOCKED"` when a plan-pack slice hits one of its stop conditions,
+whether this run was given a pack path or the slice's issue number. It has then pushed its branch
+with a `wip:` commit and opened no PR, so `pr` and `pr_url` are null. Skip the Ship step for this
+group and record it with `state: "stuck"`, `pr` and `pr_url` null. Then stop the run, as for any
+`stuck` group: no later group starts, whether or not it depends on this one. Display
+`Group {n}/{total}: #{issues} — BLOCKED on {branch}, stuck` in place of the line below.
+
 **Ship.** Load the `ship-pr` skill with the PR number just captured, passing `--no-merge` through
 when this skill received it. **Do not start the next group until `ship-pr` returns.** This is
 deliberate, not incidental: finishing one PR fully — through merge, unless `--no-merge` was set —
@@ -133,6 +195,10 @@ the same files.
 only start once this call reported `state: "merged"`. `clean_unmerged` or `stuck` means the
 prerequisite never actually landed — stop the run entirely rather than starting a dependent group on
 top of it, and report the stall in the final output rather than guessing at a resolution.
+
+**Pack slices (conditional).** Skip this when the input is not a pack path. The prerequisites in the
+gate above are the `plan.md` ones from Phase 4. On `stuck` or any failure, stop the whole run as
+Error Handling says. No later slice starts, whether or not it depends on the one that stopped.
 
 Record `{pr, pr_url, issues, state}` for this group, using `ship-pr`'s `pr` and `state` verbatim.
 
@@ -165,6 +231,14 @@ If any group is `stuck`, set `status` to `SHIP INCOMPLETE` instead, and list eve
 started yet under `"not_started": [issue_numbers]` — flattened across the remaining groups in
 `ordered_groups`, in the order they would have run.
 
+A group that `work-issue` returned as `BLOCKED` is `stuck` as well, with `pr` and `pr_url` null
+(Phase 5). `state` has no other values.
+
+**Pack path (conditional).** Skip this when the input is not a pack path. Add
+`"pack": "docs/plans/{pack_slug}"` to the JSON above. Every other key is unchanged, and `issues` and
+`not_started` hold the slices' issue numbers. When every slice was already done, `prs` is empty and
+`status` is `SHIP COMPLETE`.
+
 ---
 
 ## Error Handling
@@ -172,7 +246,10 @@ started yet under `"not_started": [issue_numbers]` — flattened across the rema
 - A group that fails inside `work-issue` or `ship-pr` stops the run — report the failure and
   everything shipped so far, plus `not_started` for what never began. Do not attempt the next group;
   a later group may depend on the one that just failed.
-- Leave every branch and PR exactly where its own skill left it. This skill does not touch git
-  directly and has nothing of its own to roll back.
+- A `work-issue` run that ends without its final JSON is a failure of this kind. It ends that way
+  when it stops before creating a branch, for example on a marked issue whose pack is not on the
+  integration branch. Report the message it displayed as the failure.
+- Leave every branch and PR exactly where its own skill left it. This skill changes no working tree,
+  index or branch; it only fetches and reads, and has nothing of its own to roll back.
 - Don't retry a failed group automatically — `work-issue` and `ship-pr` already have their own retry
   and confirmation logic; a second attempt on top of that hides what actually went wrong.
