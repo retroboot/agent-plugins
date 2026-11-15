@@ -32,7 +32,7 @@ Pack read from `origin/main` at `71846df`; the working copy matched it.
 
 ## Acceptance
 
-Line numbers refer to `skills/slice/SKILL.md` after review round 1 (366 lines). Fixtures were built
+Line numbers refer to `skills/slice/SKILL.md` after review round 1 (367 lines). Fixtures were built
 in a scratchpad directory outside the repository and not committed: a copy of this pack's `prd.md`
 with a doctored `plan.md`; a fence file; a heading-order file; and, from the first round, a pack
 with a `text` and a `mermaid` fence.
@@ -51,7 +51,7 @@ with a `text` and a `mermaid` fence.
 | 4.2 | Dry run (b), Refactor M: "By type" (155–156) makes Slice 1 the characterization tests, no behaviour change, all others depending on it. Greenfield M: 157–159, Slice 1 a walking skeleton with `context.md`'s verify command green. Migration and Rewrite: 160–162, a **Rollback:** line ending every slice's Contracts; Rewrite's cutover its own slice. Self-check Type (298–299) rejects a draft breaking any of them |
 | Stop condition | The slice's own stop is built into the skill: more than 12 drafted slices stops before writing (191–193), emits `SLICE STOPPED` with the drafted count (360–362). Not triggered while building this slice |
 | Structural | `eval "$(jq -r .verify.test .hivrr.json)"`: `structural checks pass`. Phases `## Phase 1`–`## Phase 7`, no stated count. `slice` is registered in `marketplace.json`, the planner `**Skills:**` line, the README planner table and `.agents/skills/slice` |
-| NFR Size | `skills/slice/SKILL.md` is 366 lines, under the 400-line limit |
+| NFR Size | `skills/slice/SKILL.md` is 367 lines, under the 400-line limit |
 
 ## Deviations
 
@@ -85,7 +85,7 @@ with a `text` and a `mermaid` fence.
 - **Pre-mortem items** mapped to "stop condition in the slice that …" become "Stop if …" bullets in
   that slice; `design.md` itself is not edited.
 - **Traceability rows** write every ID out, never a range, so the trace command can read them.
-- **Self-check commands** are given in `bash` fences (headings, fences, trace). They are read-only
+- **Self-check commands** are given in `bash` fences (headings, fences, trace, story-map coverage). They are read-only
   and deterministic, so they follow the script policy; the skill still reads each slice for
   content the commands cannot judge.
 - **`Map:`** (review round 1) names the journey steps the slice's Outcome changes, the steps it
@@ -107,7 +107,7 @@ with a `text` and a `mermaid` fence.
   Slice 5.
 - **For Slice 6:** `slice` leaves the README Size row's slice count alone (the row is the wrapper's);
   the wrapper may update `<n> slices` from `slices` when it confirms.
-- **For Slice 5:** `cold-read` can reuse the three self-check commands in `skills/slice/SKILL.md`
+- **For Slice 5:** `cold-read` can reuse the four self-check commands in `skills/slice/SKILL.md`
   Phase 4 for its own fence and trace checks.
 - **For Slice 6:** a Re-slice at `reviewed` or `approved` leaves Status alone, so the cold read
   that passed saw the old plan; the wrapper should re-run `cold-read` after one.
@@ -116,4 +116,9 @@ with a `text` and a `mermaid` fence.
 - Check 14 still misses indented and `~~~` fences; the skill's own Fences command covers them.
   Tracked in #218; check 14 is unchanged here.
 - A criterion split across slices is written "**S-NN.k** (author side): …", as this pack's own
-  `plan.md` does; the trace command treats each mention as coverage.
+  `plan.md` does; the trace command treats each bold mention as coverage.
+- **Known limits of the self-checks** (follow-up review): the Map command checks only that every
+  story-map step is touched, not that each `Map:` value is a real step; and the fence command pairs
+  fences by toggling, so a four-backtick or `~~~` fence holding inner fences can mis-pair. Both are
+  backstopped by reading each fence and each slice header; the fence case is tracked with check 14
+  in #218.
