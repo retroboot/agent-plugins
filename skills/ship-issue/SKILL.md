@@ -1,6 +1,6 @@
 ---
 name: ship-issue
-description: Drive a list of issues, or a plan pack's slices in order, to merged PR(s) end-to-end — group by relatedness, implement each group, and ship every resulting PR through review and merge
+description: Drive a list of issues (grouped by relatedness) or a plan pack's slices (one PR each, in plan order) to merged PR(s) end-to-end, shipping every PR through review and merge
 license: MIT
 compatibility: opencode
 ---

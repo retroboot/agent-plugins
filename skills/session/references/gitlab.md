@@ -25,7 +25,7 @@ glab issue view {N} --repo {PROJECT}
 glab issue create --repo {PROJECT} --title "{T}" --description "$(cat {file})" --label "{labels}"
 ```
 
-Write the description to `{file}` first, with a single-quoted heredoc (`cat > {file} <<'EOF'`).
+Write the description to `{file}` first, outside the checkout (`mktemp`), with a single-quoted heredoc (`cat > {file} <<'EOF'`).
 The output of `$(cat …)` is not expanded again, so backticks in it survive; a literal `"{B}"` would
 run them as command substitutions.
 

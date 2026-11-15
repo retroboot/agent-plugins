@@ -25,7 +25,7 @@ linear issue view {ID}
 linear issue create --team {TEAM} --title "{T}" --description "$(cat {file})"
 ```
 
-Write the description to `{file}` first, with a single-quoted heredoc (`cat > {file} <<'EOF'`), so
+Write the description to `{file}` first, outside the checkout (`mktemp`), with a single-quoted heredoc (`cat > {file} <<'EOF'`), so
 backticks in it are not run as command substitutions.
 
 **Label**

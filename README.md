@@ -34,7 +34,7 @@ The plugin is split into focused packages:
 | `review-pr` | Review a PR/MR and post a structured comment |
 | `merge-pr` | Merge a PR/MR, close linked issues, clean up branches, capture follow-up work |
 | `promote` | Promote one ladder rung to the next — `dev → staging → main` |
-| `ship-issue` | Drive a list of issues, or a plan pack's slices in order, to merged PR(s), composing `work-issue` and `ship-pr` |
+| `ship-issue` | Drive a list of issues (grouped by relatedness) or a plan pack's slices (one PR each, in plan order) to merged PR(s), composing `work-issue` and `ship-pr` |
 | `ship-pr` | Drive an existing PR/MR to clean-or-merged, composing `review-pr`, `work-pr`, and `merge-pr` |
 | `wave` | Execute multiple related issues in order on a shared branch |
 | `debug` | Diagnose a bug without making changes |

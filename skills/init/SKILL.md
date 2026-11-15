@@ -328,7 +328,7 @@ printf '%s\n' '.hivrr.json' >> .gitignore
 ```
 
 Append rather than overwrite — `.gitignore` routinely already excludes `node_modules/`, `.env`, or
-this plugin's own `.claude/`/`.ai/` entries, and this phase's job is one more line, not a rewrite.
+this plugin's own `.claude/` entry, and this phase's job is one more line, not a rewrite.
 
 **Step 2 — Check whether `.hivrr.json` is tracked**
 
