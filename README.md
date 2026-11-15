@@ -58,6 +58,7 @@ The plugin is split into focused packages:
 | `brainstorm` | Collaborative thinking session on a technical problem |
 | `spec` | Write a plan pack's PRD, context, decisions and design for its route, each behind a checkpoint |
 | `slice` | Split a specified plan pack into PR-sized slices in `plan.md`, with a traceability table, behind a checkpoint |
+| `cold-read` | Prove a plan pack complete with a cold read by the smallest available model, fixing it until no blocking questions remain |
 | `planning` | Triage a feature into sized issues, and place them on the project board |
 
 ### `data-platform`
