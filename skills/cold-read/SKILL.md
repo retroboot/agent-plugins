@@ -52,6 +52,12 @@ The input is a pack path, `docs/plans/<slug>`. Read `{path}/README.md`.
 - **No README there:** say `No pack at {path}` and go to Phase 7.
 - Read the header **Status**, **Type** and **Size**, and the **Read order**. List every file in the
   folder.
+- **Record only** (below): the pack executors read is the one on the integration branch. Resolve
+  `{integration}` as `work-issue` Phase 5 does (`branches.integration`, then the repository default
+  branch, then `origin/HEAD`, then `main`), run `git fetch origin {integration}`, and compare with
+  `git diff --stat origin/{integration} -- {path}`. When the working copy differs, warn
+  `Working copy of {path} differs from origin/{integration}; the reader sees the working copy.`
+  and record the warning in the round's summary paragraph.
 
 Read `pack-format.md` §3 (README contract and Status) and §6 (fences).
 
@@ -96,16 +102,17 @@ find docs/plans/{slug} -name '*.md' -print0 | xargs -0 awk 'FNR == 1 { open = 0 
   if (t != "bash" && t != "sh" && t != "mermaid" && t != "text") print FILENAME ":" FNR ": fence \"" t "\"" }'
 ```
 
-Then read each fence: a `bash` or `sh` fence holds only commands, `mermaid` a diagram, `text` a tree
-or layout. Code in any language is a defect whatever its tag.
+Then read each fence: a `bash` or `sh` fence sits under a Verify heading and holds only commands,
+`mermaid` a diagram, `text` a tree or layout. Code in any language is a defect whatever its tag.
 
 **Plan (when `plan.md` exists).** Run the **Headings** and **Trace** commands from
 `$CLAUDE_SKILL_DIR/../slice/SKILL.md` Phase 4, Self-check, exactly as written there with `{slug}`
 filled in; expected no output from either.
 
-Every finding is a blocking item. Fix it now, unless the mode is Record only, and record it in the
-coming round's Questions table as an author finding, Id `A1`, `A2` …, so the round shows it. A fix
-that changes what a criterion means, or drops one, is developer-only (Phase 4).
+Every finding is a blocking item, recorded in the coming round's Questions table as an author
+finding, Id `A1`, `A2` …, so the round shows it. Fix it now, unless the mode is Record only or the
+fix is developer-only — one that changes what a criterion means, or drops one; hold those for
+Phase 5.
 
 ---
 
@@ -241,7 +248,9 @@ After the fixes, run the Phase 2 checks again; expected no output.
 Add `## Round {N} — {YYYY-MM-DD}` to `{path}/cold-read.md` after the last round and before the
 closing `## Result` (at the end, if an older file has none). When the file does not exist, write
 it from the template first, and add its entry to the README **Read order** in the same step, using
-the template's wording and position. Fill the round from the template's skeleton:
+the template's wording and position. In Record only mode leave the README alone, and write the
+entry as a `Proposed:` line in the closing Result instead. Fill the round from the template's
+skeleton:
 
 1. **Summary paragraph:** the reader and model, the slices it thought through, how many citations it
    checked and how many held, and whether it found any code.
@@ -255,11 +264,11 @@ closing `## Result` section, which stays the last section of the file.
 
 ### Next round, or stop
 
-- **No blocking item in this round's report** (author findings excepted, since they were fixed
-  before the reader saw the pack): the pack **passes**. Go to Phase 6.
+- **No item classed Blocking in this round's Phase 4** (author findings excepted, since they were
+  fixed before the reader saw the pack): the pack **passes**. Go to Phase 6.
 - **Blocking items, all resolved, fewer than 3 rounds this run, and not Record only:** go back to
   Phase 3 with a new reader. Only a new reader can show the fixes worked.
-- **Otherwise** — the third round of this run still raised blocking items, a developer-only
+- **Otherwise** — the third round of this run still had items classed Blocking, a developer-only
   question is unanswered, or the mode is Record only: go to Phase 6 without passing. Fixes already
   made stay in the pack, but no cold reader has checked them.
 
@@ -267,8 +276,10 @@ closing `## Result` section, which stays the last section of the file.
 
 ## Phase 6 — Result and Status
 
-`blocking` is the number of blocking items the last round's reader raised (author findings
-excepted), plus any unanswered developer-only question. It is 0 only on a pass.
+`blocking` is the number of items classed **Blocking** in the last round's Phase 4, author
+findings excepted, each counted once — so an item the author re-classed blocking counts, one
+re-classed non-blocking with a cited pack location does not, and an unanswered developer-only
+question is already among them. It is 0 only on a pass.
 
 **On a pass:** the closing **Result** says `Pass after {n} rounds.`
 
@@ -308,9 +319,10 @@ Write `null` bare, never as the string `"null"`.
 
 - `rounds` is the number of rounds this run recorded; `blocking` as Phase 6 defines it.
 - `COLD READ COMPLETE` only when the last round passed.
-- `COLD READ BLOCKED` when the run ended without a pass: the third round still raised blocking
-  items, a developer-only question is unanswered, or a Record only round raised blocking items.
+- `COLD READ BLOCKED` when the run ended without a pass: the third round still had items classed
+  Blocking, a developer-only question is unanswered, or a Record only round had one.
 - `COLD READ STOPPED` when no round could be recorded: no README, no subagent available, two
-  incomplete reports, or a reader that changed the pack. `model` is bare `null` when no reader ran, `rounds` counts the rounds
-  recorded before the stop, and `pack_status` is the unchanged Status.
+  incomplete reports, or a reader that changed the pack. `model` is bare `null` when no reader
+  ran, `rounds` counts the rounds recorded before the stop, and `pack_status` is the unchanged
+  Status.
 - With no README at the path, `pack_status` is bare `null`.
