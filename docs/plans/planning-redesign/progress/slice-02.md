@@ -27,7 +27,6 @@ Pack read from `origin/main` at `e4312cb`; the working copy matched it.
   (`.claude-plugin/marketplace.json`).
 
 ## Acceptance
-## Acceptance
 
 Line numbers refer to the new `skills/brainstorm/SKILL.md` after review round 1.
 
