@@ -321,7 +321,8 @@ Approve for publish: docs/plans/{slug}
 Ready to create {n} issue(s){ + 1 epic} in {tracker}, then open the pack PR.
 ```
 
-- **Issue title:** `{pack title} — Slice {N}: {slice name}`; at size S, the pack title.
+- **Issue title:** `{pack title} — Slice {N}: {slice name}`; at size S, the pack title. Drop any
+  backticks from the title: the **Create** commands pass it in double quotes, where a backtick runs.
 - **Labels:** from `$CLAUDE_SKILL_DIR/../init/references/labels.md`: one type label that fits the
   route (`feature`, `bug`, `refactor`, `enhancement`, `chore`, `documentation`, `security`), a
   priority `P0`–`P3`, and the slice's size label `size:xs`–`size:l` (as estimated by `slice`; no

@@ -90,7 +90,9 @@ already recorded in the pack, so a resume skips them. Say what failed and
   - **Size S:** `#{number}`, the slice's issue alone. This is the form `ship-issue` reads for a
     pack without `plan.md`.
   - **Size M or L:** `#{first}–#{last} (Slices 1–{n})` when the numbers run consecutively,
-    otherwise each `#{number} (Slice {N})`, comma-separated. Step 3 appends ` · epic #{epic}`.
+    otherwise each `#{number} (Slice {N})`, comma-separated. Step 3 appends ` · epic #{epic}`;
+    when rewriting a row that already carries that suffix, keep it, since step 3 reads it to skip
+    an epic that already exists.
 
 ---
 
