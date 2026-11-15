@@ -54,9 +54,14 @@ When the input is a path under `docs/plans/`, read `{path}/README.md`.
   **Open questions** and **Route** sections. Take `topic` and `framing` from the Brief. Set
   `resume_pack` to the path.
   - Status `discovered`: this is a saved brainstorm. Phase 3 re-opens the conversation from it.
-  - Any later Status: the pack has moved past discovery. Say
-    `Pack is at Status {status}; brainstorm will update Brief, Ruled out, Key insights and Open questions only, and leave Status and Route as they are.`
+  - Status `routed`, `specified`, `sliced`, `reviewed` or `approved`: the pack has moved past
+    discovery but is not yet published. Say
+    `Pack is at Status {status}; brainstorm will revise Brief, Ruled out, Key insights and Open questions in place, list each revision under Open questions until it is approved, and leave Status and Route as they are.`
     Then continue. No skill ever lowers Status.
+  - Status `published`, `executing` or `done`: the pack is fixed; its issues exist and executors
+    rely on it. Say
+    `Pack is at Status {status}; this is a read-only run — brainstorm will not edit a published pack.`
+    Then continue. The conversation still runs, but nothing is written (Phase 6).
 
 Display: `Topic: {topic} | Framing: {framing}` — plus ` | Resuming: {resume_pack}` when resuming.
 
@@ -148,8 +153,10 @@ Propose each part with a one-line reason:
 When resuming a pack whose Status is past `discovered`, skip this phase: its Route is already
 confirmed and is not this skill's to change.
 
-If the conclusion is a batch of independent small items rather than one piece of work, say that it
-is not routed: recommend `ship-issue` for the items, and recommend discarding the brainstorm.
+**Not routed.** If the conclusion is a batch of independent small items rather than one piece of
+work, say that it is not routed and recommend `ship-issue` for the items. Do not ask keep or
+discard, and write nothing: skip Phases 6 and 7, and go to Phase 8 with `BRAINSTORM DISCARDED` and
+`route: null`.
 
 This is a proposal, not the confirmed route. The `planning` wrapper confirms it, and may change the
 slug, at its Route checkpoint.
@@ -168,7 +175,12 @@ Proposed route
 
 ## Phase 6 — Keep or Discard
 
-Show the Brief, Ruled out, Key insights and Open questions you have been tracking, then ask:
+When resuming a pack at `published`, `executing` or `done`, do not ask. Say
+`Read-only run: {resume_pack} is at Status {status}, so nothing is written.` and go to Phase 8 as a
+discard.
+
+Otherwise, show the Brief, Ruled out, Key insights and Open questions you have been tracking, then
+ask:
 
 > Keep this brainstorm as `docs/plans/{slug}/README.md`, or discard it?
 
@@ -191,15 +203,15 @@ Only a kept brainstorm reaches this phase.
 3. Create the folder `docs/plans/{slug}/` and write `README.md` from the template, keeping its
    section order:
    - **Title line:** a short name for the work.
-   - **Header table:** Status `discovered`; Type, Size and Modifiers from the proposed route (Size
-     as `{size} — {slice range from the size table} slices`, or `—` for a Spike); Issues
-     `not yet published`; Owner; Opened.
+   - **Header table:** Status `discovered`; Type, Size and Modifiers from the proposed route;
+     Issues `not yet published`; Owner; Opened. Write Size as the size and its slice range from
+     the size table: `S — 1 slice`, `M — 2–6 slices`, `L — 7–12 slices`, `XL — over 12 slices`.
+     For a Spike, which has no size, write `n/a`.
    - **Brief**, **Ruled out** and **Key insights** from the conversation. Write "None." under
      Ruled out if nothing was.
-   - **Child packs**, **Question**, **Repro and root cause** and **Slice:** keep each one, with its
-     template guidance, only when the proposed route needs it — Child packs at XL, Question for a
-     Spike, Repro and root cause for a Bug, Slice at size S — so the skill that writes it later
-     finds its place. Delete the rest.
+   - **Child packs**, **Question**, **Repro and root cause** and **Slice:** delete all four. They
+     are not brainstorm's to write; `spec` and the `planning` wrapper add them from the template
+     when the route needs them.
    - **Route:** open the section with the line `Proposed by brainstorm; not yet confirmed.`, then one
      bullet each for type, size and modifiers, with its reason.
    - **Read order:** only item 1, `This file, including **How to execute this pack** below`. Each
@@ -215,13 +227,16 @@ it, which is also what lets the wrapper rename the folder if the slug changes at
 
 ### Resuming
 
-Edit the existing `{resume_pack}/README.md` in place; never create a second folder.
+Edit the existing `{resume_pack}/README.md` in place; never create a second folder, and never
+rewrite a section wholesale — revise what the conversation changed and keep the rest.
 
-- Rewrite **Brief**, **Ruled out**, **Key insights** and **Open questions** with the revised
-  content.
-- Status `discovered`: also rewrite the header Type, Size and Modifiers rows and the **Route**
+- Revise **Brief**, **Ruled out**, **Key insights** and **Open questions**.
+- Status `discovered`: also revise the header Type, Size and Modifiers rows and the **Route**
   section from the new proposal. Status stays `discovered`.
-- Any later Status: leave the header, **Route** and Status as they are.
+- Status `routed` to `approved`: leave the header, **Route** and Status as they are. Add one line
+  per revised section to **Open questions** — `Revised by brainstorm on {date}: {section} — awaiting approval at the next checkpoint.`
+  — so it stays visible until the developer approves it.
+- Status `published`, `executing` or `done` never reaches this phase (Phase 6).
 - Leave every other section untouched.
 
 Display: `Pack written: docs/plans/{slug}/README.md (Status: {status})`
@@ -230,7 +245,10 @@ Display: `Pack written: docs/plans/{slug}/README.md (Status: {status})`
 
 ## Phase 8 — Emit the Result
 
-Emit this JSON as your entire final response — no markdown, no preamble, no trailing text:
+Emit one JSON object as your entire final response — no markdown, no preamble, no trailing text.
+Write `null` bare, never as the string `"null"`.
+
+**Kept:**
 
 ```json
 {
@@ -239,15 +257,26 @@ Emit this JSON as your entire final response — no markdown, no preamble, no tr
   "pack_status": "{README Status after the run}",
   "route": {
     "type": "{type}",
-    "size": "{size, or null for a Spike}",
+    "size": "{S | M | L | XL}",
     "modifiers": ["{modifier}"],
     "slug": "{slug}"
   }
 }
 ```
 
-On discard, `status` is `BRAINSTORM DISCARDED`. For a new brainstorm, `pack` and `pack_status` are
-`null`, because nothing was written. When resuming, `pack` is `{resume_pack}` and `pack_status` is
-its unchanged Status. `route` is the proposed route, or `null` if none was proposed.
+For a Spike, `size` is bare `null`. When resuming a pack past `discovered`, `route` is read back
+from its header and **Route** section.
 
-When resuming a pack past `discovered`, `route` is read back from its header and **Route** section.
+**Discarded, not routed, or a read-only run:**
+
+```json
+{
+  "status": "BRAINSTORM DISCARDED",
+  "pack": null,
+  "pack_status": null,
+  "route": null
+}
+```
+
+When resuming, `pack` is `"{resume_pack}"` and `pack_status` is its unchanged Status instead,
+because that README still exists; `route` stays `null`.
