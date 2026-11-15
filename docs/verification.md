@@ -78,14 +78,16 @@ jq -r '.plugins[].name' .claude-plugin/marketplace.json | while read -r p; do
 # every skill's phase headings run 1..N, and any stated count matches them
 w2n() { case "$1" in one) echo 1;; two) echo 2;; three) echo 3;; four) echo 4;; five) echo 5;;
         six) echo 6;; seven) echo 7;; eight) echo 8;; nine) echo 9;; ten) echo 10;;
-        eleven) echo 11;; twelve) echo 12;; thirteen) echo 13;; *) echo 0;; esac; }
+        eleven) echo 11;; twelve) echo 12;; thirteen) echo 13;; fourteen) echo 14;;
+        fifteen) echo 15;; sixteen) echo 16;; seventeen) echo 17;; eighteen) echo 18;;
+        nineteen) echo 19;; twenty) echo 20;; *) echo 0;; esac; }
 for f in skills/*/SKILL.md; do
     nums=$(grep '^## Phase [0-9]' "$f" | sed 's/^## Phase *\([0-9][0-9]*\).*/\1/' | sort -n -u)
     cnt=$(printf '%s\n' "$nums" | grep -c .)
     [ "$cnt" -eq 0 ] && continue
     [ "$nums" = "$(seq 1 "$cnt")" ] \
       || echo "PHASE SEQUENCE $f (numbered $(echo $nums | tr '\n' ' ')- expected 1 to $cnt)"
-    said=$(sed -n 's/.*[Tt]he \**\(one\|two\|three\|four\|five\|six\|seven\|eight\|nine\|ten\|eleven\|twelve\|thirteen\)\** phases.*/\1/p' "$f" | head -1)
+    said=$(sed -n 's/.*[Tt]he \**\(one\|two\|three\|four\|five\|six\|seven\|eight\|nine\|ten\|eleven\|twelve\|thirteen\|fourteen\|fifteen\|sixteen\|seventeen\|eighteen\|nineteen\|twenty\)\** phases.*/\1/p' "$f" | head -1)
     [ -n "$said" ] || continue
     [ "$(w2n "$said")" = "$cnt" ] || echo "PHASE COUNT DRIFT $f (says $said, has $cnt)"
   done
@@ -164,6 +166,23 @@ printf '%s\n' "$agent_links" | grep . | while read -r name; do
     [ -L "$p" ] || { echo "AGENTS SKILL NOT SYMLINK $name"; continue; }
     [ -d "$p" ] || echo "AGENTS SKILL DANGLING $name"
   done
+
+# every plan pack under docs/plans/ has a README, and its fences are tagged bash, sh, mermaid or text
+if [ -d docs/plans ]; then
+  for d in docs/plans/*/ docs/plans/.[!.]*/; do
+    [ -d "$d" ] || continue
+    [ -f "${d}README.md" ] || echo "PACK NO README ${d%/}"
+  done
+  # the pattern is built with printf so this block never holds a fence-shaped line of its own
+  pack_fence=$(printf '\140\140\140')
+  find docs/plans -type f -name '*.md' | sort | while read -r f; do
+      awk -v fence="$pack_fence" -v file="$f" '
+        index($0, fence) != 1 { next }
+        open { open = 0; next }
+        { open = 1; info = substr($0, 4); sub(/[ \t\r]+$/, "", info)
+          if (info !~ /^(bash|sh|mermaid|text)$/) print "PACK CODE FENCE " file ":" NR }' "$f"
+    done
+fi
 ```
 
 Silence from all of them means everything registered resolves, nothing is duplicated, the phase
@@ -185,6 +204,7 @@ See **Path resolution** in `CLAUDE.md` for the contract the first three checks e
 | 11 | `README.md`'s Overview table names exactly the registered plugins | `PLUGIN UNDOCUMENTED`, `PLUGIN NOT REGISTERED` |
 | 12 | `review-pr` declares itself read-only and grants no unrestricted tool | `REVIEW NOT READ-ONLY`, `REVIEW MAY WRITE` |
 | 13 | Every `skills/` directory has a matching, non-dangling `.agents/skills/` symlink | `AGENTS SKILL MISSING`, `AGENTS SKILL NOT SYMLINK`, `AGENTS SKILL DANGLING` |
+| 14 | Every folder directly under `docs/plans/` has a `README.md`, and every opening fence in `docs/plans/**/*.md` is tagged `bash`, `sh`, `mermaid` or `text` | `PACK NO README {dir}`, `PACK CODE FENCE {file}:{line}` |
 
 A few mechanics worth knowing before editing this block:
 
@@ -214,6 +234,14 @@ A few mechanics worth knowing before editing this block:
 - **The duplication check (4) covers one pair, deliberately.** Other same-named skills share lines
   over the threshold today (`planning`/`brainstorm`); widening it needs a per-pair allowlist since
   some sharing is required rather than accidental.
+- **Check 14 builds its fence pattern with `printf`**, exactly as the loader does, so the block
+  never holds a line that starts with three backticks. A literal one would end the extracted block
+  early and silently drop every check after it. It prints nothing when `docs/plans/` is absent,
+  and a backtick run mid-line is not a fence. It reads column-0 backtick fences only: `~~~` and
+  indented fences are outside the rule it was specified with, and a four-backtick fence is reported
+  rather than passed, so the check fails closed. Trailing spaces, tabs and `\r` after the info
+  string are ignored. The rule it enforces is the plan-pack fence rule in
+  `skills/planning/references/pack-format.md` §6.
 - **Checks 6, 9, and 11 read sections of `README.md`** (the per-plugin skill tables, the `## Commands`
   usage block, and the `## Overview` table) even though this fence lives here — those are checks on
   README's own content, not on this file, so they stay pointed at README.md.
