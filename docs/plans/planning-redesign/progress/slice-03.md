@@ -112,6 +112,7 @@ Line numbers refer to `skills/spec/SKILL.md` after review round 2 (380 lines). F
 - **Migration usage sites** get `pending` in the Slice column, since no slices exist yet.
 - **Bootstrap** (review round 1) loads `core` only when the install ships it; `planner` does not,
   so a planner-only install continues without it. Nothing needs tracker context.
+  **Reverted 2026-11-14 (developer):** a skill loaded by name is found across installed plugins, so every planner skill loads `core` unconditionally, as before; #221 closed. Only relative file links (`../core/SKILL.md`) break across plugins.
 - **Spike resume** (review round 1) matches on an `accepted` ADR, so a `proposed` outcome ADR left
   by a stopped run resumes at the ADR checkpoint.
 - **Cutover plan** (review round 1) lives in a `### Cutover` subsection under design.md's

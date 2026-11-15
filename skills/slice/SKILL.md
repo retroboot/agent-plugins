@@ -38,8 +38,7 @@ Rules that hold in every phase:
 ## Bootstrap
 
 Run before Phase 1:
-1. If this install ships the `core` skill, load it — it internalizes quality standards and
-   architectural principles. `planner` does not ship it; when it is absent, continue without it.
+1. Load the `core` skill — internalizes quality standards and architectural principles
 
 ---
 
