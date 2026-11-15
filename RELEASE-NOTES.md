@@ -1,5 +1,16 @@
 # Agent Plugins Release Notes
 
+## v1.4.0 (2026-11-14)
+
+### Planning redesign — plan packs
+
+- **`planner` now produces a plan pack**: a committed folder under `docs/plans/<slug>/` that any model can execute cold in a fresh session. `planning` is a guided wrapper over four phase skills — `brainstorm`, and the new `spec`, `slice` and `cold-read` — routed by type, size and modifiers, and it resumes from the pack's README Status. It publishes one issue per slice, each carrying a `Plan: docs/plans/<slug> · Slice: N` marker, and a pack PR that lands the pack before any slice starts. The format of record is `skills/planning/references/pack-format.md`, with templates beside it.
+- **Files are the only state (ADR-002).** Every session UUID, memory MCP read and write, `.ai/session/` fallback and container-mode question channel is gone from `brainstorm`, `planning` and `work-issue`. A brainstorm you keep becomes the pack's README, and resume works by reading README Status. A headless run that needs an answer now stops at its checkpoint instead of polling.
+- **No code in plans (ADR-003).** The old plans with failing tests and implementations written in are replaced by contracts, acceptance criteria with examples, stop conditions, Verify commands and **Pattern to follow** pointers to real code. Every fence in a pack must be tagged `bash`, `sh`, `mermaid` or `text`; new structural check 14 rejects any other, and `slice` and `cold-read` reject code inside one.
+- **One PR per slice (ADR-008).** `slice` sizes each slice for one PR, and each slice leaves its own `progress/slice-NN.md`, so progress files never conflict. Pack slices never run as a `wave`. The last slice writes the pack's Retro and sets its Status `done`.
+- **Work without a pack behaves as before (ADR-011).** `work-issue` enters pack mode only for an issue whose body starts a line with `Plan: docs/plans/`, and `ship-issue` only for such an issue or a `docs/plans/<slug>` path, which ships the pack's slices in order and stops on a `BLOCKED` slice. Without a marker every phase runs as in v1.3.2, minus the removed `Session …` lines.
+- The `planner` description, the README tables and the `ship-issue` description now describe the new skills. The design template puts a Rewrite's cutover under **Architecture**, matching `spec`, and `config.md` defines `issues.epicThreshold` as a slice count.
+
 ## v1.3.2 (2026-09-28)
 
 ### Verification fix and a ship-workflow retrospective

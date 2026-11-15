@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Hivrr Agent Plugin \u2014 Skills and commands for implementation, brainstorming, planning, and code review",
-    "version": "1.3.2"
+    "version": "1.4.0"
   },
   "plugins": [
     {
@@ -45,7 +45,7 @@
     },
     {
       "name": "planner",
-      "description": "Planning and brainstorming \u2014 open-ended thinking sessions through to sized issues, then implementation plans with TDD tasks, complexity-aware blueprints, and an automated plan review",
+      "description": "Planning and brainstorming \u2014 open-ended thinking sessions through to committed plan packs with a PRD, design and PR-sized slices, proven by a cold read and published as one issue per slice",
       "source": "./",
       "strict": true,
       "skills": [

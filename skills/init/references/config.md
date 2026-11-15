@@ -138,7 +138,9 @@ Issue-hierarchy wiring. `hierarchy` opts the repo into GitHub sub-issues; when i
 the same contract as `project`, and for the same reason: most repos will not adopt hierarchy, and
 announcing that on every invocation is noise.
 
-`epicThreshold` is the issue count at or above which `planning` proposes a parent epic. Below it,
+`epicThreshold` is the slice count at or above which `planning` proposes a parent epic. A plan pack
+publishes one issue per slice, so this is also the issue count; a pack of Size L gets an epic
+whatever its slice count (see `skills/planning/references/publish.md`, **Epic**). Below it,
 planning emits a flat set — a parent wrapping two issues is bookkeeping with no board benefit.
 
 **`hierarchy` is GitHub-only.** GitLab has no equivalent outside Premium epics and Linear has its

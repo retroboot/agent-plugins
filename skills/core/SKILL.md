@@ -67,7 +67,6 @@ nothing unnamed reaches the index any more.
 Judge them by **who created them**, not by the fact that they are untracked. All of these are
 expected, none are staged, and none of them block the commit:
 
-- scratch this run wrote itself, such as session state under `.ai/session/`
 - a worktree this run entered
 - anything untracked that was already present when the run started
 

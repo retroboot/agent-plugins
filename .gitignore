@@ -1,7 +1,8 @@
 node_modules/
 .claude/
 
-# Worker session scratch — memory fallback written by the planning and work-issue skills
+# Local, uncommitted scratch (such as old .ai/plans/ drafts); no skill writes here, and plan packs
+# are committed under docs/plans/ instead
 .ai/
 
 # Per-checkout config scaffolded by the init skill — never shared via git, see

@@ -7,7 +7,9 @@ every fence is tagged `mermaid`, `text`, `bash` or `sh`._
 ## 1. Architecture
 
 _Always. Guidance: the components involved, their responsibilities and how they connect. A Mermaid
-`flowchart` helps when there are more than three._
+`flowchart` helps when there are more than three. For a Rewrite, add the cutover plan here as a
+`### Cutover` subsection. For a Migration or Rewrite, state the rollback approach each slice will
+apply._
 
 ## 2. Contracts
 
@@ -69,5 +71,6 @@ mitigation, a stop condition in a named slice, or a risk row above._
 
 _One section per modifier on the route; delete this heading when there are none. Guidance: state
 what `skills/planning/references/pack-format.md` §2, Modifiers, requires for that modifier. For
-`ui` at size M and larger, link `ux.md` here instead of writing the screens inline. For Rewrite,
-also include the cutover plan; for Migration and Rewrite, the rollback per slice._
+`ui` at size M and larger, link `ux.md` here instead of writing the screens inline. A Rewrite's
+cutover plan and a Migration's or Rewrite's rollback are not modifier sections: they go under
+**Architecture**._

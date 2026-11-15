@@ -229,6 +229,10 @@ with the slice number that covers that site. In a Re-slice, update the numbers t
 
 ### Self-check
 
+`cold-read` Phase 2 runs the **Headings** and **Trace** commands below by name, from this section.
+Renaming or moving either command, or this section, silently breaks that check: change
+`skills/cold-read/SKILL.md` Phase 2 in the same commit.
+
 Before the checkpoint, check the draft on disk. A draft that fails any check is rejected: fix it and
 check again. Never show a failing draft as ready.
 
