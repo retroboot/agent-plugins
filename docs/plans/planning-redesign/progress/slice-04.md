@@ -95,7 +95,9 @@ with a `text` and a `mermaid` fence.
 - **Headings** (review round 1) must be exactly the eight, in order; the check prints the slice's
   actual sequence when they are not.
 - **Bootstrap** loads `core` only when the install ships it, as `spec` does (issue #221).
-  **Reverted 2026-11-14 (developer):** a skill loaded by name is found across installed plugins, so every planner skill loads `core` unconditionally, as before; #221 closed. Only relative file links (`../core/SKILL.md`) break across plugins.
+  **Reverted 2026-11-14 (developer):** a skill loaded by name is found across installed plugins,
+  so every planner skill loads `core` unconditionally, as before (#221). Only relative file links
+  such as `../core/SKILL.md` break across plugins.
 - **Registration order:** `slice` after `spec` in `marketplace.json`, the `**Skills:**` line and the
   README table.
 
