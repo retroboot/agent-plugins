@@ -110,6 +110,9 @@ outside the repo) and `{slices}` = `Slice 1`. This pack's `cold-read.md` was not
 - **Read order:** `cold-read` adds the `cold-read.md` entry when it creates the file (Slice 4
   Discoveries).
 - **Bootstrap** loads `core` only when the install ships it (issue #221), as `spec` and `slice` do.
+  **Reverted 2026-11-14 (developer):** a skill loaded by name is found across installed plugins,
+  so every planner skill loads `core` unconditionally, as before (#221). Only relative file links
+  such as `../core/SKILL.md` break across plugins.
 - **Registration order:** `cold-read` after `slice` in `marketplace.json`, the `**Skills:**` line and
   the README table.
 

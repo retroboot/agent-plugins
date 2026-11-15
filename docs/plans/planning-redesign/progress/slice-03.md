@@ -112,6 +112,9 @@ Line numbers refer to `skills/spec/SKILL.md` after review round 2 (380 lines). F
 - **Migration usage sites** get `pending` in the Slice column, since no slices exist yet.
 - **Bootstrap** (review round 1) loads `core` only when the install ships it; `planner` does not,
   so a planner-only install continues without it. Nothing needs tracker context.
+  **Reverted 2026-11-14 (developer):** a skill loaded by name is found across installed plugins,
+  so every planner skill loads `core` unconditionally, as before (#221). Only relative file links
+  such as `../core/SKILL.md` break across plugins.
 - **Spike resume** (review round 1) matches on an `accepted` ADR, so a `proposed` outcome ADR left
   by a stopped run resumes at the ADR checkpoint.
 - **Cutover plan** (review round 1) lives in a `### Cutover` subsection under design.md's
@@ -136,6 +139,8 @@ Line numbers refer to `skills/spec/SKILL.md` after review round 2 (380 lines). F
   show the developer the reason. `pack_status` is `null` when the path has no README.
 - **Issue #221** tracks the same unconditional `core` load in `brainstorm` and `planning`, and the
   option of shipping `core` in `planner`. `brainstorm` was not changed here.
+  Resolved 2026-11-14: loading by name works across plugins, so no change is needed (see
+  **Bootstrap** above).
 - **For Slice 6:** for a Spike, `spec` leaves Status `specified` after writing the outcome ADR, and
   the wrapper sets `done` or `routed`. A re-routed Spike's Question section and ADR stay.
 - **For Slice 6:** a Bug's **Repro and root cause** is still not written by `spec`; the wrapper
