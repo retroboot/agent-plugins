@@ -31,10 +31,23 @@ cause is the `gh` version.
 
 **Create**
 ```
-gh issue create --repo {OWNER}/{REPO} --title "{T}" --body "{B}" --label "{labels}"
+gh issue create --repo {OWNER}/{REPO} --title "{T}" --body-file {file} --label "{labels}"
 ```
 
+Write the body to `{file}` first, with a single-quoted heredoc (`cat > {file} <<'EOF'`). A body
+passed as `--body "{B}"` loses every backticked span: the shell runs it as a command substitution.
+
 Use labels from the label reference loaded by init. Pick one or more that fit the issue type and priority.
+
+**Edit** (replace an issue's body)
+```
+gh api --method PATCH repos/{OWNER}/{REPO}/issues/{N} -F body=@{file}
+```
+
+The body comes from `{file}`, written as for **Create**; `-F body=@{file}` reads it verbatim.
+
+Use this rather than `gh issue edit`, for the same reason as **Edit a PR's title or body** below:
+the `gh api` form is version-independent.
 
 **Close**
 ```

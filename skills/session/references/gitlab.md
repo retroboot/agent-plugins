@@ -22,10 +22,21 @@ glab issue view {N} --repo {PROJECT}
 
 **Create**
 ```
-glab issue create --repo {PROJECT} --title "{T}" --description "{B}" --label "{labels}"
+glab issue create --repo {PROJECT} --title "{T}" --description "$(cat {file})" --label "{labels}"
 ```
 
+Write the description to `{file}` first, with a single-quoted heredoc (`cat > {file} <<'EOF'`).
+The output of `$(cat …)` is not expanded again, so backticks in it survive; a literal `"{B}"` would
+run them as command substitutions.
+
 Use labels from the label reference loaded by init. Pick one or more that fit the issue type and priority.
+
+**Edit** (replace an issue's description)
+```
+glab issue update {N} --repo {PROJECT} --description "$(cat {file})"
+```
+
+The description comes from `{file}`, written as for **Create**.
 
 **Close**
 ```

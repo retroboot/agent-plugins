@@ -61,14 +61,19 @@ object as its entire final response, like `work-issue` does. The wrapper reads o
 |---|---|---|
 | `status` | string | `<SKILL> COMPLETE`, or one of the skill-specific values below |
 | `pack` | string or null | `docs/plans/<slug>`, or null only for `BRAINSTORM DISCARDED` |
-| `pack_status` | string | The README Status after the run (`design.md` §4) |
+| `pack_status` | string or null | The README Status after the run (`design.md` §4); null when the path has no README |
 
 Skill-specific extra fields:
 
 - `brainstorm`: `route` = `{type, size, modifiers[], slug}`. `status` may be `BRAINSTORM DISCARDED`.
-- `spec`: `files` = paths written or extended.
-- `slice`: `slices` = count.
-- `cold-read`: `model`, `rounds`, `blocking` (count remaining). `status` may be `COLD READ BLOCKED`.
+- `spec`: `files` = paths written or extended. `status` may be `SPEC STOPPED`.
+- `slice`: `slices` = count. `status` may be `SLICE STOPPED`.
+- `cold-read`: `model` (null when no reader ran), `rounds`, `blocking` (count remaining). `status`
+  may be `COLD READ BLOCKED` or `COLD READ STOPPED`.
+
+Amended by Slice 6 on 2026-11-14: the null `pack_status`, the three `STOPPED` values and the null
+`model` were recorded as contract deviations by Slices 2–5 and accepted by the orchestrator. The
+wrapper treats every `STOPPED` value as a stop and shows its reason.
 
 ---
 

@@ -22,13 +22,25 @@ linear issue view {ID}
 
 **Create**
 ```
-linear issue create --team {TEAM} --title "{T}" --description "{B}"
+linear issue create --team {TEAM} --title "{T}" --description "$(cat {file})"
 ```
+
+Write the description to `{file}` first, with a single-quoted heredoc (`cat > {file} <<'EOF'`), so
+backticks in it are not run as command substitutions.
 
 **Label**
 ```
 linear issue update {ID} --label "{label}"
 ```
+
+**Edit** (replace an issue's description)
+```
+linear issue update {ID} --description "$(cat {file})"
+```
+
+**Untested:** the `--description` flag on `linear issue update` is assumed from `create`, and has
+not been run. Check `linear issue update --help` before relying on it. The description comes from
+`{file}`, written as for **Create**.
 
 **Close** (transition to Done state)
 ```
