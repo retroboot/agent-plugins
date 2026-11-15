@@ -56,6 +56,7 @@ The plugin is split into focused packages:
 | `init` | Shared setup skill — see `dev` |
 | `session` | Shared setup skill — see `dev` |
 | `brainstorm` | Collaborative thinking session on a technical problem |
+| `spec` | Write a plan pack's PRD, context, decisions and design for its route, each behind a checkpoint |
 | `planning` | Triage a feature into sized issues, and place them on the project board |
 
 ### `data-platform`

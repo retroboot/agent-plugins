@@ -122,7 +122,7 @@ Code audit — security, accessibility, performance, and tech debt.
 ### `planner`
 Planning and brainstorming — open-ended thinking sessions through to sized issues, then implementation plans with TDD tasks, complexity-aware blueprints, and an automated plan review.
 
-**Skills:** `init`, `session`, `brainstorm`, `planning`
+**Skills:** `init`, `session`, `brainstorm`, `spec`, `planning`
 
 ---
 
