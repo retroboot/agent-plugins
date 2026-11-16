@@ -11,7 +11,7 @@ Ensure provider config, labels, repo config, and verify commands are in place be
 
 **Phase contract — read this before anything else.** The seven phases run **in order, every time**. A phase that finds its work already done reports and **continues to the next phase**; it does not end the skill. Only an unrecoverable error stops `init`.
 
-**The count in that sentence is load-bearing.** It is what tells you the run is not finished, so a wrong number truncates the skill silently — stopping after Phase 5 would skip Phase 6, which is what keeps `.hivrr.json` out of git. Nothing verifies it. If you add or remove a phase here, update this line, the `init` row in `README.md`, and the `init` bullet under **Shared setup skills** in `CLAUDE.md` in the same commit.
+**The count in that sentence is load-bearing.** It is what tells you the run is not finished, so a wrong number truncates the skill silently — stopping after Phase 5 would skip Phase 6, which is what keeps `.hivrr.json` out of git. The seventh and tenth structural checks in `docs/verification.md` hold this count and `CLAUDE.md`'s against the `## Phase` headings; nothing checks the `README.md` row. If you add or remove a phase here, update this line, the `init` row in `README.md`, and the `init` bullet under **Shared setup skills** in `CLAUDE.md` in the same commit.
 
 "Idempotent" here means each phase is cheap and safe to re-run, not that the skill exits early. Phase 4 in particular exists to catch repo drift and is worthless if an earlier phase short-circuits past it.
 
@@ -24,11 +24,7 @@ Read `~/.claude/settings.json` using the Read tool. Check `providerConfig` for t
 - `repoProvider` — `github` | `gitlab`
 - `issueTracker` — `github` | `gitlab` | `linear`
 
-**If both fields are present:**
-
-Emit: `INIT: ok`
-
-Phase 1 complete — continue to Phase 2.
+**If both fields are present:** emit `INIT: ok`. Phase 1 complete — continue to Phase 2.
 
 **If either field is missing:**
 
@@ -71,27 +67,18 @@ Ensure the core label set exists in the current repository. Skips if already don
 gh repo view --json owner,name --jq '"\(.owner.login)/\(.name)"'
 ```
 
-If this fails (not in a git repo, no remote, or `repoProvider` is not `github`):
-
-Emit: `INIT: no repo detected — skipping label bootstrap`
-
-Skip the rest of Phase 2 and continue to Phase 3.
+If this fails (not in a git repo, no remote, or `repoProvider` is not `github`): emit
+`INIT: no repo detected — skipping label bootstrap`, skip the rest of Phase 2, and continue to Phase 3.
 
 **Step 2 — Check bootstrap record**
 
 Read `~/.claude/settings.json`. Check `providerConfig.bootstrappedRepos` (default: `[]`).
 
-If the detected `{OWNER}/{REPO}` is already in the list:
+If the detected `{OWNER}/{REPO}` is already in the list: emit `INIT: labels ok`, skip the rest of
+Phase 2, and continue to Phase 3.
 
-Emit: `INIT: labels ok`
-
-Skip the rest of Phase 2 and continue to Phase 3.
-
-**Step 3 — Load label reference**
-
-```
-Read $CLAUDE_SKILL_DIR/references/labels.md
-```
+**Step 3 — Load label reference.** Read `$CLAUDE_SKILL_DIR/references/labels.md` — it holds the
+label set Step 4 creates.
 
 **Step 4 — Create labels**
 
@@ -127,14 +114,10 @@ Emit: `INIT: labels bootstrapped for {OWNER}/{REPO}`
 
 Offer the repo a local config file so branch, board, and verify settings are derived once per
 checkout instead of living in per-user global settings or being re-guessed on every command. The
-file is **gitignored, never committed** — see Phase 6 — so each teammate, agent, and CI run
-scaffolds its own copy by running `init`, rather than inheriting one that travels with the code.
+file is **gitignored, never committed** — see Phase 6.
 
-**Step 1 — Load the config reference**
-
-```
-Read $CLAUDE_SKILL_DIR/references/config.md
-```
+**Step 1 — Load the config reference.** Read `$CLAUDE_SKILL_DIR/references/config.md`. It is the
+`config.md` the rest of this skill names: the schema, defaults and precedence every later phase reads.
 
 **Step 2 — Check for an existing file**
 
@@ -165,13 +148,12 @@ From the results, derive proposed values:
 
 - `provider` — the resolved `repoProvider`
 - `issueTracker` — the resolved `issueTracker`. Where it disagrees with the repo's own host, propose
-  the **repo's host** and say so in the Step 4 confirmation. A config written *for this repo* is the
-  one place that disagreement is most likely a stale global setting, and writing `provider` without
-  `issueTracker` reproduces the exact defect `.hivrr.json` exists to prevent — a repo resolving to
-  one provider and reading its issues from another.
+  the **repo's host** and say so in the Step 4 confirmation: here the disagreement is most likely a
+  stale global setting, and writing `provider` without `issueTracker` makes the repo read its issues
+  from another host (**`provider` and `issueTracker`** in `config.md`).
 - `branches.integration` — the default branch, unless a `dev` branch exists on the remote, in which case propose `dev`
 - `branches.ladder` — the subset of `["dev", "staging", "main"]` (or `master`) that actually exists on the remote, ordered lowest environment first. A single existing branch yields a single-rung ladder, which is correct.
-- `branches.protected` — omit this key unless the ladder or default branch adds a name the documented default does not already cover. Because precedence resolves per key, writing the key at all *replaces* the default set rather than extending it, so a scaffold that writes a narrow list leaves the repo less protected than one with no config at all. When you do write it, write the **union** of the documented default set (`main, master, dev, develop, staging, release/*`), the ladder, and the default branch — never a subset.
+- `branches.protected` — omit this key unless the ladder or default branch adds a name the documented default does not already cover. Writing it *replaces* the default set rather than extending it (**`branches.protected`** in `config.md`), so when you do write it, write the **union** of the documented default set (`main, master, dev, develop, staging, release/*`), the ladder, and the default branch — never a subset.
 
 Omit `project` and `verify` entirely — Phase 4 fills in `verify` and Phase 5 fills in `project`, both against the file this step writes. An absent key is valid and falls through to its documented default.
 
@@ -205,47 +187,24 @@ Read `verify.test`, `verify.lint`, and `verify.detectedFrom` from `.hivrr.json`.
 commands deliberately and detection must not touch them. Emit `INIT: verify manual — not re-detected`
 and continue to Phase 5. Do not run Step 2, do not compare, do not offer to update.
 
-This exists because detection can only find what its tables know about, and a repo whose
-verification is real but unconventional would otherwise have it overwritten with `null` on every
-run — and `null` contractually means "checked, there is nothing", which makes `work-issue` and
-`work-pr` report `skipped`. The result is an unattended run skipping verification on a repo that
-has it. The sentinel is the repo saying *stop looking, I already told you*.
-
 `["manual"]` is a whole-block sentinel, not a per-key one: it governs `test` and `lint` together. A
-repo that wants one key detected and the other pinned should record both by hand — mixing the two
-would make the block's provenance unreadable.
+repo that wants one key detected and the other pinned should record both by hand. Why the sentinel
+exists — without it an unconventional repo's real verification is overwritten with `null` and every
+run reports `skipped` — is **The `["manual"]` sentinel** in `config.md`; read it before advising a
+repo to adopt or drop it.
 
 **Step 2 — Detect from the repo**
 
-Look for a test command, in this order, and stop at the first match:
+Read **Detecting the commands** in `$CLAUDE_SKILL_DIR/references/verify.md` now and apply its
+two tables: a test command first, then a lint command, each stopping at the first match. The rules
+that govern this step live beside the tables and are restated here because Step 3 depends on them:
 
-| Source | Command |
-|---|---|
-| `package.json` with a `scripts.test` entry | `npm test` |
-| `Makefile` with a `test:` target | `make test` |
-| `pyproject.toml` with `[tool.pytest…]`, or `pytest.ini` | `pytest` |
-| `jest.config.{js,ts,mjs,cjs}` | `npx jest` |
-| `go.mod` | `go test ./...` |
-| `Cargo.toml` | `cargo test` |
-| A CI workflow that runs a test step | the command that workflow runs |
-
-Then a lint command, same rule:
-
-| Source | Command |
-|---|---|
-| `package.json` with a `scripts.lint` entry | `npm run lint` |
-| `eslint.config.{js,mjs,cjs,ts}` — **flat config** | `npx eslint .` |
-| `.eslintrc`, `.eslintrc.{js,cjs,json,yaml,yml}` — legacy config | `npx eslint .` |
-| `ruff.toml`, or `pyproject.toml` with `[tool.ruff]` | `ruff check .` |
-| `.flake8`, or `setup.cfg` with `[flake8]` | `flake8 .` |
-| `Makefile` with a `lint:` target | `make lint` |
-| A CI workflow that runs a lint step | the command that workflow runs |
-
-Check flat config **and** legacy config. Matching only `.eslintrc*` is how a repo on `eslint.config.js` silently reports `lint skipped`.
-
-Record the file and key that justified each command in `verify.detectedFrom`, e.g. `["package.json:scripts.test", "eslint.config.js"]`. This is the fingerprint, not decoration — Step 3 depends on it.
-
-If a repo genuinely has no test or lint setup, record the key as `null` rather than omitting it. `null` means "checked, there is nothing"; absent means "never checked".
+- Check ESLint flat config **and** legacy config — matching only `.eslintrc*` is how a repo on
+  `eslint.config.js` silently reports `lint skipped`.
+- Record the file and key that justified each command in `verify.detectedFrom`, e.g.
+  `["package.json:scripts.test", "eslint.config.js"]`. This is the fingerprint Step 3 compares.
+- A repo with genuinely no test or lint setup gets the key recorded as `null`, never omitted: `null`
+  means "checked, there is nothing"; absent means "never checked".
 
 **Step 3 — Compare against the fingerprint**
 
@@ -302,11 +261,11 @@ Emit one of:
 ## Phase 6 — Keep `.hivrr.json` Out of Git
 
 `.hivrr.json` is per-checkout, not shared — each teammate, agent, and CI run derives its own copy by
-running `init`, the same way each of them has their own `~/.claude/settings.json`. A copy that leaks
-into git via a missing `.gitignore` entry gives every clone a stale, silently-inherited config
-instead of one derived from that machine's actual repo state — which is exactly how this plugin's own
-repo ended up with a committed `.hivrr.json` before this phase existed. This phase exists to make
-that failure mode structurally impossible rather than something a `.gitignore` review might catch.
+running `init`. A copy that leaks into git gives every clone a stale, silently-inherited config; this
+phase makes that structurally impossible. The reasoning behind each step below is in
+[`references/git-hygiene.md`](references/git-hygiene.md), under the **Phase 6 — …** heading the
+step names. Read that section when the step's result surprises you or before changing the step; the
+steps here are complete without it.
 
 This phase is gated on nothing but the file itself. It runs whether or not the repo has a project
 board, a verify command, or a worktree.
@@ -317,18 +276,15 @@ board, a verify command, or a worktree.
 git check-ignore -q .hivrr.json && echo ignored || echo not-ignored
 ```
 
-**If ignored:** continue to Step 2 — the file may still be tracked from before this phase existed, or
-from before `.gitignore` had the line at all, and being ignored going forward does not untrack
-something git already knows about.
+**If ignored:** continue to Step 2 anyway — an ignored file can still be tracked (**Phase 6 — why an
+ignored file still goes to Step 2**).
 
-**If not ignored:** append it and record that fact for Step 3's commit message:
+**If not ignored:** append it — append, never overwrite `.gitignore` (**Phase 6 — why append to
+`.gitignore`**) — and record that fact for Step 3's commit message:
 
 ```bash
 printf '%s\n' '.hivrr.json' >> .gitignore
 ```
-
-Append rather than overwrite — `.gitignore` routinely already excludes `node_modules/`, `.env`, or
-this plugin's own `.claude/` entry, and this phase's job is one more line, not a rewrite.
 
 **Step 2 — Check whether `.hivrr.json` is tracked**
 
@@ -336,15 +292,12 @@ this plugin's own `.claude/` entry, and this phase's job is one more line, not a
 git ls-files --error-unmatch .hivrr.json >/dev/null 2>&1 && echo tracked || echo untracked
 ```
 
-**If tracked:** untrack it without touching the working-tree file:
+**If tracked:** untrack it without touching the working-tree file. This stages a deletion from the
+index only; the file and its config stay on disk (**Phase 6 — what `git rm --cached` does**):
 
 ```bash
 git rm --cached .hivrr.json
 ```
-
-This stages a deletion *from the index only* — the file stays on disk with its current content, so
-no config is lost. The commit in Step 3 is what actually removes it from the repo's history going
-forward (past commits still have it; that is expected and not this phase's job to rewrite).
 
 **If untracked:** nothing to do here.
 
@@ -369,21 +322,12 @@ git add .gitignore
 git commit -m "chore(config): keep .hivrr.json out of git" -- .gitignore .hivrr.json
 ```
 
-**The trailing pathspec is required, not decoration**, for the same reason it always is in this
-plugin: a bare `git commit` commits the **whole index**, including anything staged before `init` ran
-by the user or an interrupted workflow, and `init` runs as the first bootstrap step of every command
-— so it routinely executes mid-workflow in a checkout with a populated index. Passing `.hivrr.json`
-in the pathspec here commits its *removal* (from Step 2) when that happened; git accepts a pathspec
-for a staged deletion the same way it does for a staged addition. If Step 2 found nothing tracked,
-the pathspec simply matches nothing extra and the commit carries `.gitignore` alone.
-
-**Why this rule is restated here rather than linked.** `core` states it once, under **Staging**, and
-`work-issue` and `work-pr` link to it. `init` cannot: it ships in **both** `dev` and `planner`, and
-only `dev` ships `core` — a plugin install carries just the skills its `marketplace.json` entry
-names, so `../core/SKILL.md` resolves to nothing in one install out of two. Reordering the bootstrap
-so `core` loads before `init` would not change that; the constraint is packaging, not load order.
-Keep the copy inline, and keep it phase-agnostic — the phase numbers
-in the other two skills are hand-maintained and nothing verifies a prose reference to them.
+**The trailing pathspec is required, not decoration.** A bare `git commit` commits the **whole
+index**, including anything staged before `init` ran, and `init` routinely runs mid-workflow with a
+populated index. With the pathspec the commit carries `.gitignore`, plus `.hivrr.json`'s removal when
+Step 2 staged one, and nothing else (**Phase 6 — the commit's trailing pathspec**). Keep this rule
+inline rather than linking to `core`'s **Staging**: `init` also ships in `planner`, which has no
+`core` (**Phase 6 — why the pathspec rule is restated in `init`, not linked**).
 
 Then confirm the commit carries only `.gitignore` and, if Step 2 ran, `.hivrr.json`'s removal:
 
@@ -413,15 +357,9 @@ Emit one of:
 
 ## Phase 7 — Report Orphan Worktrees
 
-**Skip when `worktree` is absent from `.hivrr.json`.** This is the phase's only gate.
-
-Like Phase 6, this is a **sibling of Phase 5, not a step inside it.** Phase 5 skips entirely when
-`project` is absent, and a repo that configures `worktree` without a board would then never hear
-about its orphans. The two keys are independent.
-
-An abandoned or crashed session leaves a worktree that nothing else will notice, and each one holds
-a branch that cannot be deleted while it exists. `init` runs on every command, which makes it the
-cheapest place to surface them.
+**Skip when `worktree` is absent from `.hivrr.json`.** This is the phase's only gate: it does not
+depend on `project`, so it runs even when Phase 5 skipped (**Phase 7 — why it is not gated on
+`project`** in [`references/git-hygiene.md`](references/git-hygiene.md)).
 
 ```bash
 git worktree list --porcelain
@@ -439,16 +377,11 @@ worktree was never cleaned up:
 git branch -vv | grep ': gone]'
 ```
 
-**Do not use `git branch --merged` here.** Under squash merges — this plugin's default strategy, and
-what `merge-pr` documents at length where it cleans up branches — a merged branch shares no commit
-with the base, so `--merged` returns nothing for exactly the branches this phase most needs to find.
-The failure is silent: an empty result is indistinguishable from "no merged orphans".
-
-`: gone]` means the remote ref disappeared, **not** that the work landed — a closed-unmerged PR and a
-force-pushed rename produce the same signature. `merge-pr` treats that ambiguity as a reason to
-verify before deleting. Here it is not a problem: this phase only reports, and a worktree worth a
-second look is worth reporting either way. Say `branch gone from remote` rather than `merged`, so
-the report claims only what it checked.
+**Do not use `git branch --merged` here.** Under squash merges a merged branch shares no commit with
+the base, so `--merged` silently returns nothing for exactly these branches. And `: gone]` means the
+remote ref disappeared, **not** that the work landed, so say `branch gone from remote` rather than
+`merged`. Read **Phase 7 — why `: gone]`, not `git branch --merged`** in `references/git-hygiene.md`
+before changing either rule.
 
 ```
 INIT: 2 orphan worktree(s)
