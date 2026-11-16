@@ -43,14 +43,30 @@ docs/plans/<slug>/
 
 ### ADRs
 
-Every decision with at least one rejected option gets an ADR, with the sections Status, Context,
-Options (each rejected one with its reason), Decision and Consequences.
+Every decision with at least one rejected option gets an ADR, with a **Status** line, a
+**Proposed by** line, and the sections Context, Options (each rejected one with its reason),
+Decision and Consequences.
 
-| Who made the decision | Status |
-|---|---|
-| The developer stated it outright | `accepted` |
-| The author made it; shown at the `spec` checkpoint (a "contested" ADR) | `proposed` |
-| The developer approved a proposed ADR | `accepted (developer, <date>)` |
+| Who made the decision | Status | Proposed by |
+|---|---|---|
+| The developer stated it outright | `accepted` | `developer` |
+| The author made it; shown at the `spec` checkpoint (a "contested" ADR) | `proposed` | `author (<skill>)`, the skill that wrote it |
+| The developer approved a proposed ADR | `accepted (developer, <date>)` | unchanged, plus `; accepted by the developer at <checkpoint>` (or `in <where>` outside one) |
+| The author wrote it from a developer answer outside a `spec` checkpoint (a `cold-read` question) | `accepted (developer, <date>)` | `author (<skill>); accepted by the developer in <where>`, such as `in cold-read round 2` |
+
+**Lifecycle.** A `proposed` ADR may be revised in place until the developer approves it. An
+accepted ADR (`accepted` or `accepted (developer, <date>)`) is **never edited**. To change or
+reverse it, write a new ADR whose Context names the one it changes, and append one clause to the
+old ADR's Status line, the only edit an accepted ADR ever takes:
+
+- `; amended by ADR-NNN, <what it changes>` when the new ADR changes part of it;
+- `; superseded by ADR-NNN` when the new ADR replaces it outright.
+
+Append the clause only once the new ADR is accepted: at once when it is written accepted,
+otherwise when the developer approves it. While the new ADR is `proposed`, the old one is untouched.
+
+A superseded ADR stays in `decisions/`, and its number is never reused. This holds for every
+skill that writes a pack, at every Status, and in a re-route (§2).
 
 ---
 
@@ -138,6 +154,8 @@ A route can grow at any checkpoint.
 - Inside an existing file, a section may be added or revised. Record each revision in the README
   **Open questions** until the developer approves it at the next checkpoint. For example, a Feature
   re-routed to a Refactor revises the prd's Stories into a behaviour-preservation contract.
+- An accepted ADR is the exception: it is never revised. A changed decision is a new ADR that
+  amends or supersedes it (§1, Lifecycle).
 - Status stays where it was. It advances only through the next approved checkpoint.
 - A Spike always ends by offering a re-route.
 
@@ -288,9 +306,24 @@ exactly one of:
 - `text`: trees, layouts and wireframes.
 
 An untagged fence is rejected, because it could hide code. So are `json`, `yaml` and every other
-tag. The structural check in `docs/verification.md` enforces the info string (`PACK CODE FENCE`)
-and that every folder directly under `docs/plans/` has a README (`PACK NO README`). `slice` and
-`cold-read` enforce what is inside each fence.
+tag.
+
+A fence opens with **exactly three backticks**, at any indentation: a fence indented under a list
+item is as valid as one at column 0, and is checked the same way. `~~~` fences and fences of four
+or more backticks are rejected, whatever their tag. A pack has nothing to nest, since no fence holds
+code, so the longer and alternative forms buy nothing a reader or a check needs, and allowing them
+would let a fence hide inside another one.
+
+A fence closes on a line holding only three backticks, at any indentation. Nothing inside a fence
+may look like a fence: a pack nests nothing, so any other fence line before the closer is
+rejected, and so is a fence left open at the end of a file. A pack puts no fence on a `>`
+blockquote line or a list-marker line (`- `, `* `, `+ `, `1. `, `1) `): put the fence on its own line,
+indented under the item instead.
+
+The structural check in `docs/verification.md` enforces the form (`PACK FENCE FORM`), the info
+string (`PACK CODE FENCE`), nesting (`PACK FENCE NESTED`), closing (`PACK FENCE UNCLOSED`) and
+that every folder directly under `docs/plans/` has a README (`PACK NO README`). `slice` and
+`cold-read` run the same fence rule as a self-check, and enforce what is inside each fence.
 
 ---
 

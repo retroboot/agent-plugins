@@ -2,7 +2,28 @@
 
 All operations use the `gh` CLI.
 
-Variables: `{OWNER}` = repo owner, `{REPO}` = repo name, `{N}` = issue or PR number, `{B}` = body text, `{T}` = title.
+Variables: `{OWNER}` = repo owner, `{REPO}` = repo name, `{N}` = issue or PR number, `{T}` = title, `{file}` = a file holding the body text.
+
+**Bodies always go through a file.** Never pass a body's text inline: in `--body "…"` or
+`-f body="…"` the shell runs every backticked span and every `$(…)` as a command substitution, and
+every issue, PR and comment body these skills write holds backticks. Write the body to `{file}`
+first, outside the checkout (`mktemp`), with a single-quoted heredoc, then pass the file:
+
+```
+file=$(mktemp)
+cat > "$file" <<'HIVRR_BODY_7f3a'
+…body text, verbatim…
+HIVRR_BODY_7f3a
+```
+
+The delimiter is `HIVRR_BODY_7f3a`, not `EOF`: a body that quotes one of these snippets holds a line `EOF`,
+which would end the heredoc early and run the rest of the body as shell commands. If the body
+contains a line equal to the delimiter, choose another. Remove the file once the command has run;
+each command below ends with `rm -f {file}`.
+
+**Titles stay inline, so a title must be safe in double quotes.** Drop any backtick, `$`, `"` or
+`\` from `{T}` before substituting it into `--title "{T}"` or `-f title="{T}"`. A title is one line
+of prose, so this costs nothing, and `planning` builds its Publish titles by the same rule.
 
 ---
 
@@ -31,17 +52,18 @@ cause is the `gh` version.
 
 **Create**
 ```
-gh issue create --repo {OWNER}/{REPO} --title "{T}" --body-file {file} --label "{labels}"
+gh issue create --repo {OWNER}/{REPO} --title "{T}" --body-file "{file}" --label "{labels}"
+rm -f "{file}"
 ```
 
-Write the body to `{file}` first, outside the checkout (`mktemp`), with a single-quoted heredoc (`cat > {file} <<'EOF'`). A body
-passed as `--body "{B}"` loses every backticked span: the shell runs it as a command substitution.
+The body comes from `{file}`, written as **Bodies always go through a file** says above.
 
 Use labels from the label reference loaded by init. Pick one or more that fit the issue type and priority.
 
 **Edit** (replace an issue's body)
 ```
-gh api --method PATCH repos/{OWNER}/{REPO}/issues/{N} -F body=@{file}
+gh api --method PATCH repos/{OWNER}/{REPO}/issues/{N} -F body=@"{file}"
+rm -f "{file}"
 ```
 
 The body comes from `{file}`, written as for **Create**; `-F body=@{file}` reads it verbatim.
@@ -223,20 +245,36 @@ gh api repos/{OWNER}/{REPO}/issues/{N}/comments
 
 **Post comment**
 ```
-gh pr comment {N} --repo {OWNER}/{REPO} --body "{B}"
+gh pr comment {N} --repo {OWNER}/{REPO} --body-file "{file}"
+rm -f "{file}"
+```
+
+The body comes from `{file}`, as for every body. **A caller that may not write files** — `review-pr`
+is read-only — passes the body on stdin instead, with the same single-quoted heredoc and no scratch
+file: `--body-file -` reads standard input.
+
+```
+gh pr comment {N} --repo {OWNER}/{REPO} --body-file - <<'HIVRR_BODY_7f3a'
+…body text, verbatim…
+HIVRR_BODY_7f3a
 ```
 
 **Create PR**
 ```
-gh pr create --repo {OWNER}/{REPO} --title "{T}" --body "{B}" --base {base}
+gh pr create --repo {OWNER}/{REPO} --title "{T}" --body-file "{file}" --base {base}
+rm -f "{file}"
 ```
 
 `--base` is **required**, not optional. Without it `gh` silently targets the repository default branch — which on a ladder repo means aiming a feature PR at production. Resolve `{base}` from `branches.integration` in `.hivrr.json`, falling back to the repo default branch.
 
 **Edit a PR's title or body**
 ```
-gh api --method PATCH repos/{OWNER}/{REPO}/pulls/{N} -f title="{T}" -f body="{B}"
+gh api --method PATCH repos/{OWNER}/{REPO}/pulls/{N} -f title="{T}" -F body=@"{file}"
+rm -f "{file}"
 ```
+
+Drop either field to change only the other. `-F body=@{file}` reads the body verbatim, as in the
+issue **Edit** above.
 
 **Use this rather than `gh pr edit`.** On `gh` 2.45.0 `gh pr edit` fails the same way a bare
 `gh issue view` does — it queries the sunset Projects (classic) `projectCards` field:

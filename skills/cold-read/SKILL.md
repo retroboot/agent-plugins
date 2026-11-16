@@ -51,12 +51,18 @@ The input is a pack path, `docs/plans/<slug>`. Read `{path}/README.md`.
 - **No README there:** say `No pack at {path}` and go to Phase 7.
 - Read the header **Status**, **Type** and **Size**, and the **Read order**. List every file in the
   folder.
-- **Record only** (below): the pack executors read is the one on the integration branch. Resolve
-  `{integration}` as `work-issue` Phase 5 does (`branches.integration`, then the repository default
-  branch, then `origin/HEAD`, then `main`), run `git fetch origin {integration}`, and compare with
-  `git diff --stat origin/{integration} -- {path}`. When the working copy differs, warn
-  `Working copy of {path} differs from origin/{integration}; the reader sees the working copy.`
-  and record the warning in the round's summary paragraph.
+- Resolve `{integration}` as `work-issue` Phase 5 does (`branches.integration`, then the repository
+  default branch, then `origin/HEAD`, then `main`) and run `git fetch origin {integration}`. Phase 3
+  builds the reader's tree from `{base}`, which is `origin/{integration}`, the commit executors
+  fork from. If the fetch fails but `git rev-parse --verify -q origin/{integration}` finds the ref,
+  keep it and record `Reader tree from origin/{integration}, not refreshed: fetch failed, may be stale.`
+  in each round's summary paragraph. Only when the ref is missing too, set `{base}` to `HEAD` and
+  record `Reader tree from HEAD: origin/{integration} unavailable.` there instead.
+- **Record only** (below): the pack executors read is the one on the integration branch, and that
+  is the copy the reader sees. Compare with `git diff --stat {base} -- {path}`. When the working
+  copy differs, warn `Working copy of {path} differs from {base}; the reader sees {base}.` and record
+  the warning in the round's summary paragraph. When `git cat-file -e {base}:{path}/README.md`
+  fails, say `Pack {path} is not on {base}: merge the pack PR first.` and go to Phase 7.
 
 Read `pack-format.md` §3 (README contract and Status) and §6 (fences).
 
@@ -91,14 +97,25 @@ Display: `Pack: {path} | Status: {status} | Mode: {mode} | Slices: {count} | Ear
 Before any reader sees the pack, fix what a command can find. A reader's attention is for gaps only
 a reader can find.
 
-**Fences (S-04.3).** Every opening fence in every pack file, at any indentation and with backticks or
-tildes, is tagged `bash`, `sh`, `mermaid` or `text`. This prints each one that is not, untagged
-included; expected no output:
+**Fences (S-04.3).** Every opening fence in every pack file, at any indentation, is exactly three
+backticks tagged `bash`, `sh`, `mermaid` or `text` (`pack-format.md` §6). This prints each `~~~`,
+four-backtick or `>`/list-marker fence as `fence form`, each tag that is not allowed (untagged
+included), each fence line inside an open fence as `fence nested`, and each file left with a fence
+open as `fence unclosed`; expected no output:
 
 ```bash
-find docs/plans/{slug} -name '*.md' -print0 | xargs -0 awk 'FNR == 1 { open = 0 }
-  /^[ \t]*(```|~~~)/ { if (open) { open = 0; next } open = 1; t = $0; sub(/^[ \t]*(```|~~~)[`~]*/, "", t); sub(/[ \t\r]+$/, "", t)
-  if (t != "bash" && t != "sh" && t != "mermaid" && t != "text") print FILENAME ":" FNR ": fence \"" t "\"" }'
+find docs/plans/{slug} -name '*.md' -print0 | xargs -0 awk 'FNR == 1 { if (open) print f ": fence unclosed"; open = 0; f = FILENAME }
+  { s = $0; pre = 0; sub(/^[ \t]+/, "", s)
+    while (sub(/^(>|[-*+][ \t]|[0-9]+[.)][ \t])[ \t]*/, "", s)) pre = 1 }
+  !match(s, /^(```+|~~~+)/) { next }
+  { n = RLENGTH; r = substr(s, 1, n); t = substr(s, n + 1); sub(/[ \t\r]+$/, "", t) }
+  open { if (substr(r, 1, 1) != oc || n < on || t != "") print FILENAME ":" FNR ": fence nested \"" r t "\""
+         else { open = 0; if (good && (r != "```" || pre)) print FILENAME ":" FNR ": fence form \"" r "\"" }
+         next }
+  { open = 1; oc = substr(r, 1, 1); on = n; good = (r == "```" && !pre)
+    if (!good) print FILENAME ":" FNR ": fence form \"" r "\""
+    if (t != "bash" && t != "sh" && t != "mermaid" && t != "text") print FILENAME ":" FNR ": fence \"" t "\"" }
+  END { if (open) print f ": fence unclosed" }'
 ```
 
 Then read each fence: a `bash` or `sh` fence sits under a Verify heading and holds only commands,
@@ -107,6 +124,10 @@ Then read each fence: a `bash` or `sh` fence sits under a Verify heading and hol
 **Plan (when `plan.md` exists).** Run the **Headings** and **Trace** commands from
 `$CLAUDE_SKILL_DIR/../slice/SKILL.md` Phase 4, Self-check, exactly as written there with `{slug}`
 filled in; expected no output from either.
+
+**Record only:** the reader sees the pack as `{base}` has it, so check that copy. Build this
+round's tree now (Phase 3, **Build the reader's tree**), run both checks in a subshell,
+`(cd "{tree}" && …)`, and keep the tree: Phase 3 uses it rather than building another.
 
 Every finding is a blocking item, recorded in the coming round's Questions table as an author
 finding, Id `A1`, `A2` …, so the round shows it. Fix it now, unless the mode is Record only or the
@@ -133,27 +154,62 @@ round's fixes touched. With no slices, leave the slice line out of the prompt.
 | A subagent tool with no model choice (R1 in the design) | A fresh subagent on the default model; a read-only type where one exists | The default model by name if known, else `default model`, and the tool used |
 | No subagent tool | Do not read it yourself — you have seen the pack, so you are not cold. Say `No subagent available: run cold-read {path} in a session that can start one.` Go to Phase 7 | — |
 
-Frontmatter `allowed-tools` does not scope a spawned subagent, so when no read-only type exists the
-prompt's "change nothing" line is the only guard. Run this before and after every read and compare
-the two outputs; they must be identical:
+**Build the reader's tree.** The reader never reads this checkout: uncommitted files and commits on
+this branch that `{integration}` lacks are context the pack does not hold, and an executor will not
+have them. It reads a detached worktree of `{base}`, outside the checkout, holding the pack and
+nothing else that is uncommitted. In every mode but Record only, the pack is copied in from the
+working copy, since it is usually uncommitted work in progress; in Record only the reader sees the
+pack as `{base}` has it. A dirty checkout is therefore not a stop. In Record only, Phase 2 has
+already built this round's tree; use it and skip to the guard below.
+
+Shell variables do not survive from one command to the next, so print the path and write it
+into every later command as `{tree}`, the way `{path}` is written. First clear trees an earlier,
+interrupted run left registered, and list any that remain; report each one to the developer and
+leave it in place:
 
 ```bash
-find docs/plans/{slug} -type f -exec cksum {} + | sort -k3
+git worktree prune
+git worktree list --porcelain | grep '^worktree .*/cold-read\.'
+mktemp -d "${TMPDIR:-/tmp}/cold-read.XXXXXX"
 ```
 
-A difference means the reader changed the pack: the round is void. Say which files changed and go
-to Phase 7.
+Then, with `{tree}` the path just printed:
 
-**The prompt** is exactly this, with `{path}` and `{slices}` filled in. Add nothing to it — no
-summary, no context, no reason for the read:
+```bash
+git worktree add --detach "{tree}" {base}
+tree="{tree}"; rm -rf "${tree:?}/{path}" && mkdir -p "$tree/{path}" && cp -R {path}/. "$tree/{path}/"
+```
+
+Skip the second line in Record only. The tree is new for every round, so it carries the last
+round's fixes. Whatever path leaves this phase — a recorded round, a void one, an incomplete
+report — remove it first with `git worktree remove --force "{tree}"`; the fixes in Phase 5 go to
+this checkout, never to the tree.
+
+Frontmatter `allowed-tools` does not scope a spawned subagent, so when no read-only type exists the
+prompt's "change nothing" line is the only guard. Run this before and after every read, from the
+checkout, and compare the two outputs; they must be identical:
+
+```bash
+find {path} -type f -exec cksum {} + | sort -k3
+(cd "{tree}" || exit 1; find {path} -type f -exec cksum {} + | sort -k3; git status --porcelain --untracked-files=all)
+```
+
+It covers the pack in the checkout and anything the reader could write in its tree; a missing
+tree fails it. A
+difference means the reader changed something: the round is void. Say which files changed, remove
+the tree, and go to Phase 7.
+
+**The prompt** is exactly this, with `{tree}`, `{path}` and `{slices}` filled in. Add nothing to it — no summary, no context, no reason for the read:
 
 ```text
 You are about to implement part of a plan pack, and you have never seen it. Read it cold.
 
-Pack: {path}
+Repository: {tree}
+Pack: {tree}/{path}
 
-Read {path}/README.md first, then follow its Read order. Do not open {path}/cold-read.md until
-your report is written. Read only: change nothing.
+Read only files under {tree}: every path in the pack is relative to it. Read {path}/README.md
+first, then follow its Read order. Do not open {path}/cold-read.md until your report is written.
+Read only: change nothing.
 
 Think these slices through as if you were implementing them now: {slices}.
 
@@ -186,8 +242,8 @@ A table: citation | holds (yes/partly/no) | note.
 `{slices}` reads `Slice 2, Slice 5` — numbers only, never names or what they contain.
 
 **Check the report.** It must have all five sections and at least 8 citations. If it does not,
-dispatch one more new reader for the same round; a second incomplete report goes to Phase 7 with
-the round unrecorded.
+dispatch one more new reader for the same round, in the same tree; a second incomplete report goes
+to Phase 7 with the round unrecorded. Then remove the tree.
 
 Display: `Round {N}: reader {model} — {q} questions ({b} blocking), {c} contradictions, {k} citations checked`.
 
@@ -221,7 +277,10 @@ further round — never carried into the next round in the hope a reader settles
 with the reader's wording, the file, and the options the pack leaves open. Then:
 
 - **Answered:** resolve it as below, recording the developer's answer and date in the Resolution.
-  An ADR the developer confirms becomes `accepted (developer, {date})`.
+  A `proposed` ADR the developer confirms becomes `accepted (developer, {date})`, and its Proposed
+  by line gains `; accepted by the developer in cold-read round {N}`. If it amends or supersedes an
+  accepted ADR, append that ADR's Status clause now (pack-format §1). An already accepted ADR the
+  developer confirms is left unchanged; the Resolution records the confirmation.
 - **Not answered** (the developer defers it or stops): it remains blocking. Record the round, then
   go to Phase 6 without dispatching another round. The run ends `COLD READ BLOCKED`.
 
@@ -236,6 +295,13 @@ Skip this in Record only mode; write each fix as `Proposed: …` in its Resoluti
   in its restatement is the next round's blocker.
 - **Non-blocking:** adopt the reader's default when it is right, writing it into the pack, or record
   why the pack stands as it is. Either way the Resolution says which.
+- **Never edit an accepted ADR** (`pack-format.md` §1, Lifecycle). An answer that changes or
+  reverses one is a new ADR from the `adr.md` template, numbered after the highest in `decisions/`,
+  its Context naming the old ADR. It records the developer's answer, so it is written accepted:
+  Status `accepted (developer, {date})`, Proposed by
+  `author (cold-read); accepted by the developer in cold-read round {N}`.
+  The old ADR's Status line gains `; amended by ADR-NNN, {what it changes}` or
+  `; superseded by ADR-NNN`, and nothing else. In Record only mode, propose both instead.
 - Never renumber a PRD criterion; a new one goes at the end of its story. A fix that adds a
   criterion also adds it to a slice's Acceptance and the Traceability table.
 - Fix only what an item asked for. A wider rework is a `planning` step — Re-slice, Revise spec or
@@ -323,8 +389,9 @@ Write `null` bare, never as the string `"null"`.
   Blocking (author findings fixed in Phase 2 excepted; a held one counts), a developer-only
   question is unanswered, or a Record only round had one — in Record only mode every author
   finding is held.
-- `COLD READ STOPPED` when no round could be recorded: no README, no subagent available, two
-  incomplete reports, or a reader that changed the pack. `model` is bare `null` when no reader
+- `COLD READ STOPPED` when no round could be recorded: no README (in Record only, none on
+  `{base}`), no subagent available, two incomplete reports, or a void round (the reader changed
+  the pack or its tree). `model` is bare `null` when no reader
   ran, `rounds` counts the rounds recorded before the stop, and `pack_status` is the unchanged
   Status.
 - With no README at the path, `pack_status` is bare `null`.

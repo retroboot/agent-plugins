@@ -4,7 +4,10 @@ Issue tracker only. For PR/MR operations, use the repo provider reference (githu
 
 All operations use the `linear` CLI.
 
-Variables: `{TEAM}` = team key from `providerConfig.linearTeam` (e.g. `ENG`), `{ID}` = Linear issue identifier (e.g. `ENG-123`), `{T}` = title, `{B}` = description.
+Variables: `{TEAM}` = team key from `providerConfig.linearTeam` (e.g. `ENG`), `{ID}` = Linear issue identifier (e.g. `ENG-123`), `{T}` = title, `{file}` = a file holding the description text.
+
+**Titles stay inline, so a title must be safe in double quotes.** Drop any backtick, `$`, `"` or
+`\` from `{T}` before substituting it into `--title "{T}"`, as `planning` does for its Publish titles.
 
 ---
 
@@ -22,10 +25,11 @@ linear issue view {ID}
 
 **Create**
 ```
-linear issue create --team {TEAM} --title "{T}" --description "$(cat {file})"
+linear issue create --team {TEAM} --title "{T}" --description "$(cat "{file}")"
+rm -f "{file}"
 ```
 
-Write the description to `{file}` first, outside the checkout (`mktemp`), with a single-quoted heredoc (`cat > {file} <<'EOF'`), so
+Write the description to `{file}` first, outside the checkout (`mktemp`), with a single-quoted heredoc (`cat > {file} <<'HIVRR_BODY_7f3a'`, the delimiter `github.md` and `gitlab.md` explain), so
 backticks in it are not run as command substitutions.
 
 **Label**
@@ -35,7 +39,8 @@ linear issue update {ID} --label "{label}"
 
 **Edit** (replace an issue's description)
 ```
-linear issue update {ID} --description "$(cat {file})"
+linear issue update {ID} --description "$(cat "{file}")"
+rm -f "{file}"
 ```
 
 **Untested:** the `--description` flag on `linear issue update` is assumed from `create`, and has
