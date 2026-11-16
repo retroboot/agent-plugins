@@ -30,7 +30,7 @@ Rules that hold in every phase:
   **Read order** in the same step, using the template's wording and order and renumbering the list.
   `decisions/` gets one entry, however many ADRs it holds.
 - **Never delete or rewrite wholesale.** An existing file is extended or revised section by
-  section (Phase 1, Re-route).
+  section (Phase 1, Re-route, and `references/reroute.md`).
 - **Do not stage or commit.** The pack stays untracked until the `planning` wrapper publishes it.
 
 ## Bootstrap
@@ -86,34 +86,24 @@ Never invent a file or a section.
 
 ### Re-route
 
-The route grew after spec files were written (for example Feature to Rewrite). Work through every
-phase as in Specify, but against the files already there (`pack-format.md` §2, Re-routing):
+Two forms, both working through every phase as in Specify but against the files already there:
+the route grew after spec files were written (for example Feature to Rewrite), or, when the input
+names what to revise, the same route (**Revise spec**), revising only the sections that answer the
+request. **Before Phase 2, read `$CLAUDE_SKILL_DIR/references/reroute.md`**: which files and
+sections each form adds or revises, ADR numbering, and how `planning`'s `Spec pending` line relates.
+Read it too in Specify at `routed` when spec files are already in the folder (an earlier stopped
+run, or a re-routed Spike); that run still sets Status on approval. These rules apply at every
+checkpoint:
 
-- A required file that is missing is written new.
-- A file that exists is never deleted or rewritten wholesale. Add each section the new route needs
-  that it lacks. Revise an existing section only when the new route changes what that section must
-  hold — for example, Feature to Refactor turns Stories into a behaviour-preservation contract;
-  Feature to Rewrite adds behaviour criteria and keeps the Story map.
-- For each revised section, add one line to the README **Open questions**:
+- For each revised section, add one line to the README **Open questions**. Grown route:
   `Revised by spec on {date}: {file} — {section}, for the re-route to {type}. Awaiting approval at the next checkpoint.`
-  When the developer approves the checkpoint that shows that file, remove its lines; write
-  "None." if the list is then empty. A stop before approval leaves them in place.
-- ADR numbers continue after the highest one in `decisions/`; none is renumbered. An accepted ADR
-  is never revised: a changed decision is a new ADR that amends or supersedes it, marked on the old
-  ADR only once the new one is accepted (Phase 5).
-- Status is not changed by this run (Phase 9).
-
-**Same route (Revise spec).** When the input names what to revise, the route has not changed: no
-file is missing and no section is added for the route. Revise only the sections that answer the
-request — for example a criterion `slice` could not place, moved or dropped with the developer's
-agreement — and list each with
-`Revised by spec on {date}: {file} — {section}, {what to revise}. Awaiting approval at the next checkpoint.`
-Everything else above holds; the checkpoints show only the files revised, and Phase 9 treats the run
-as a Re-route. A run with no request whose **Open questions** already hold `Revised by spec …` lines
-is a resumed revision: show those sections at the checkpoints for approval.
-
-Specify at `routed` follows the same rules for any spec file already in the folder (an earlier
-stopped run, or a re-routed Spike), and still sets Status on approval.
+  Same route:
+  `Revised by spec on {date}: {file} — {section}, {what to revise}. Awaiting approval at the next checkpoint.`
+- When the developer approves the checkpoint that shows that file, remove its lines; write "None."
+  if the list is then empty. A stop before approval leaves them in place.
+- A run with no request whose **Open questions** already hold `Revised by spec …` lines is a
+  resumed revision: show those sections at the checkpoints for approval.
+- Status is not changed by a Re-route of either form (Phase 9).
 
 Display: `Pack: {path} | Status: {status} | Route: {type}, {size}, {modifiers} | Mode: {mode}`, then
 the required and optional file lists.
@@ -272,16 +262,10 @@ Spike outcome: when every ADR is accepted, go to Phase 9.
 ## Phase 6 — Inventory
 
 Migration and Rewrite only; otherwise skip. Write `inventory.md` from `templates/inventory.md`,
-keeping the section for this type and deleting the other.
-
-- **Migration — Usage sites:** every place that uses what is being migrated, found by searching the
-  code (cite each `path:line`), whether it breaks and how. Slices do not exist yet: write `pending`
-  in the Slice column for `slice` to fill.
-- **Rewrite — Behaviour inventory:** every observable behaviour of the old system, with its
-  evidence (`path:line` in the old system) and the prd criterion that keeps, changes or drops it.
-  A behaviour with no criterion gets one added to the prd now, at the end of its story.
-- **Rewrite — Parity matrix:** one row per behaviour in the inventory, with old, new and a status
-  of `kept`, `changed: <reason>` or `dropped: <reason>`.
+keeping the section for this type and deleting the other. **Read
+`$CLAUDE_SKILL_DIR/references/inventory.md` first**: what Usage sites, Behaviour inventory and
+Parity matrix each list. A Rewrite behaviour with no prd criterion gets one added to the prd now,
+at the end of its story; Phase 8 shows it.
 
 ---
 
@@ -292,35 +276,18 @@ keeping the section for this type and deleting the other.
 Required for Refactor, Migration, Greenfield and Rewrite, and for Feature at size M or larger.
 Bug: required at size M or larger when the route has modifiers, so their sections always have a
 home in design.md. Otherwise optional: when the fix crosses components, propose it before writing,
-saying what it would hold, and write it only on a yes. Write it from `templates/design.md`,
-including each section (Domain model, State machines, Flows, Test strategy, Pre-mortem) **exactly**
-when its trigger in `pack-format.md` §2, **Content sections**, applies, and deleting it when it
-does not. Beyond those triggers:
-
-- **State machines:** list every illegal transition, including each move back to an earlier state
-  that the lifecycle forbids.
-- **Test strategy:** name the level each example row in the prd is proven at.
-- **Pre-mortem:** "It is six months later and this failed. Why?" Each item maps to a mitigation, a
-  risk row, or a stop condition. Slices do not exist yet, so name the slice by what it does — "stop
-  condition in the slice that runs the migration" — for `slice` to carry into that slice.
-- **Rewrite:** add the cutover plan as a `### Cutover` subsection under **Architecture**.
-  **Migration and Rewrite:** the rollback approach each slice will apply.
+saying what it would hold, and write it only on a yes. Write it from `templates/design.md`, with
+each section exactly when its `pack-format.md` §2 trigger applies. **Before writing it, read
+`$CLAUDE_SKILL_DIR/references/design.md`, design.md sections:** which sections to include, and what
+State machines, Test strategy, Pre-mortem, a Rewrite cutover and Migration or Rewrite rollback hold.
 
 ### Modifier sections
 
-Each modifier on the route adds one `## Modifier: <name>` section, stating everything
-`pack-format.md` §2, **Modifiers**, requires for it. The section goes in `design.md`; where the pack
-has no design.md (only at size S), it goes in the README, after the Slice section and before Route.
-
-- **ui, size M or larger:** write `ux.md` from `templates/ux.md`, following
-  `$CLAUDE_SKILL_DIR/../planning/references/ux-checklist.md`, and link it from the modifier section.
-  One wireframe (`text` fence) and one state table (loading, empty, error, success, partial) per
-  screen in the inventory, so 3 screens give 3 of each. A high-fidelity mockup is a link under
-  **Mockups**, never embedded; delete Mockups when there are none.
-- **ui, size S:** the same six parts inline in the modifier section.
-- **observability:** name what must never be logged concretely (for example, log a payment
-  webhook's event ID, never its card data), give every alert a numeric threshold, and tie the
-  production check to the prd's success measures (at size S without a prd, to the Slice Outcome).
+Each modifier on the route adds one `## Modifier: <name>` section. The section goes in `design.md`;
+where the pack has no design.md (only at size S), it goes in the README, after the Slice section and
+before Route. **When the route has any modifier, read `$CLAUDE_SKILL_DIR/references/design.md`,
+Modifier sections, before writing them:** what each must state, including the `ux.md` that `ui` at
+size M or larger writes, and the inline parts it takes at size S.
 
 ### README Slice, at size S
 
