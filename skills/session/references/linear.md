@@ -4,7 +4,10 @@ Issue tracker only. For PR/MR operations, use the repo provider reference (githu
 
 All operations use the `linear` CLI.
 
-Variables: `{TEAM}` = team key from `providerConfig.linearTeam` (e.g. `ENG`), `{ID}` = Linear issue identifier (e.g. `ENG-123`), `{T}` = title, `{B}` = description.
+Variables: `{TEAM}` = team key from `providerConfig.linearTeam` (e.g. `ENG`), `{ID}` = Linear issue identifier (e.g. `ENG-123`), `{T}` = title, `{file}` = a file holding the description text.
+
+**Titles stay inline, so a title must be safe in double quotes.** Drop any backtick, `$`, `"` or
+`\` from `{T}` before substituting it into `--title "{T}"`, as `planning` does for its Publish titles.
 
 ---
 

@@ -248,6 +248,9 @@ Store: `review_body`.
 ## Phase 6 — Post the Review
 
 Use the **Post comment** command from the loaded reference to post `review_body` as a comment on the PR/MR.
+This skill may not write files, so take the reference's stdin form for callers that may not write
+files: `review_body` goes in a single-quoted heredoc (`<<'EOF'`), never in double quotes on the
+command line, where every backticked path in it would run as a command substitution.
 
 Display: `Posted: review comment on PR/MR #{pr_number}`
 
