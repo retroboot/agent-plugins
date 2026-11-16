@@ -164,7 +164,10 @@ For each issue, look at the lines that start with `Plan: `. Matching is case-sen
 
 A Linear issue, such as `ENG-123`, works the same way: its body is the description that the linear
 reference's **Get** command returns, and the marker is found in it by the rules below. In the
-messages of this pack-mode run, write its identifier where they say `#{number}`.
+messages of this pack-mode run, write its identifier where they say `#{number}`. Its branch is
+`issue/{identifier}`, exactly (`issue/ENG-123`), wherever Phase 5 and later phases say
+`issue/{number}`: `ship-issue` finds a slice's open PR by that branch name, and any other name
+would let a rerun open a second PR.
 
 - **Marker.** The first line that starts with `Plan: docs/plans/`, in the form
   `Plan: docs/plans/<slug> · Slice: <N>`. The separator may be `·` or `|`. Store `pack_slug`, with
