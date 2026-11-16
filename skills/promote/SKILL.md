@@ -147,10 +147,18 @@ git log origin/{target}..origin/{source} --oneline
 
 **Do not include `Closes #N` lines.** The commits beneath a promotion carry their own closing keywords, and those issues closed at their feature merge. Restating them here would make the PR body claim credit for closures it did not perform.
 
-Create the PR with the **Create PR** command from the loaded reference, passing `--base {target}` explicitly:
+Create the PR with the **Create PR** command from the loaded reference, passing `--base {target}` explicitly.
+Commit subjects carry backticks, so the body goes through a file: write it outside the checkout with
+a single-quoted heredoc, as the reference's **Bodies always go through a file** says. Use the
+`HIVRR_BODY_7f3a` delimiter shown, never `EOF`; if the body holds a line equal to it, choose another.
 
 ```bash
-gh pr create --repo {repo_slug} --head {source} --base {target} --title "promote: {source} → {target}" --body "{body}"
+file=$(mktemp)
+cat > "$file" <<'HIVRR_BODY_7f3a'
+{body}
+HIVRR_BODY_7f3a
+gh pr create --repo {repo_slug} --head {source} --base {target} --title "promote: {source} → {target}" --body-file "$file"
+rm -f "$file"
 ```
 
 Display: `PR: {url}`

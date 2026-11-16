@@ -119,9 +119,26 @@ If the user skips: display the findings summary and stop.
 
 ## Phase 7 — Create GitHub Issues
 
-For each finding, create a GitHub issue using `gh issue create`:
+For each finding, create a GitHub issue using `gh issue create`. The body goes through a file,
+never inline: in `--body "…"` the shell would run every backticked path in it and every `$(…)` as a
+command substitution. Write it outside the checkout with a single-quoted heredoc, pass it with
+`--body-file`, then remove it:
 
-**Title**: the finding title
+```bash
+body_file=$(mktemp)
+cat > "$body_file" <<'HIVRR_BODY_7f3a'
+{body below, filled in}
+HIVRR_BODY_7f3a
+gh issue create --title "{title}" --body-file "$body_file" --label "{labels}"
+rm -f "$body_file"
+```
+
+Use the `HIVRR_BODY_7f3a` delimiter, never `EOF`: a finding that quotes a heredoc holds a line `EOF`, which
+would end the body early and run the rest as shell commands. If the body holds a line equal to the
+delimiter, choose another.
+
+**Title**: the finding title, with any backtick, `$`, `"` or `\` dropped — the title is passed in
+double quotes, where each of these expands or breaks the quoting.
 
 **Body**:
 ```

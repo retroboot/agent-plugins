@@ -265,7 +265,8 @@ A Spike skips Slice, Cold read, Approve and Publish for itself (S-03.5).
 3. **Offer a re-route** of the same pack, naming the type the outcome suggests (for example "use
    library X" suggests a Feature).
    - **Re-route:** run the Phase 3 checkpoint for the new type, then set Status `routed` (the one
-     lowering allowed). The Question section and the ADR stay. Continue at Phase 4.
+     lowering allowed). The Question section and the ADR stay, the ADR unedited (`pack-format.md`
+     §1, Lifecycle). Continue at Phase 4.
    - **No re-route:** set Status `done` and display the outcome ADR. The pack is not published; say
      `Spike closed: docs/plans/{slug} is untracked — commit it through a PR to keep it.` Stop.
 
@@ -322,8 +323,9 @@ Ready to create {n} issue(s){ + 1 epic} in {tracker}, then open the pack PR.
 ```
 
 - **Issue title:** `{pack title} — Slice {N}: {slice name}`; at size S, the pack title. Drop any
-  backtick or `$` from every title Publish builds, including the epic and the `Plan:` PR title: the
-  **Create** commands pass titles in double quotes, where both expand.
+  backtick, `$`, `"` or `\` from every title Publish builds, including the epic and the `Plan:` PR
+  title: the **Create** commands pass titles in double quotes, where each of these expands or breaks
+  the quoting. The session references state the same rule for every title.
 - **Labels:** from `$CLAUDE_SKILL_DIR/../init/references/labels.md`: one type label that fits the
   route (`feature`, `bug`, `refactor`, `enhancement`, `chore`, `documentation`, `security`), a
   priority `P0`–`P3`, and the slice's size label `size:xs`–`size:l` (as estimated by `slice`; no
@@ -378,6 +380,5 @@ Pack PR:  {url | none}
 Next: ship-issue docs/plans/{slug}
 ```
 
-With Linear as the slice tracker, the Next line names the identifiers instead (`publish.md`,
-**Linear**). On a resume at `published` or later, Phase 1 says what to display instead. Return control to the
-developer.
+The Next line is the same with Linear as the slice tracker (`publish.md`, **Linear**). On a resume
+at `published` or later, Phase 1 says what to display instead. Return control to the developer.
