@@ -155,8 +155,8 @@ confirmed and is not this skill's to change.
 
 **Not routed.** If the conclusion is a batch of independent small items rather than one piece of
 work, say that it is not routed and recommend `ship-issue` for the items. Do not ask keep or
-discard, and write nothing: skip Phases 6 and 7, and go to Phase 8 with `BRAINSTORM DISCARDED` and
-`route: null`.
+discard, and write nothing: skip Phases 6 and 7, and go to Phase 8 with `BRAINSTORM NOT ROUTED`
+and `route: null`.
 
 This is a proposal, not the confirmed route. The `planning` wrapper confirms it, and may change the
 slug, at its Route checkpoint.
@@ -267,7 +267,7 @@ Write `null` bare, never as the string `"null"`.
 For a Spike, `size` is bare `null`. When resuming a pack past `discovered`, `route` is read back
 from its header and **Route** section.
 
-**Discarded, not routed, or a read-only run:**
+**Discarded, or a read-only run:**
 
 ```json
 {
@@ -277,6 +277,11 @@ from its header and **Route** section.
   "route": null
 }
 ```
+
+**Not routed** (Phase 5): the same keys and values, with `"status": "BRAINSTORM NOT ROUTED"`. It is
+a status of its own, not a reason field on `BRAINSTORM DISCARDED`, so a caller that reads only
+`status`, as the `planning` wrapper does, tells "thrown away" from "no route: run `ship-issue`"
+without reading anything else.
 
 When resuming, `pack` is `"{resume_pack}"` and `pack_status` is its unchanged Status instead,
 because that README still exists; `route` stays `null`.

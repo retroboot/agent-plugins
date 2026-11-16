@@ -42,7 +42,8 @@ Run before Phase 1:
 
 ## Phase 1 — Read the Pack and the Route
 
-The input is a pack path, `docs/plans/<slug>`. Read `{path}/README.md`.
+The input is a pack path, `docs/plans/<slug>`, optionally followed by `: {what to revise}` (the
+`planning` wrapper's **Revise spec** step passes it). Read `{path}/README.md`.
 
 - **No README there:** say `No pack at {path}` and go to Phase 10 with no files written.
 - Read the header **Status**, **Type**, **Size** and **Modifiers**, and the **Route**, **Brief**,
@@ -98,6 +99,14 @@ phase as in Specify, but against the files already there (`pack-format.md` §2, 
   "None." if the list is then empty. A stop before approval leaves them in place.
 - ADR numbers continue after the highest one in `decisions/`; none is renumbered.
 - Status is not changed by this run (Phase 9).
+
+**Same route (Revise spec).** When the input names what to revise, the route has not changed: no
+file is missing and no section is added for the route. Revise only the sections that answer the
+request — for example a criterion `slice` could not place, moved or dropped with the developer's
+agreement — and list each with
+`Revised by spec on {date}: {file} — {section}, {what to revise}. Awaiting approval at the next checkpoint.`
+Everything else above holds; the checkpoints show only the files revised, and Phase 9 treats the run
+as a Re-route.
 
 Specify at `routed` follows the same rules for any spec file already in the folder (an earlier
 stopped run, or a re-routed Spike), and still sets Status on approval.

@@ -62,19 +62,22 @@ skill's own completion and read only these fields:
 | extras | `brainstorm`: `route`. `spec`: `files`. `slice`: `slices`. `cold-read`: `model` (may be `null`), `rounds`, `blocking` |
 
 - **`pack_status` is `null`:** stop. Say `No pack at {path}`. Never treat `null` as a Status. The
-  exception is `BRAINSTORM DISCARDED` with `pack` `null`, which means nothing was kept (Phase 2).
+  exceptions are `BRAINSTORM DISCARDED` and `BRAINSTORM NOT ROUTED` with `pack` `null`: nothing was
+  written, and Phase 2 gives each its own message.
 - **`SPEC STOPPED`, `SLICE STOPPED` or `COLD READ STOPPED`:** a stop, not a failure. Do not advance.
   Show the developer the reason the skill gave (its last message before the JSON) and the unchanged
   Status. Files written so far stay on disk. Where the reason asks for a re-route (`slice`: over 12
-  slices, a size mismatch, or a Bug's plan declined), offer **Re-route** (below); otherwise end with
-  `Resume: planning {path}`. A `COLD READ STOPPED` round does not count as a cold read.
+  slices, a size mismatch, or a Bug's plan declined), offer **Re-route** (below); where it asks to
+  revise the spec (`slice`: a gap, an untouched map step, or a size mismatch), offer **Revise spec**
+  (below); otherwise end with `Resume: planning {path}`. A `COLD READ STOPPED` round does not count
+  as a cold read.
 - **`COLD READ BLOCKED`:** handled in Phase 6.
 - **`{SKILL} COMPLETE` with an unexpected `pack_status`:** stop and show both values. Never set
   the Status the skill did not. The expected value depends on the Status the run started at: the
   skill's own Status when it started at the one before (`spec` from `routed` gives `specified`,
   `slice` from `specified` gives `sliced`, `cold-read` from `sliced` gives `reviewed`), and the
-  **unchanged** Status otherwise (`spec` Re-route, `slice` Re-slice, `cold-read` re-read, and a
-  Spike outcome, which stays `specified`).
+  **unchanged** Status otherwise (`spec` Re-route or Revise spec, `slice` Re-slice, `cold-read`
+  re-read, and a Spike outcome, which stays `specified`).
 
 ---
 
@@ -94,6 +97,21 @@ at Approve (Phase 7) and after a phase skill stops asking for one; on a resume, 
    the files the new route needs and lists every revised section in **Open questions**), `slice`
    (Re-slice, unless the size is S), and `cold-read`, then Approve. A re-route to XL instead writes
    **Child packs** (Phase 3) and stops.
+
+---
+
+## Revise spec
+
+The route holds but the spec does not: a criterion `slice` cannot place, a Story map step no slice
+touches, or a size mismatch the prd explains. Offer it at Approve (Phase 7), and after a
+`SLICE STOPPED` or `COLD READ BLOCKED` that asks for it; on a resume, do not ask. The Route
+checkpoint does not run: Type, Size, Modifiers, **Route** and Status stay as they are.
+
+1. Ask what to revise, in one line. When Status is `sliced` or later, add to the README **Open
+   questions** the line `Cold read pending after spec revision on {date}.` (Phase 6 gates on it).
+2. Load `spec` with `docs/plans/{slug}: {what to revise}`; Status is `specified` or later, so it
+   runs in its Re-route mode on the same route. Then `slice` (Slice at `specified`, Re-slice
+   later, skipped at size S), `cold-read`, then Approve, as Re-route step 4.
 
 ---
 
@@ -178,8 +196,11 @@ scope — for example an issue with acceptance criteria — ask once: **Skip dis
 some. It holds its own conversation and asks keep or discard. Read its result (above):
 
 - `BRAINSTORM COMPLETE` with `pack_status` `discovered`: go to Phase 3 with `pack` and `route`.
-- `BRAINSTORM DISCARDED` with `pack` `null`: nothing was kept. When brainstorm said the work is not
-  routed, repeat its `ship-issue` recommendation (S-09.3). Say `Nothing written.` and stop.
+- `BRAINSTORM DISCARDED` with `pack` `null`: the developer threw the thinking away. Say
+  `Brainstorm discarded: nothing written.` and stop.
+- `BRAINSTORM NOT ROUTED` with `pack` `null`: the work is a batch of independent small items, so no
+  pack was offered. Say `Not routed: planning adds nothing here.`, repeat brainstorm's `ship-issue`
+  recommendation (its last message before the JSON, S-09.3), and stop.
 
 ---
 
@@ -293,13 +314,13 @@ on a pass from `sliced`. Read its `status`, not only `pack_status`:
   `reviewed`.
 - **`COLD READ BLOCKED` (S-05.3):** do not publish. Show the remaining questions from the closing
   **Result** of `cold-read.md`, each with its Resolution, and `blocking`. Status stays where it was
-  (`sliced` on a first read). Say `Answer these, then planning docs/plans/{slug} to run the cold read again.`
-  and stop.
+  (`sliced` on a first read). A Resolution naming a wider rework offers it first (Phase 7's
+  re-slice, **Re-route**, **Revise spec**). Else say `Answer these, then planning docs/plans/{slug} to run the cold read again.` and stop.
 - **`COLD READ STOPPED`:** handled as above. It does not count as a cold read.
 
-**After a Re-slice or Re-route past `sliced`** (Status `reviewed` or `approved`), the cold read that
-passed saw the old plan, and Status no longer shows it. The Re-slice or Re-route therefore writes
-`Cold read pending after {re-slice | re-route} on {date}.` to **Open questions**, and this phase runs
+**After a Re-slice, Re-route or Revise spec past `sliced`** (Status `reviewed` or `approved`), the
+cold read that passed saw the old plan, and Status no longer shows it. The step therefore writes
+`Cold read pending after {re-slice | re-route | spec revision} on {date}.` to **Open questions**, and this phase runs
 `cold-read` again; it fixes the pack but leaves Status as it is.
 
 **Gate before Approve and Publish.** Phases 7 and 8, including on a resume, run only when
@@ -330,12 +351,13 @@ Ready to create {n} issue(s){ + 1 epic} in {tracker}, then open the pack PR.
   slice is larger).
 - **Epic:** as `publish.md` **Epic** says.
 
-Ask: **approve**, **change**, **re-slice**, **re-route** or **stop**.
+Ask: **approve**, **change**, **re-slice**, **revise spec**, **re-route** or **stop**.
 
 - **Approve:** set Status `approved` (from `reviewed`). Go to Phase 8.
 - **Change:** revise titles, labels or the epic, and show this again. Nothing in the pack changes.
 - **Re-slice:** write `Cold read pending after re-slice on {date}.` to **Open questions**, load
   `slice` (its Re-slice mode), then Phase 6 again, then this checkpoint.
+- **Revise spec:** see **Revise spec** above.
 - **Re-route:** see **Re-route** above.
 - **Stop:** Status is unchanged.
 
@@ -343,15 +365,10 @@ Ask: **approve**, **change**, **re-slice**, **re-route** or **stop**.
 
 ## Phase 8 — Publish
 
-Follow `$CLAUDE_SKILL_DIR/references/publish.md`, its five steps in order (6.1):
-
-1. Create one issue per slice, in slice order, each body holding the marker, the Outcome and the
-   acceptance IDs with their text; then edit each body to add its `Depends on #N` lines.
-2. Write the issue numbers into `plan.md` (or the README Slice) and the README Issues row.
-3. The epic, hierarchy, board and Linear behaviours (6.2), with the epic body linking the README.
-4. Set Status `published`, create `plan/{slug}` from `origin/{integration}`, stage the pack by name,
-   commit, push, and open the pack PR.
-5. Offer `ship-pr` on that PR, or tell the developer to merge it before executing.
+Follow `$CLAUDE_SKILL_DIR/references/publish.md`, its five steps in order (6.1): one issue per
+slice with its marker, then its `Depends on #N` lines; the issue numbers written into the pack; the
+epic, hierarchy, board and Linear behaviours (6.2); Status `published` and the pack PR from
+`plan/{slug}`; then `ship-pr` offered on that PR.
 
 **Integration branch.** `branches.integration` from `.hivrr.json`, then the repository default
 branch, then `origin/HEAD`, then `main`.

@@ -316,19 +316,22 @@ Show the developer, in this order:
 - the dependency graph, and any merge-order line;
 - the traceability table;
 - each **gap**: a PRD criterion no slice lists, with why none can, and the choice to add it to a
-  slice, or take it back to `spec` to drop or move it;
+  slice, or stop so `planning` **Revise spec** can drop or move it;
 - each Story map step no slice touches;
 - a **size mismatch**: `Size {size} expects {range} slices; the draft has {n}.`;
 - in a Re-slice, each revised slice and its Open questions line.
 
 Then ask: **approve**, **change** or **stop**. Approve is offered only when there is no gap, no
-untouched map step and no size mismatch. Otherwise offer **change**, or **stop** to re-route the
-size or revise the prd with `planning`.
+untouched map step and no size mismatch. Otherwise offer **change**, or **stop** to take it to a
+`planning` step: **Re-route** for the size, or **Revise spec** for a gap, an untouched map step or
+a mismatch the prd explains.
 
 - **Approve:** for a Re-slice, remove the revision lines from Open questions. Go to Phase 6.
 - **Change:** revise `plan.md` in place, re-run the Phase 4 self-check, and show this checkpoint
   again.
-- **Stop:** go to Phase 7. Status is unchanged; `plan.md` stays on disk.
+- **Stop:** go to Phase 7. Status is unchanged; `plan.md` stays on disk. When a gap, untouched map
+  step or size mismatch was shown, first say
+  `Stopped: {gap | untouched map step | size mismatch} — next: planning {path}, Revise spec{ or Re-route for a size mismatch}.`
 
 ---
 
