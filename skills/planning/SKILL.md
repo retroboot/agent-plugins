@@ -265,7 +265,8 @@ A Spike skips Slice, Cold read, Approve and Publish for itself (S-03.5).
 3. **Offer a re-route** of the same pack, naming the type the outcome suggests (for example "use
    library X" suggests a Feature).
    - **Re-route:** run the Phase 3 checkpoint for the new type, then set Status `routed` (the one
-     lowering allowed). The Question section and the ADR stay. Continue at Phase 4.
+     lowering allowed). The Question section and the ADR stay, the ADR unedited (`pack-format.md`
+     §1, Lifecycle). Continue at Phase 4.
    - **No re-route:** set Status `done` and display the outcome ADR. The pack is not published; say
      `Spike closed: docs/plans/{slug} is untracked — commit it through a PR to keep it.` Stop.
 
