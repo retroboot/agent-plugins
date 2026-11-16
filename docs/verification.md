@@ -167,19 +167,23 @@ printf '%s\n' "$agent_links" | grep . | while read -r name; do
     [ -d "$p" ] || echo "AGENTS SKILL DANGLING $name"
   done
 
-# every plan pack under docs/plans/ has a README, and its fences are tagged bash, sh, mermaid or text
+# every plan pack under docs/plans/ has a README, and opens each fence with exactly three backticks tagged bash, sh, mermaid or text
 if [ -d docs/plans ]; then
   for d in docs/plans/*/ docs/plans/.[!.]*/; do
     [ -d "$d" ] || continue
     [ -f "${d}README.md" ] || echo "PACK NO README ${d%/}"
   done
-  # the pattern is built with printf so this block never holds a fence-shaped line of its own
-  pack_fence=$(printf '\140\140\140')
+  # the backtick is built with printf so this block never holds a fence-shaped line of its own
+  pack_bt=$(printf '\140')
   find docs/plans -type f -name '*.md' | sort | while read -r f; do
-      awk -v fence="$pack_fence" -v file="$f" '
-        index($0, fence) != 1 { next }
-        open { open = 0; next }
-        { open = 1; info = substr($0, 4); sub(/[ \t\r]+$/, "", info)
+      awk -v bt="$pack_bt" -v file="$f" '
+        BEGIN { run_re = "^(" bt bt bt "+|~~~+)" }
+        { s = $0; sub(/^[ \t]+/, "", s) }
+        !match(s, run_re) { next }
+        { n = RLENGTH; run = substr(s, 1, n); info = substr(s, n + 1); sub(/[ \t\r]+$/, "", info) }
+        open { if (substr(run, 1, 1) == oc && n >= on && info == "") open = 0; next }
+        { open = 1; oc = substr(run, 1, 1); on = n
+          if (run != bt bt bt) print "PACK FENCE FORM " file ":" NR
           if (info !~ /^(bash|sh|mermaid|text)$/) print "PACK CODE FENCE " file ":" NR }' "$f"
     done
 fi
@@ -204,7 +208,7 @@ See **Path resolution** in `CLAUDE.md` for the contract the first three checks e
 | 11 | `README.md`'s Overview table names exactly the registered plugins | `PLUGIN UNDOCUMENTED`, `PLUGIN NOT REGISTERED` |
 | 12 | `review-pr` declares itself read-only and grants no unrestricted tool | `REVIEW NOT READ-ONLY`, `REVIEW MAY WRITE` |
 | 13 | Every `skills/` directory has a matching, non-dangling `.agents/skills/` symlink | `AGENTS SKILL MISSING`, `AGENTS SKILL NOT SYMLINK`, `AGENTS SKILL DANGLING` |
-| 14 | Every folder directly under `docs/plans/` has a `README.md`, and every opening fence in `docs/plans/**/*.md` is tagged `bash`, `sh`, `mermaid` or `text` | `PACK NO README {dir}`, `PACK CODE FENCE {file}:{line}` |
+| 14 | Every folder directly under `docs/plans/` has a `README.md`, and every opening fence in `docs/plans/**/*.md`, at any indentation, is exactly three backticks tagged `bash`, `sh`, `mermaid` or `text` | `PACK NO README {dir}`, `PACK FENCE FORM {file}:{line}`, `PACK CODE FENCE {file}:{line}` |
 
 A few mechanics worth knowing before editing this block:
 
@@ -234,13 +238,18 @@ A few mechanics worth knowing before editing this block:
 - **The duplication check (4) covers one pair, deliberately.** Other same-named skills share lines
   over the threshold today (`planning`/`brainstorm`); widening it needs a per-pair allowlist since
   some sharing is required rather than accidental.
-- **Check 14 builds its fence pattern with `printf`**, exactly as the loader does, so the block
-  never holds a line that starts with three backticks. A literal one would end the extracted block
-  early and silently drop every check after it. It prints nothing when `docs/plans/` is absent,
-  and a backtick run mid-line is not a fence. It reads column-0 backtick fences only: `~~~` and
-  indented fences are outside the rule it was specified with, and a four-backtick fence is reported
-  rather than passed, so the check fails closed. Trailing spaces, tabs and `\r` after the info
-  string are ignored. The rule it enforces is the plan-pack fence rule in
+- **Check 14 builds its backtick with `printf`**, exactly as the loader does, so the block never
+  holds a line that starts with three backticks. A literal one would end the extracted block early
+  and silently drop every check after it. It prints nothing when `docs/plans/` is absent. A fence
+  line is any line whose first non-blank characters are three or more backticks or tildes, at any
+  indentation, so a fence indented under a list item is read like one at column 0; a backtick run
+  mid-line is not a fence. An opening fence that is not exactly three backticks — `~~~`, or four or
+  more backticks — reports `PACK FENCE FORM`; one whose info string is not `bash`, `sh`, `mermaid`
+  or `text` reports `PACK CODE FENCE`, and `~~~python` reports both. A fence closes only on a line
+  holding nothing but a run of its opener's character at least as long as the opener's run, with
+  indentation ignored, so a four-backtick fence wrapping a three-backtick one stays in step and the
+  inner line is content, not a fence. Trailing spaces, tabs and `\r` after the info string are
+  ignored. The rule it enforces is the plan-pack fence rule in
   `skills/planning/references/pack-format.md` §6.
 - **Checks 6, 9, and 11 read sections of `README.md`** (the per-plugin skill tables, the `## Commands`
   usage block, and the `## Overview` table) even though this fence lives here — those are checks on
