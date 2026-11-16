@@ -53,8 +53,8 @@ Store it as `{integration}`.
 `wave/{min}-{max}-{count}` — the same name as the branch. When the key is absent or false, skip this
 paragraph entirely and use the branch logic below unchanged.
 
-Follow the **Enter a worktree** section in [`work-issue/SKILL.md`](../work-issue/SKILL.md) with
-`{branch}` = `wave/{min}-{max}-{count}`. That section is written against `{branch}` for this reason;
+Follow [`work-issue/references/worktree.md`](../work-issue/references/worktree.md) with
+`{branch}` = `wave/{min}-{max}-{count}`. That file is written against `{branch}` for this reason;
 everything in it — the existing-worktree check, the create-only re-point, carry, and setup — applies
 unchanged. The config key set without the `CLAUDE.md` authorization warns once and continues in the
 current checkout; it never fails the wave.
