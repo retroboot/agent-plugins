@@ -248,6 +248,12 @@ Store: `review_body`.
 ## Phase 6 — Post the Review
 
 Use the **Post comment** command from the loaded reference to post `review_body` as a comment on the PR/MR.
+This skill may not write files, so take the reference's stdin form for callers that may not write
+files: `review_body` goes in a single-quoted heredoc (`<<'HIVRR_BODY_7f3a'`), never in double quotes on the
+command line, where every backticked path in it would run as a command substitution. Keep that
+delimiter rather than `EOF`: a review quoting a heredoc holds a line `EOF`, which would end the body
+early and run the rest as shell commands. If `review_body` holds a line equal to the delimiter,
+choose another.
 
 Display: `Posted: review comment on PR/MR #{pr_number}`
 

@@ -4,7 +4,30 @@ All operations use the `glab` CLI.
 
 **Terminology:** MR (Merge Request) = PR. Issues and MRs use `iid` (project-scoped internal ID), not a global number. Branch fields are `source_branch` / `target_branch` (snake_case from the raw API).
 
-Variables: `{PROJECT}` = `group/project` path, `{PROJECT_ENCODED}` = `group%2Fproject`, `{N}` = issue iid or MR iid, `{B}` = body/description, `{T}` = title.
+Variables: `{PROJECT}` = `group/project` path, `{PROJECT_ENCODED}` = `group%2Fproject`, `{N}` = issue iid or MR iid, `{T}` = title, `{file}` = a file holding the body/description text.
+
+**Bodies always go through a file.** Never pass a description or comment inline: in
+`--description "…"` or `--message "…"` the shell runs every backticked span and every `$(…)` as a
+command substitution, and every issue, MR and comment body these skills write holds backticks.
+Write the body to `{file}` first, outside the checkout (`mktemp`), with a single-quoted heredoc,
+then pass it as `"$(cat {file})"`. The output of `$(cat …)` is not expanded again, so backticks in
+it survive.
+
+```
+file=$(mktemp)
+cat > "$file" <<'HIVRR_BODY_7f3a'
+…body text, verbatim…
+HIVRR_BODY_7f3a
+```
+
+The delimiter is `HIVRR_BODY_7f3a`, not `EOF`: a body that quotes one of these snippets holds a line `EOF`,
+which would end the heredoc early and run the rest of the body as shell commands. If the body
+contains a line equal to the delimiter, choose another. Remove the file once the command has run;
+each command below ends with `rm -f {file}`.
+
+**Titles stay inline, so a title must be safe in double quotes.** Drop any backtick, `$`, `"` or
+`\` from `{T}` before substituting it into `--title "{T}"`. A title is one line of prose, so this
+costs nothing, and `planning` builds its Publish titles by the same rule.
 
 ---
 
@@ -22,18 +45,18 @@ glab issue view {N} --repo {PROJECT}
 
 **Create**
 ```
-glab issue create --repo {PROJECT} --title "{T}" --description "$(cat {file})" --label "{labels}"
+glab issue create --repo {PROJECT} --title "{T}" --description "$(cat "{file}")" --label "{labels}"
+rm -f "{file}"
 ```
 
-Write the description to `{file}` first, outside the checkout (`mktemp`), with a single-quoted heredoc (`cat > {file} <<'EOF'`).
-The output of `$(cat …)` is not expanded again, so backticks in it survive; a literal `"{B}"` would
-run them as command substitutions.
+The description comes from `{file}`, written as **Bodies always go through a file** says above.
 
 Use labels from the label reference loaded by init. Pick one or more that fit the issue type and priority.
 
 **Edit** (replace an issue's description)
 ```
-glab issue update {N} --repo {PROJECT} --description "$(cat {file})"
+glab issue update {N} --repo {PROJECT} --description "$(cat "{file}")"
+rm -f "{file}"
 ```
 
 The description comes from `{file}`, written as for **Create**.
@@ -65,12 +88,24 @@ glab api projects/{PROJECT_ENCODED}/merge_requests/{N}/notes
 
 **Post comment**
 ```
-glab mr comment {N} --repo {PROJECT} --message "{B}"
+glab mr comment {N} --repo {PROJECT} --message "$(cat "{file}")"
+rm -f "{file}"
+```
+
+The comment comes from `{file}`, as for every body. **A caller that may not write files** —
+`review-pr` is read-only — posts through the notes API instead, with the body on stdin from the
+same single-quoted heredoc and no scratch file: `-F body=@-` reads standard input.
+
+```
+glab api --method POST projects/{PROJECT_ENCODED}/merge_requests/{N}/notes -F body=@- <<'HIVRR_BODY_7f3a'
+…body text, verbatim…
+HIVRR_BODY_7f3a
 ```
 
 **Create MR**
 ```
-glab mr create --repo {PROJECT} --title "{T}" --description "{B}" --target-branch {base}
+glab mr create --repo {PROJECT} --title "{T}" --description "$(cat "{file}")" --target-branch {base}
+rm -f "{file}"
 ```
 
 `--target-branch` is **required**, not optional — without it `glab` targets the project's default branch. Resolve `{base}` from `branches.integration` in `.hivrr.json`, falling back to the default branch.
