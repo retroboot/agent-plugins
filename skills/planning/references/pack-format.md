@@ -299,7 +299,7 @@ would let a fence hide inside another one.
 A fence closes on a line holding only three backticks, at any indentation. Nothing inside a fence
 may look like a fence: a pack nests nothing, so any other fence line before the closer is
 rejected, and so is a fence left open at the end of a file. A pack puts no fence on a `>`
-blockquote line or a list-marker line (`- `, `* `, `+ `, `1. `): put the fence on its own line,
+blockquote line or a list-marker line (`- `, `* `, `+ `, `1. `, `1) `): put the fence on its own line,
 indented under the item instead.
 
 The structural check in `docs/verification.md` enforces the form (`PACK FENCE FORM`), the info
