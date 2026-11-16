@@ -373,6 +373,5 @@ Pack PR:  {url | none}
 Next: ship-issue docs/plans/{slug}
 ```
 
-With Linear as the slice tracker, the Next line names the identifiers instead (`publish.md`,
-**Linear**). On a resume at `published` or later, Phase 1 says what to display instead. Return
-control to the developer.
+The Next line is the same with Linear as the slice tracker (`publish.md`, **Linear**). On a resume
+at `published` or later, Phase 1 says what to display instead. Return control to the developer.

@@ -157,9 +157,8 @@ as `linear`.
 
 **Linear as the slice tracker.** The header lines then hold `Issue: {identifier}`, and the issue
 bodies `Depends on {identifier}`. `work-issue` still finds each marker, because it fetches the issue
-through the linear reference. But `ship-issue`'s pack mode, and its `Depends on #N` ordering, read
-only `#{number}`. So Phase 9's Next line for such a pack is `ship-issue {identifier} …`, in slice
-order, one run per slice whose prerequisites have merged, rather than `ship-issue docs/plans/{slug}`.
+through the linear reference, and `ship-issue`'s pack mode reads `Issue: {identifier}` as well as
+`Issue: #{number}`. So Phase 9's Next line is `ship-issue docs/plans/{slug}` for such a pack too.
 
 With `.linear.yaml`, read the team ID, project ID and default labels from it:
 

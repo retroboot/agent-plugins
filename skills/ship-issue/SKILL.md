@@ -79,21 +79,42 @@ anywhere else.
    - **XL parent:** when the README header table's **Size** row starts with `XL`, the pack has child packs and
      no slices of its own. Display `XL parent pack: ship each child pack` and stop before any slice
      starts.
-   - **With `plan.md`:** one entry per `## Slice N — …` heading. Its issue is the `Issue: #N` on the
-     first non-blank line after the heading, and its prerequisites are that line's `Depends on:`
-     field (`Slice 1`, `Slices 6, 8`, or `none`).
+   - **With `plan.md`:** one entry per `## Slice N — …` heading. Its issue is the `Issue:` reference
+     on the first non-blank line after the heading, and its prerequisites are that line's
+     `Depends on:` field (`Slice 1`, `Slices 6, 8`, or `none`).
    - **Without `plan.md` (size S):** one entry, Slice 1, with no prerequisites. Its issue is the
      README header table's **Issues** row.
-   If a slice has no issue number to read, stop before any slice starts:
+   An issue reference is `#N`, or a Linear identifier (`ENG-123`, the pattern the linear reference
+   gives) when the slice issues were created in Linear: `Issue: #214` or `Issue: ENG-123`. A line
+   that names both, `Issue: #214 (Linear ENG-123)`, names `#214`: the repo provider holds that
+   issue, and the Linear one only mirrors it. Keep each reference as written; `{issue}` below is
+   that text (`#214`, `ENG-123`), and the plain number or identifier is what is passed on.
+   If a slice has no issue reference to read, stop before any slice starts:
    `pack docs/plans/{pack_slug}: Slice {N} has no issue — publish the pack first`.
 4. Drop every slice whose `progress/slice-NN.md` (`NN` zero-padded to two digits) on
    `origin/{integration}` has Status `done`. A missing file, `in-progress` or `blocked` keeps the
    slice, because it is unfinished. A prerequisite that was dropped counts as satisfied.
-5. Store `pack_slices`, the remaining slices with their number, issue and prerequisites, and set
-   `issue_numbers` to their issues in slice-number order. If none remain, display
+5. Look for an open PR on each remaining slice. Its `{branch}` is `issue/` followed by the number or
+   identifier, the name `work-issue` Phase 5 gives it (`issue/214`, `issue/ENG-123`). Run the
+   **Find open PR for a branch** command from the loaded repo provider reference with that branch.
+   This is a read, like the rest of this section.
+   - **No result:** the slice has no `open_pr`.
+   - **One result:** store it as the slice's `open_pr`, its number and URL. An earlier run
+     implemented the slice and opened this PR, but it never merged: `ship-pr` returned `stuck`, the
+     run used `--no-merge`, or it was interrupted. Its `done` progress file exists only on the
+     branch, which is why step 4 kept it. Phase 5 ships this PR instead of implementing the slice
+     again, which would open a second one.
+
+     A PR that was closed without merging is not open, so it is not found: the slice has no
+     `open_pr` and is implemented again, as it would be with no PR at all.
+   - **More than one, or the command fails:** stop before any slice starts:
+     `pack docs/plans/{pack_slug}: cannot tell which PR ships Slice {N} from {branch} — {count} open PRs | {error}`.
+6. Store `pack_slices`, the remaining slices with their number, issue, prerequisites and any
+   `open_pr`, and set `issue_numbers` to their issues in slice-number order. If none remain, display
    `Pack: docs/plans/{pack_slug} — every slice is done` and go straight to Phase 6 with no groups.
 
-Display: `Pack: docs/plans/{pack_slug} · {remaining}/{total} slice(s) to ship (from origin/{integration})`
+Display: `Pack: docs/plans/{pack_slug} · {remaining}/{total} slice(s) to ship (from origin/{integration})`,
+then `Open PR: Slice {N} ({issue}) — #{pr}` for each slice with an `open_pr`.
 
 ---
 
@@ -113,6 +134,27 @@ the body is not enough here — that is the gap this phase exists to close.
 Store `issue_data` — title, body, labels, and comments — for every issue in `issue_numbers`.
 
 Display: `Fetched: {count} issue(s), {comment_count} comment(s)`
+
+**Pack slices (conditional).** Skip this when the input is not a pack path. Check every slice's
+marker against `plan.md` now, before any slice starts: a hand-edited `Issue:` line or a
+mis-numbered marker would otherwise run another slice's contract. With Linear as the tracker, the
+fetch above is **Get** in the linear reference, and the body is the issue's description. In each
+body, the marker is the first line that starts with `Plan: docs/plans/`, read as `work-issue`
+Phase 3 reads it: `Plan: docs/plans/<slug> · Slice: <M>`, separator `·` or `|`, any trailing `/`
+removed from the slug. Compare it with the slice's entry in `pack_slices`:
+
+- **Same slug and number** (`<slug>` is `pack_slug`, `<M>` is the slice's `N`): it matches.
+- **Anything else** stops the run, with the first failing slice's line:
+  - a different slug or number:
+    `marker mismatch on {issue}: the issue says docs/plans/{slug} · Slice {M}, plan.md says docs/plans/{pack_slug} · Slice {N} — fix the Issue: line or the issue body`
+  - no marker line, or one with no `Slice: <M>`:
+    `marker missing on {issue}: plan.md says docs/plans/{pack_slug} · Slice {N} — fix the issue body`
+  - an issue the **Get issue** command (**Get** in the linear reference) could not fetch:
+    `cannot read the marker on {issue}: {error}`
+
+No slice has started, so that line is the whole report, as in **Load the pack**.
+
+Display: `Markers: {count}/{count} match plan.md`
 
 ---
 
@@ -147,7 +189,7 @@ single group and continue to Phase 5. A lone group has nothing to topologically 
 prerequisites `plan.md` gives (Phase 1, **Load the pack**), not by `Depends on #N`: a slice does not
 start until every remaining slice it depends on has shipped. When several slices are free to start,
 take the lowest slice number first, so independent slices still run in plan order, one at a time.
-The cycle rule below applies unchanged. Display `Order: Slice {N} (#{issue}), …` in place of the line
+The cycle rule below applies unchanged. Display `Order: Slice {N} ({issue}), …` in place of the line
 below.
 
 Scan every issue's body and comments (from Phase 2) for `Depends on #N`. When `#N` belongs to a
@@ -170,6 +212,13 @@ Display: `Order: {ordered_groups as group summaries}`
 ## Phase 5 — Per Group, In Order
 
 For each group in `ordered_groups`:
+
+**A slice with an open PR (conditional).** Skip this unless the input is a pack path and this
+group's slice has an `open_pr` (Phase 1, **Load the pack**, step 5). Skip Implement: do not load
+`work-issue`, which would resume `{branch}` and open a second PR in its Phase 11. Take `pr` and
+`pr_url` from `open_pr`, and `issues` from this group's slice, in place of `work-issue`'s completion
+JSON. Display `Group {n}/{total}: {issue} — open PR #{pr}, shipping it` and go straight to Ship.
+Everything from Ship on runs as written, the dependency gate included.
 
 **Implement.** Load the `work-issue` skill with this group's issue numbers, `inline_context` for any
 issue it applies to, and `--auto`. `work-issue` fetches the issues itself — the data from Phase 2 is
@@ -201,7 +250,9 @@ top of it, and report the stall in the final output rather than guessing at a re
 
 **Pack slices (conditional).** Skip this when the input is not a pack path. The prerequisites in the
 gate above are the `plan.md` ones from Phase 4. On `stuck` or any failure, stop the whole run as
-Error Handling says. No later slice starts, whether or not it depends on the one that stopped.
+Error Handling says. No later slice starts, whether or not it depends on the one that stopped. In
+the **A blocked slice** display, write the slice's `{issue}` (`#214`, `ENG-123`) where it says
+`#{issues}`, as the Order line does.
 
 Record `{pr, pr_url, issues, state}` for this group, using `ship-pr`'s `pr` and `state` verbatim.
 
@@ -239,8 +290,9 @@ A group that `work-issue` returned as `BLOCKED` is `stuck` as well, with `pr` an
 
 **Pack path (conditional).** Skip this when the input is not a pack path. Add
 `"pack": "docs/plans/{pack_slug}"` to the JSON above. Every other key is unchanged, and `issues` and
-`not_started` hold the slices' issue numbers. When every slice was already done, `prs` is empty and
-`status` is `SHIP COMPLETE`.
+`not_started` hold the slices' issue numbers, or their Linear identifiers as strings when `plan.md`
+names those: `"issues": ["ENG-123"]` in place of the integer example above. When every slice was
+already done, `prs` is empty and `status` is `SHIP COMPLETE`.
 
 ---
 
