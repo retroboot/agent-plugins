@@ -58,6 +58,14 @@ glab api projects/{PROJECT_ENCODED}/merge_requests/{N}
      (glab mr view lacks --output json in older versions)
 ```
 
+**Find open MR for a branch**
+```
+glab api "projects/{PROJECT_ENCODED}/merge_requests?state=opened&source_branch={branch}" | jq '[.[] | {number: .iid, url: .web_url}]'
+```
+
+Returns a JSON array: `[]` when the branch has no open MR, otherwise one `{number, url}` per open MR.
+Skills call this **Find open PR for a branch**; the MR is the same thing.
+
 **MR discussion notes** (conversation thread)
 ```
 glab api projects/{PROJECT_ENCODED}/merge_requests/{N}/notes

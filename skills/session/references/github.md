@@ -216,6 +216,13 @@ gh pr diff {N} --repo {OWNER}/{REPO}
 gh pr view {N} --repo {OWNER}/{REPO} --json title,body,headRefName,state,baseRefName,reviews
 ```
 
+**Find open PR for a branch**
+```
+gh pr list --repo {OWNER}/{REPO} --head {branch} --state open --json number,url
+```
+
+Returns a JSON array: `[]` when the branch has no open PR, otherwise one `{number, url}` per open PR.
+
 **PR conversation thread** (issue-style comments, not inline diff comments)
 ```
 gh api repos/{OWNER}/{REPO}/issues/{N}/comments
