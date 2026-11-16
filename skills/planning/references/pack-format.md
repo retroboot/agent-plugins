@@ -43,14 +43,26 @@ docs/plans/<slug>/
 
 ### ADRs
 
-Every decision with at least one rejected option gets an ADR, with the sections Status, Context,
-Options (each rejected one with its reason), Decision and Consequences.
+Every decision with at least one rejected option gets an ADR, with a **Status** line, a
+**Proposed by** line, and the sections Context, Options (each rejected one with its reason),
+Decision and Consequences.
 
-| Who made the decision | Status |
-|---|---|
-| The developer stated it outright | `accepted` |
-| The author made it; shown at the `spec` checkpoint (a "contested" ADR) | `proposed` |
-| The developer approved a proposed ADR | `accepted (developer, <date>)` |
+| Who made the decision | Status | Proposed by |
+|---|---|---|
+| The developer stated it outright | `accepted` | `developer` |
+| The author made it; shown at the `spec` checkpoint (a "contested" ADR) | `proposed` | `author (<skill>)`, the skill that wrote it |
+| The developer approved a proposed ADR | `accepted (developer, <date>)` | unchanged, plus `; accepted by the developer at <checkpoint>` |
+
+**Lifecycle.** A `proposed` ADR may be revised in place until the developer approves it. An
+accepted ADR (`accepted` or `accepted (developer, <date>)`) is **never edited**. To change or
+reverse it, write a new ADR whose Context names the one it changes, and append one clause to the
+old ADR's Status line, the only edit an accepted ADR ever takes:
+
+- `; amended by ADR-NNN, <what it changes>` when the new ADR changes part of it;
+- `; superseded by ADR-NNN` when the new ADR replaces it outright.
+
+A superseded ADR stays in `decisions/`, and its number is never reused. This holds for every
+skill that writes a pack, at every Status, and in a re-route (§2).
 
 ---
 
@@ -138,6 +150,8 @@ A route can grow at any checkpoint.
 - Inside an existing file, a section may be added or revised. Record each revision in the README
   **Open questions** until the developer approves it at the next checkpoint. For example, a Feature
   re-routed to a Refactor revises the prd's Stories into a behaviour-preservation contract.
+- An accepted ADR is the exception: it is never revised. A changed decision is a new ADR that
+  amends or supersedes it (§1, Lifecycle).
 - Status stays where it was. It advances only through the next approved checkpoint.
 - A Spike always ends by offering a re-route.
 
