@@ -18,7 +18,7 @@ override scope. Throughout the run, keep notes for the progress file: deviations
 reality / why / contract affected), decisions the plan left open, and discoveries for the next slice
 or the retro.
 
-## Detect a pack marker (Phase 3)
+## Detect a pack marker (Phase 2 or 3)
 
 For each issue, look at the lines that start with `Plan: `. Matching is case-sensitive. A body that
 mentions a plan mid-sentence, such as `Plan: TBD` inside a paragraph, has no such line.

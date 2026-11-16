@@ -155,6 +155,9 @@ Display: `Branch: wave skill will create`
 
 **Single issue or sequential strategy:**
 
+For a pack slice on a Linear issue, `issue/{number}` in this phase and later is `issue/{identifier}`
+(`issue/ENG-123`), as **Detect a pack marker** in `references/pack-mode.md` says.
+
 ### Enter a worktree (conditional)
 
 Read `worktree` from `.hivrr.json`. **Skip this entire section** when `worktree.enabled` is absent
@@ -180,9 +183,6 @@ Store it as `{integration}`. Branching from the current HEAD is not acceptable: 
 left you on `staging`, an issue branch forked from there carries unrelated commits into its PR.
 
 Check whether the working tree is dirty with `git status --porcelain`. If it reports anything, display `WARNING: Working tree has uncommitted changes — continuing anyway` and continue. This is a warning, not a guard — do not stash, reset, or discard the changes.
-
-For a pack slice on a Linear issue, `issue/{number}` here and later is `issue/{identifier}`
-(`issue/ENG-123`), as **Detect a pack marker** in `references/pack-mode.md` says.
 
 Check whether the issue branch already exists — **locally and on the remote**. Checking only local refs is not enough: on a fresh clone, a recreated container, or work resumed from another machine, `issue/{number}` exists on `origin` but not in `refs/heads`. Branching from the base in that situation produces a local branch with none of the remote's commits, and the push in Phase 11 fails as a non-fast-forward after all the implementation work is done.
 
@@ -379,10 +379,10 @@ your entire final response — no markdown, no preamble, no trailing text:
 Handling describe. Take this path when a stop condition triggers in Phase 6 or Phase 7, with or
 without `--auto`: follow the five steps of **Blocked path** in
 [`references/pack-mode.md`](references/pack-mode.md). In short: skip Phases 8, 9 and 11; write the
-progress file with Status `blocked` and **Blocked on**; commit the partial work with it in one
-`wip:` commit (`Refs`, not `Closes`); push; open no PR, and emit the Phase 12 JSON with
-`"status": "BLOCKED"`, `"pr": null` and `"pr_url": null`.
-Under the sequential strategy, no later issue starts.
+progress file with Status `blocked`, PR `none (no PR is opened)` and **Blocked on**, leaving README
+Status and the Retro alone; commit the partial work with it in one `wip:` commit (`Refs`, not
+`Closes`); push; open no PR, and emit the Phase 12 JSON with `"status": "BLOCKED"`, `"pr": null`
+and `"pr_url": null`. Under the sequential strategy, no later issue starts.
 
 ---
 
