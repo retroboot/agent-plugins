@@ -53,14 +53,16 @@ The input is a pack path, `docs/plans/<slug>`. Read `{path}/README.md`.
   folder.
 - Resolve `{integration}` as `work-issue` Phase 5 does (`branches.integration`, then the repository
   default branch, then `origin/HEAD`, then `main`) and run `git fetch origin {integration}`. Phase 3
-  builds the reader's tree from `origin/{integration}`, the commit executors fork from. If the fetch
-  fails, set `{base}` to `HEAD` and record `Reader tree from HEAD: origin/{integration} unavailable.`
-  in each round's summary paragraph; otherwise `{base}` is `origin/{integration}`.
+  builds the reader's tree from `{base}`, which is `origin/{integration}`, the commit executors
+  fork from. If the fetch fails but `git rev-parse --verify -q origin/{integration}` finds the ref,
+  keep it and record `Reader tree from origin/{integration}, not refreshed: fetch failed, may be stale.`
+  in each round's summary paragraph. Only when the ref is missing too, set `{base}` to `HEAD` and
+  record `Reader tree from HEAD: origin/{integration} unavailable.` there instead.
 - **Record only** (below): the pack executors read is the one on the integration branch, and that
   is the copy the reader sees. Compare with `git diff --stat {base} -- {path}`. When the working
   copy differs, warn `Working copy of {path} differs from {base}; the reader sees {base}.` and record
-  the warning in the round's summary paragraph. When `{base}` has no `{path}/README.md`, say
-  `Pack {path} is not on {base}` and go to Phase 7.
+  the warning in the round's summary paragraph. When `git cat-file -e {base}:{path}/README.md`
+  fails, say `Pack {path} is not on {base}: merge the pack PR first.` and go to Phase 7.
 
 Read `pack-format.md` §3 (README contract and Status) and §6 (fences).
 
@@ -112,6 +114,10 @@ Then read each fence: a `bash` or `sh` fence sits under a Verify heading and hol
 `$CLAUDE_SKILL_DIR/../slice/SKILL.md` Phase 4, Self-check, exactly as written there with `{slug}`
 filled in; expected no output from either.
 
+**Record only:** the reader sees the pack as `{base}` has it, so check that copy. Build this
+round's tree now (Phase 3, **Build the reader's tree**), run both checks in a subshell,
+`(cd "{tree}" && …)`, and keep the tree: Phase 3 uses it rather than building another.
+
 Every finding is a blocking item, recorded in the coming round's Questions table as an author
 finding, Id `A1`, `A2` …, so the round shows it. Fix it now, unless the mode is Record only or the
 fix is developer-only — one that changes what a criterion means, or drops one; hold those for
@@ -129,24 +135,6 @@ most **3 rounds**; a later run of this skill continues the numbering with a fres
 covered, in plan order. Once every slice has been covered, prefer the slices whose files the last
 round's fixes touched. With no slices, leave the slice line out of the prompt.
 
-**Build the reader's tree.** The reader never reads this checkout: uncommitted files and commits on
-this branch that `{integration}` lacks are context the pack does not hold, and an executor will not
-have them. It reads a detached worktree of `{base}`, outside the checkout, holding the pack and
-nothing else that is uncommitted. In every mode but Record only, the pack is copied in from the
-working copy, since it is usually uncommitted work in progress; in Record only the reader sees the
-pack as `{base}` has it. A dirty checkout is therefore not a stop:
-
-```bash
-tree=$(mktemp -d "${TMPDIR:-/tmp}/cold-read.XXXXXX")
-git worktree add --detach "$tree" {base}
-rm -rf "$tree/{path}" && mkdir -p "$tree/{path}" && cp -R {path}/. "$tree/{path}/"
-```
-
-Skip the third line in Record only. The tree is new for every round, so it carries the last round's
-fixes. Whatever path leaves this phase — a recorded round, a void one, an incomplete report — remove
-it first with `git worktree remove --force "$tree"`; the fixes in Phase 5 go to this checkout,
-never to the tree.
-
 **Choose the reader**, the first that this environment offers:
 
 | Offer | Dispatch | Record as the model |
@@ -155,20 +143,52 @@ never to the tree.
 | A subagent tool with no model choice (R1 in the design) | A fresh subagent on the default model; a read-only type where one exists | The default model by name if known, else `default model`, and the tool used |
 | No subagent tool | Do not read it yourself — you have seen the pack, so you are not cold. Say `No subagent available: run cold-read {path} in a session that can start one.` Go to Phase 7 | — |
 
+**Build the reader's tree.** The reader never reads this checkout: uncommitted files and commits on
+this branch that `{integration}` lacks are context the pack does not hold, and an executor will not
+have them. It reads a detached worktree of `{base}`, outside the checkout, holding the pack and
+nothing else that is uncommitted. In every mode but Record only, the pack is copied in from the
+working copy, since it is usually uncommitted work in progress; in Record only the reader sees the
+pack as `{base}` has it. A dirty checkout is therefore not a stop. In Record only, Phase 2 has
+already built this round's tree; use it and skip to the guard below.
+
+Shell variables do not survive from one command to the next, so print the path and write it
+into every later command as `{tree}`, the way `{path}` is written. First clear trees an earlier,
+interrupted run left registered, and list any that remain; report each one to the developer and
+leave it in place:
+
+```bash
+git worktree prune
+git worktree list --porcelain | grep '^worktree .*/cold-read\.'
+mktemp -d "${TMPDIR:-/tmp}/cold-read.XXXXXX"
+```
+
+Then, with `{tree}` the path just printed:
+
+```bash
+git worktree add --detach "{tree}" {base}
+tree="{tree}"; rm -rf "${tree:?}/{path}" && mkdir -p "$tree/{path}" && cp -R {path}/. "$tree/{path}/"
+```
+
+Skip the second line in Record only. The tree is new for every round, so it carries the last
+round's fixes. Whatever path leaves this phase — a recorded round, a void one, an incomplete
+report — remove it first with `git worktree remove --force "{tree}"`; the fixes in Phase 5 go to
+this checkout, never to the tree.
+
 Frontmatter `allowed-tools` does not scope a spawned subagent, so when no read-only type exists the
 prompt's "change nothing" line is the only guard. Run this before and after every read, from the
 checkout, and compare the two outputs; they must be identical:
 
 ```bash
-for d in . "$tree"; do (cd "$d" && find {path} -type f -exec cksum {} + | sort -k3 && git status --porcelain --untracked-files=all); done
+find {path} -type f -exec cksum {} + | sort -k3
+(cd "{tree}" || exit 1; find {path} -type f -exec cksum {} + | sort -k3; git status --porcelain --untracked-files=all)
 ```
 
-It covers the pack in both places and anything else the reader could write in its tree. A
+It covers the pack in the checkout and anything the reader could write in its tree; a missing
+tree fails it. A
 difference means the reader changed something: the round is void. Say which files changed, remove
 the tree, and go to Phase 7.
 
-**The prompt** is exactly this, with `{tree}` (the absolute path in `$tree`), `{path}` and
-`{slices}` filled in. Add nothing to it — no summary, no context, no reason for the read:
+**The prompt** is exactly this, with `{tree}`, `{path}` and `{slices}` filled in. Add nothing to it — no summary, no context, no reason for the read:
 
 ```text
 You are about to implement part of a plan pack, and you have never seen it. Read it cold.
@@ -349,8 +369,8 @@ Write `null` bare, never as the string `"null"`.
   question is unanswered, or a Record only round had one — in Record only mode every author
   finding is held.
 - `COLD READ STOPPED` when no round could be recorded: no README (in Record only, none on
-  `{base}`), no subagent available, two
-  incomplete reports, or a reader that changed the pack. `model` is bare `null` when no reader
+  `{base}`), no subagent available, two incomplete reports, or a void round (the reader changed
+  the pack or its tree). `model` is bare `null` when no reader
   ran, `rounds` counts the rounds recorded before the stop, and `pack_status` is the unchanged
   Status.
 - With no README at the path, `pack_status` is bare `null`.
