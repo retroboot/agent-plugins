@@ -195,7 +195,7 @@ repo to adopt or drop it.
 
 **Step 2 — Detect from the repo**
 
-Read **Detecting the commands** in [`references/verify.md`](references/verify.md) now and apply its
+Read **Detecting the commands** in `$CLAUDE_SKILL_DIR/references/verify.md` now and apply its
 two tables: a test command first, then a lint command, each stopping at the first match. The rules
 that govern this step live beside the tables and are restated here because Step 3 depends on them:
 

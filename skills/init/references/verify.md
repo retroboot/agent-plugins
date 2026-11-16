@@ -27,6 +27,8 @@ do not go looking.
 The detection tables `init` Phase 4 Step 2 runs, and the fallback above uses when `verify` is
 absent. Detection can only find what these tables know about; a repo whose verification is real but
 unconventional records it by hand with the `["manual"]` sentinel (see [`config.md`](config.md)).
+Recording what the tables find is `init` Phase 4 Step 4's job; a caller using the fallback only
+offers to record it, and never creates `.hivrr.json` for it.
 
 Look for a test command, in this order, and stop at the first match:
 
