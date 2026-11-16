@@ -162,6 +162,13 @@ A body that mentions a plan mid-sentence, such as `Plan: TBD` inside a paragraph
 
 For each issue, look at the lines that start with `Plan: `. Matching is case-sensitive.
 
+A Linear issue, such as `ENG-123`, works the same way: its body is the description that the linear
+reference's **Get** command returns, and the marker is found in it by the rules below. In the
+messages of this pack-mode run, write its identifier where they say `#{number}`. Its branch is
+`issue/{identifier}`, exactly (`issue/ENG-123`), wherever Phase 5 and later phases say
+`issue/{number}`: `ship-issue` finds a slice's open PR by that branch name, and any other name
+would let a rerun open a second PR.
+
 - **Marker.** The first line that starts with `Plan: docs/plans/`, in the form
   `Plan: docs/plans/<slug> · Slice: <N>`. The separator may be `·` or `|`. Store `pack_slug`, with
   any trailing `/` removed, and `slice_number` for that issue. If no `Slice: <N>` can be read from
@@ -572,7 +579,8 @@ Take this path when a stop condition triggers in Phase 6 or Phase 7, with or wit
    README rule). Leave README Status and the Retro alone.
 3. Stage the partial work and the progress file by name, following **Staging** in `core`, and make
    one commit: `wip: slice {slice_number} {what it does} (blocked)`, with the question and the
-   progress file's path in the body, then `Refs #{number}`. Not `Closes`: nothing is ready to close.
+   progress file's path in the body, then `Refs #{number}` (`Refs ENG-123` for a Linear issue). Not
+   `Closes`: nothing is ready to close.
    The state now survives a new session or machine.
 4. Push the branch: `git push -u origin {branch_name}`.
 5. Open no PR. Display `Blocked: slice {slice_number} — {question}`, then emit the Phase 12 JSON
