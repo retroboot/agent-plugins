@@ -88,7 +88,7 @@ Run these in parallel using commands from the loaded reference:
 1. **Diff:** use **Get diff** command
 2. **PR/MR metadata:** use **View PR** command (extract title, body, author, additions, deletions)
 3. **Review history:** use **PR conversation thread** command
-4. **CI status:** use **Check CI** command
+4. **CI status:** use **Check CI** command — on GitLab its calls run in order within this step, since the later two need the first's pipeline ID
 
 If `additions + deletions > 3000`, emit a warning: `⚠️ Large diff ({additions + deletions} lines) — consider narrowing scope with inline context, e.g. /review-pr {pr_number} : focus on auth/`. Continue regardless.
 

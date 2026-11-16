@@ -91,6 +91,7 @@ Every top-level key is optional. A file containing only `{}` is valid and resolv
 | `worktree.enabled` | boolean | `false` | `work-issue`, `wave` |
 | `worktree.carry` | string[] | `[]` | `work-issue`, `wave` |
 | `worktree.setup` | string \| `null` | `null` | `work-issue`, `wave` |
+| `ci` | object \| absent | absent — every unplayed manual job blocks a merge | `merge-pr` |
 | `ci.optionalManualJobs` | string[] | `[]` — every unplayed manual job blocks a merge | `merge-pr` |
 | `verify.test` | string \| `null` | model detects, then offers to record | `work-issue`, `work-pr` |
 | `verify.lint` | string \| `null` | model detects, then offers to record | `work-issue`, `work-pr` |
@@ -216,6 +217,15 @@ payload tells a must-play job such as `sign-bundles` from a deploy-on-demand one
 `allow_failure: true`. List a job here only when merging without it is genuinely fine. Names match
 exactly, case included; a listed job is still named in `merge-pr`'s CI line, never skipped silently.
 
+**List the jobs behind it too.** A job that `needs:` an unplayed manual job, or sits in a later
+stage of a blocked pipeline, stays `created`, and `merge-pr` reports it as `manual` under its own
+name. Allowlisting `deploy-prod` alone still stops on its `smoke-prod`; list both.
+
+**A value that is not an array of strings is treated as `[]`**, so every manual job blocks.
+`merge-pr` names the bad value once and carries on with the empty list. Unlike other wrong-type keys
+this is not a hard error, because the fallback already fails closed: the worst it can do is stop a
+merge, never let one through.
+
 It is GitLab-only in practice: GitHub has no manual jobs, so there is nothing for the list to match.
 `init` never writes it, and like the rest of the file it is per checkout, not shared through git.
 
@@ -303,6 +313,7 @@ These are deliberately different, and conflating them is a bug:
 | File present, key has the wrong type (e.g. `ladder` is a string) | **Hard error.** Report the key and the expected type. |
 | `worktree.enabled` true, no CLAUDE.md authorization | **Warn once and continue without a worktree.** Name the missing line. Never fail the workflow — the work is the deliverable. |
 | `worktree.carry` names a path that does not exist | **Warn and continue.** A repo without a `.env` is normal, not an error. |
+| `ci.optionalManualJobs` is not an array of strings | **Warn and treat it as `[]`.** Every manual job then blocks, which fails closed. |
 | `worktree.setup` exits non-zero | **Warn and continue.** Report the exit code and the command. |
 
 ---

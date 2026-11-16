@@ -172,9 +172,10 @@ Display: `Linked issues: {list | none}`
 
 Skip this phase when `already_merged` is true.
 
-Run the **Check CI** command from the loaded reference and read its output. It sorts every check or
-job into one of four classes — **passed**, **failed**, **unfinished**, **manual** — and the
-reference says how each provider's states map onto them. Read job-level state, never just the
+Run the **Check CI** command from the loaded reference — on GitLab, all three of its calls, in
+order — and read their output. It sorts every check or job into **passed**, **failed**,
+**unfinished** or **manual** (GitLab adds **unknown** when no jobs came back), and the reference
+says how each provider's states map onto them. Read job-level state, never just the
 pipeline's: a GitLab pipeline reports `success` while a manual job with `allow_failure: true` sits
 unplayed, and that is how `sign-bundles` was once skipped and unsigned bundles merged.
 
@@ -195,7 +196,7 @@ the clear line below so the skipped job is never silent. The list matches job na
 clears a `(pipeline)` row, because a pipeline whose own status is `manual` is blocked, and its later
 stages have not run.
 
-**Failed, unfinished and manual all block the merge**, and the rule is identical across providers —
+**Failed, unfinished, manual and unknown all block the merge**, and the rule is identical across providers —
 merging on a pipeline that has not finished defeats the point of checking it, and a job nobody
 played has not finished. GitHub has no manual jobs; its nearest equivalent, a job waiting on an
 environment approval, reads as unfinished. Applying any of this to only one provider would let the
@@ -203,7 +204,7 @@ same PR state merge on one host and block on the other. `--auto` changes none of
 never plays a job or approves a deployment itself.
 
 **Report them differently**, because they call for different actions — one needs a fix, one a wait,
-one a person:
+one a person, one a look at the fetch:
 
 - Failed → `CI: {n} failing — {names}`. Stop.
 - Unfinished → `CI: {n} still running — {names}`. Stop, and say that re-running the command once CI
@@ -211,6 +212,10 @@ one a person:
   approves it — say so when a pending check's description says it is waiting.
 - Manual → `CI: {n} waiting on a manual job — {names}`. Stop, and say: play the job and re-run once
   it finishes, or, if the job is genuinely optional, add its name to `ci.optionalManualJobs`.
+- Unknown → `CI: no jobs returned for pipeline {PIPELINE_ID} — nothing was checked`. Stop, and show
+  any error the jobs call printed. It is a failed fetch, not a pipeline that is still running.
+- A GitHub check that stays `pending` long after the rest finished may be a `STARTUP_FAILURE`,
+  which `gh` buckets as pending — say so rather than only telling the user to wait.
 
 When more than one class is present, print a line for each, then stop once.
 
