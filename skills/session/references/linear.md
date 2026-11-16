@@ -25,8 +25,8 @@ linear issue view {ID}
 
 **Create**
 ```
-linear issue create --team {TEAM} --title "{T}" --description "$(cat {file})"
-rm -f {file}
+linear issue create --team {TEAM} --title "{T}" --description "$(cat "{file}")"
+rm -f "{file}"
 ```
 
 Write the description to `{file}` first, outside the checkout (`mktemp`), with a single-quoted heredoc (`cat > {file} <<'HIVRR_BODY_7f3a'`, the delimiter `github.md` and `gitlab.md` explain), so
@@ -39,8 +39,8 @@ linear issue update {ID} --label "{label}"
 
 **Edit** (replace an issue's description)
 ```
-linear issue update {ID} --description "$(cat {file})"
-rm -f {file}
+linear issue update {ID} --description "$(cat "{file}")"
+rm -f "{file}"
 ```
 
 **Untested:** the `--description` flag on `linear issue update` is assumed from `create`, and has

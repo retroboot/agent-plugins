@@ -52,8 +52,8 @@ cause is the `gh` version.
 
 **Create**
 ```
-gh issue create --repo {OWNER}/{REPO} --title "{T}" --body-file {file} --label "{labels}"
-rm -f {file}
+gh issue create --repo {OWNER}/{REPO} --title "{T}" --body-file "{file}" --label "{labels}"
+rm -f "{file}"
 ```
 
 The body comes from `{file}`, written as **Bodies always go through a file** says above.
@@ -62,8 +62,8 @@ Use labels from the label reference loaded by init. Pick one or more that fit th
 
 **Edit** (replace an issue's body)
 ```
-gh api --method PATCH repos/{OWNER}/{REPO}/issues/{N} -F body=@{file}
-rm -f {file}
+gh api --method PATCH repos/{OWNER}/{REPO}/issues/{N} -F body=@"{file}"
+rm -f "{file}"
 ```
 
 The body comes from `{file}`, written as for **Create**; `-F body=@{file}` reads it verbatim.
@@ -245,8 +245,8 @@ gh api repos/{OWNER}/{REPO}/issues/{N}/comments
 
 **Post comment**
 ```
-gh pr comment {N} --repo {OWNER}/{REPO} --body-file {file}
-rm -f {file}
+gh pr comment {N} --repo {OWNER}/{REPO} --body-file "{file}"
+rm -f "{file}"
 ```
 
 The body comes from `{file}`, as for every body. **A caller that may not write files** — `review-pr`
@@ -261,16 +261,16 @@ HIVRR_BODY_7f3a
 
 **Create PR**
 ```
-gh pr create --repo {OWNER}/{REPO} --title "{T}" --body-file {file} --base {base}
-rm -f {file}
+gh pr create --repo {OWNER}/{REPO} --title "{T}" --body-file "{file}" --base {base}
+rm -f "{file}"
 ```
 
 `--base` is **required**, not optional. Without it `gh` silently targets the repository default branch — which on a ladder repo means aiming a feature PR at production. Resolve `{base}` from `branches.integration` in `.hivrr.json`, falling back to the repo default branch.
 
 **Edit a PR's title or body**
 ```
-gh api --method PATCH repos/{OWNER}/{REPO}/pulls/{N} -f title="{T}" -F body=@{file}
-rm -f {file}
+gh api --method PATCH repos/{OWNER}/{REPO}/pulls/{N} -f title="{T}" -F body=@"{file}"
+rm -f "{file}"
 ```
 
 Drop either field to change only the other. `-F body=@{file}` reads the body verbatim, as in the

@@ -45,8 +45,8 @@ glab issue view {N} --repo {PROJECT}
 
 **Create**
 ```
-glab issue create --repo {PROJECT} --title "{T}" --description "$(cat {file})" --label "{labels}"
-rm -f {file}
+glab issue create --repo {PROJECT} --title "{T}" --description "$(cat "{file}")" --label "{labels}"
+rm -f "{file}"
 ```
 
 The description comes from `{file}`, written as **Bodies always go through a file** says above.
@@ -55,8 +55,8 @@ Use labels from the label reference loaded by init. Pick one or more that fit th
 
 **Edit** (replace an issue's description)
 ```
-glab issue update {N} --repo {PROJECT} --description "$(cat {file})"
-rm -f {file}
+glab issue update {N} --repo {PROJECT} --description "$(cat "{file}")"
+rm -f "{file}"
 ```
 
 The description comes from `{file}`, written as for **Create**.
@@ -88,8 +88,8 @@ glab api projects/{PROJECT_ENCODED}/merge_requests/{N}/notes
 
 **Post comment**
 ```
-glab mr comment {N} --repo {PROJECT} --message "$(cat {file})"
-rm -f {file}
+glab mr comment {N} --repo {PROJECT} --message "$(cat "{file}")"
+rm -f "{file}"
 ```
 
 The comment comes from `{file}`, as for every body. **A caller that may not write files** —
@@ -104,8 +104,8 @@ HIVRR_BODY_7f3a
 
 **Create MR**
 ```
-glab mr create --repo {PROJECT} --title "{T}" --description "$(cat {file})" --target-branch {base}
-rm -f {file}
+glab mr create --repo {PROJECT} --title "{T}" --description "$(cat "{file}")" --target-branch {base}
+rm -f "{file}"
 ```
 
 `--target-branch` is **required**, not optional — without it `glab` targets the project's default branch. Resolve `{base}` from `branches.integration` in `.hivrr.json`, falling back to the default branch.
