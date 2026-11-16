@@ -51,12 +51,16 @@ The input is a pack path, `docs/plans/<slug>`. Read `{path}/README.md`.
 - **No README there:** say `No pack at {path}` and go to Phase 7.
 - Read the header **Status**, **Type** and **Size**, and the **Read order**. List every file in the
   folder.
-- **Record only** (below): the pack executors read is the one on the integration branch. Resolve
-  `{integration}` as `work-issue` Phase 5 does (`branches.integration`, then the repository default
-  branch, then `origin/HEAD`, then `main`), run `git fetch origin {integration}`, and compare with
-  `git diff --stat origin/{integration} -- {path}`. When the working copy differs, warn
-  `Working copy of {path} differs from origin/{integration}; the reader sees the working copy.`
-  and record the warning in the round's summary paragraph.
+- Resolve `{integration}` as `work-issue` Phase 5 does (`branches.integration`, then the repository
+  default branch, then `origin/HEAD`, then `main`) and run `git fetch origin {integration}`. Phase 3
+  builds the reader's tree from `origin/{integration}`, the commit executors fork from. If the fetch
+  fails, set `{base}` to `HEAD` and record `Reader tree from HEAD: origin/{integration} unavailable.`
+  in each round's summary paragraph; otherwise `{base}` is `origin/{integration}`.
+- **Record only** (below): the pack executors read is the one on the integration branch, and that
+  is the copy the reader sees. Compare with `git diff --stat {base} -- {path}`. When the working
+  copy differs, warn `Working copy of {path} differs from {base}; the reader sees {base}.` and record
+  the warning in the round's summary paragraph. When `{base}` has no `{path}/README.md`, say
+  `Pack {path} is not on {base}` and go to Phase 7.
 
 Read `pack-format.md` §3 (README contract and Status) and §6 (fences).
 
@@ -125,6 +129,24 @@ most **3 rounds**; a later run of this skill continues the numbering with a fres
 covered, in plan order. Once every slice has been covered, prefer the slices whose files the last
 round's fixes touched. With no slices, leave the slice line out of the prompt.
 
+**Build the reader's tree.** The reader never reads this checkout: uncommitted files and commits on
+this branch that `{integration}` lacks are context the pack does not hold, and an executor will not
+have them. It reads a detached worktree of `{base}`, outside the checkout, holding the pack and
+nothing else that is uncommitted. In every mode but Record only, the pack is copied in from the
+working copy, since it is usually uncommitted work in progress; in Record only the reader sees the
+pack as `{base}` has it. A dirty checkout is therefore not a stop:
+
+```bash
+tree=$(mktemp -d "${TMPDIR:-/tmp}/cold-read.XXXXXX")
+git worktree add --detach "$tree" {base}
+rm -rf "$tree/{path}" && mkdir -p "$tree/{path}" && cp -R {path}/. "$tree/{path}/"
+```
+
+Skip the third line in Record only. The tree is new for every round, so it carries the last round's
+fixes. Whatever path leaves this phase — a recorded round, a void one, an incomplete report — remove
+it first with `git worktree remove --force "$tree"`; the fixes in Phase 5 go to this checkout,
+never to the tree.
+
 **Choose the reader**, the first that this environment offers:
 
 | Offer | Dispatch | Record as the model |
@@ -134,26 +156,29 @@ round's fixes touched. With no slices, leave the slice line out of the prompt.
 | No subagent tool | Do not read it yourself — you have seen the pack, so you are not cold. Say `No subagent available: run cold-read {path} in a session that can start one.` Go to Phase 7 | — |
 
 Frontmatter `allowed-tools` does not scope a spawned subagent, so when no read-only type exists the
-prompt's "change nothing" line is the only guard. Run this before and after every read and compare
-the two outputs; they must be identical:
+prompt's "change nothing" line is the only guard. Run this before and after every read, from the
+checkout, and compare the two outputs; they must be identical:
 
 ```bash
-find docs/plans/{slug} -type f -exec cksum {} + | sort -k3
+for d in . "$tree"; do (cd "$d" && find {path} -type f -exec cksum {} + | sort -k3 && git status --porcelain --untracked-files=all); done
 ```
 
-A difference means the reader changed the pack: the round is void. Say which files changed and go
-to Phase 7.
+It covers the pack in both places and anything else the reader could write in its tree. A
+difference means the reader changed something: the round is void. Say which files changed, remove
+the tree, and go to Phase 7.
 
-**The prompt** is exactly this, with `{path}` and `{slices}` filled in. Add nothing to it — no
-summary, no context, no reason for the read:
+**The prompt** is exactly this, with `{tree}` (the absolute path in `$tree`), `{path}` and
+`{slices}` filled in. Add nothing to it — no summary, no context, no reason for the read:
 
 ```text
 You are about to implement part of a plan pack, and you have never seen it. Read it cold.
 
-Pack: {path}
+Repository: {tree}
+Pack: {tree}/{path}
 
-Read {path}/README.md first, then follow its Read order. Do not open {path}/cold-read.md until
-your report is written. Read only: change nothing.
+Read only files under {tree}: every path in the pack is relative to it. Read {path}/README.md
+first, then follow its Read order. Do not open {path}/cold-read.md until your report is written.
+Read only: change nothing.
 
 Think these slices through as if you were implementing them now: {slices}.
 
@@ -186,8 +211,8 @@ A table: citation | holds (yes/partly/no) | note.
 `{slices}` reads `Slice 2, Slice 5` — numbers only, never names or what they contain.
 
 **Check the report.** It must have all five sections and at least 8 citations. If it does not,
-dispatch one more new reader for the same round; a second incomplete report goes to Phase 7 with
-the round unrecorded.
+dispatch one more new reader for the same round, in the same tree; a second incomplete report goes
+to Phase 7 with the round unrecorded. Then remove the tree.
 
 Display: `Round {N}: reader {model} — {q} questions ({b} blocking), {c} contradictions, {k} citations checked`.
 
@@ -323,7 +348,8 @@ Write `null` bare, never as the string `"null"`.
   Blocking (author findings fixed in Phase 2 excepted; a held one counts), a developer-only
   question is unanswered, or a Record only round had one — in Record only mode every author
   finding is held.
-- `COLD READ STOPPED` when no round could be recorded: no README, no subagent available, two
+- `COLD READ STOPPED` when no round could be recorded: no README (in Record only, none on
+  `{base}`), no subagent available, two
   incomplete reports, or a reader that changed the pack. `model` is bare `null` when no reader
   ran, `rounds` counts the rounds recorded before the stop, and `pack_status` is the unchanged
   Status.
