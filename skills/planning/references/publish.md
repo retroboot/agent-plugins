@@ -14,7 +14,7 @@ resumed with `planning docs/plans/{slug}` never creates an issue twice.
 
 **Bodies go through a file.** An issue or PR body holds backticked paths, which a shell would run
 as command substitutions inside double quotes. Write each body to a scratch file outside the checkout
-(`mktemp`, so `core` **Staging** never sees it) with a single-quoted heredoc (`cat > {file} <<'EOF'`), and pass the file with the reference's file form,
+(`mktemp`, so `core` **Staging** never sees it) with a single-quoted heredoc (`cat > {file} <<'HIVRR_BODY_7f3a'`; never `EOF`, which a body quoting a heredoc would end early — if the body holds a line equal to the delimiter, choose another), and pass the file with the reference's file form,
 which every body-taking command in the references uses, the PR commands included. Never put a
 body's text in double quotes on the command line.
 

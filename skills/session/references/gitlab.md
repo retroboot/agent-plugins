@@ -15,10 +15,15 @@ it survive.
 
 ```
 file=$(mktemp)
-cat > "$file" <<'EOF'
+cat > "$file" <<'HIVRR_BODY_7f3a'
 …body text, verbatim…
-EOF
+HIVRR_BODY_7f3a
 ```
+
+The delimiter is `HIVRR_BODY_7f3a`, not `EOF`: a body that quotes one of these snippets holds a line `EOF`,
+which would end the heredoc early and run the rest of the body as shell commands. If the body
+contains a line equal to the delimiter, choose another. Remove the file once the command has run;
+each command below ends with `rm -f {file}`.
 
 **Titles stay inline, so a title must be safe in double quotes.** Drop any backtick, `$`, `"` or
 `\` from `{T}` before substituting it into `--title "{T}"`. A title is one line of prose, so this
@@ -41,6 +46,7 @@ glab issue view {N} --repo {PROJECT}
 **Create**
 ```
 glab issue create --repo {PROJECT} --title "{T}" --description "$(cat {file})" --label "{labels}"
+rm -f {file}
 ```
 
 The description comes from `{file}`, written as **Bodies always go through a file** says above.
@@ -50,6 +56,7 @@ Use labels from the label reference loaded by init. Pick one or more that fit th
 **Edit** (replace an issue's description)
 ```
 glab issue update {N} --repo {PROJECT} --description "$(cat {file})"
+rm -f {file}
 ```
 
 The description comes from `{file}`, written as for **Create**.
@@ -82,6 +89,7 @@ glab api projects/{PROJECT_ENCODED}/merge_requests/{N}/notes
 **Post comment**
 ```
 glab mr comment {N} --repo {PROJECT} --message "$(cat {file})"
+rm -f {file}
 ```
 
 The comment comes from `{file}`, as for every body. **A caller that may not write files** —
@@ -89,14 +97,15 @@ The comment comes from `{file}`, as for every body. **A caller that may not writ
 same single-quoted heredoc and no scratch file: `-F body=@-` reads standard input.
 
 ```
-glab api --method POST projects/{PROJECT_ENCODED}/merge_requests/{N}/notes -F body=@- <<'EOF'
+glab api --method POST projects/{PROJECT_ENCODED}/merge_requests/{N}/notes -F body=@- <<'HIVRR_BODY_7f3a'
 …body text, verbatim…
-EOF
+HIVRR_BODY_7f3a
 ```
 
 **Create MR**
 ```
 glab mr create --repo {PROJECT} --title "{T}" --description "$(cat {file})" --target-branch {base}
+rm -f {file}
 ```
 
 `--target-branch` is **required**, not optional — without it `glab` targets the project's default branch. Resolve `{base}` from `branches.integration` in `.hivrr.json`, falling back to the default branch.

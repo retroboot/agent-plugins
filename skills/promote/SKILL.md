@@ -149,14 +149,16 @@ git log origin/{target}..origin/{source} --oneline
 
 Create the PR with the **Create PR** command from the loaded reference, passing `--base {target}` explicitly.
 Commit subjects carry backticks, so the body goes through a file: write it outside the checkout with
-a single-quoted heredoc, as the reference's **Bodies always go through a file** says.
+a single-quoted heredoc, as the reference's **Bodies always go through a file** says. Use the
+`HIVRR_BODY_7f3a` delimiter shown, never `EOF`; if the body holds a line equal to it, choose another.
 
 ```bash
 file=$(mktemp)
-cat > "$file" <<'EOF'
+cat > "$file" <<'HIVRR_BODY_7f3a'
 {body}
-EOF
+HIVRR_BODY_7f3a
 gh pr create --repo {repo_slug} --head {source} --base {target} --title "promote: {source} → {target}" --body-file "$file"
+rm -f "$file"
 ```
 
 Display: `PR: {url}`
