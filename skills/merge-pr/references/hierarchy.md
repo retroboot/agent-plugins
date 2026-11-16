@@ -11,8 +11,8 @@ will.
 
 For each reference in `issues_closed`:
 
-1. Read its `parent` using the **Read hierarchy** command from the loaded provider reference (`github.md`). No parent —
-   which is the common case — means nothing to do.
+1. Read its `parent` using the **Read hierarchy** command from the loaded provider reference
+   (`github.md`; **Close** below comes from it too). No parent — the common case — means nothing to do.
 2. Read the parent's `subIssuesSummary` — **after** the children above were closed, never before.
    `completed` reflects state at query time, so a summary read taken before the closing loop reports
    the parent as unsatisfied for every child including the last, and no parent is ever closed. Close
