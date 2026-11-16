@@ -84,7 +84,8 @@ path must pass that path as a pathspec too: `git commit -F "$file" -- {path}`, w
 shell runs every backticked span and every `$(…)`, and messages here routinely name skills, paths
 and flags in backticks. Write the message to a file outside the checkout with a single-quoted
 heredoc, commit with `-F`, then remove the file. **Run the block as one Bash call**: `$file` is a
-shell variable and does not survive into a separate call.
+shell variable and does not survive into a separate call. If the steps must be split, use the
+literal path `mktemp` printed in each later call instead of `$file`.
 
 ```bash
 file=$(mktemp)
