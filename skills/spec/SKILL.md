@@ -43,7 +43,8 @@ Run before Phase 1:
 ## Phase 1 — Read the Pack and the Route
 
 The input is a pack path, `docs/plans/<slug>`, optionally followed by `: {what to revise}` (the
-`planning` wrapper's **Revise spec** step passes it). Read `{path}/README.md`.
+`planning` wrapper's **Revise spec** step passes it). `{path}` is the part before any `: `; the
+rest is the request. Read `{path}/README.md`.
 
 - **No README there:** say `No pack at {path}` and go to Phase 10 with no files written.
 - Read the header **Status**, **Type**, **Size** and **Modifiers**, and the **Route**, **Brief**,
@@ -106,7 +107,8 @@ request — for example a criterion `slice` could not place, moved or dropped wi
 agreement — and list each with
 `Revised by spec on {date}: {file} — {section}, {what to revise}. Awaiting approval at the next checkpoint.`
 Everything else above holds; the checkpoints show only the files revised, and Phase 9 treats the run
-as a Re-route.
+as a Re-route. A run with no request whose **Open questions** already hold `Revised by spec …` lines
+is a resumed revision: show those sections at the checkpoints for approval.
 
 Specify at `routed` follows the same rules for any spec file already in the folder (an earlier
 stopped run, or a re-routed Spike), and still sets Status on approval.

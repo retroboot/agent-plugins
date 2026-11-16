@@ -331,7 +331,7 @@ a mismatch the prd explains.
   again.
 - **Stop:** go to Phase 7. Status is unchanged; `plan.md` stays on disk. When a gap, untouched map
   step or size mismatch was shown, first say
-  `Stopped: {gap | untouched map step | size mismatch} — next: planning {path}, Revise spec{ or Re-route for a size mismatch}.`
+  `Stopped: {gap | untouched map step | size mismatch} — next: planning {path} revise spec{, or planning {path} re-route for a size mismatch}.`
 
 ---
 
