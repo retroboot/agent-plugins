@@ -75,11 +75,31 @@ it.** Do not stage it, do not delete it, and do not commit around it.
 
 Staging one file is not the same as committing one file. A bare `git commit` commits the **whole
 index**, including anything staged before this run started, so a phase that commits a single known
-path must pass that path as a pathspec too:
+path must pass that path as a pathspec too: `git commit -F "$file" -- {path}`, with `$file` written as
+**Commit** below shows.
+
+### Commit
+
+**Pass the message through a file, never `git commit -m "{message}"`.** Inside double quotes the
+shell runs every backticked span and every `$(…)`, and messages here routinely name skills, paths
+and flags in backticks. Write the message to a file outside the checkout with a single-quoted
+heredoc, commit with `-F`, then remove the file. **Run the block as one Bash call**: `$file` is a
+shell variable and does not survive into a separate call. If the steps must be split, use the
+literal path `mktemp` printed in each later call instead of `$file`.
 
 ```bash
-git commit -m "{message}" -- {path}
+file=$(mktemp)
+cat > "$file" <<'HIVRR_COMMIT_7f3a'
+…message, verbatim…
+HIVRR_COMMIT_7f3a
+git commit -F "$file"    # one known path: git commit -F "$file" -- {path}
+rm -f "$file"
 ```
+
+The delimiter is `HIVRR_COMMIT_7f3a`, not `EOF`, for the reason the session references give for
+`HIVRR_BODY_7f3a`: a line equal to the delimiter ends the heredoc early and runs the rest as shell.
+If the message contains such a line, choose another. A message that is a fixed literal with no
+backtick, `$` or `"` — `init`'s `.gitignore` commit is one — is safe inline and may keep `-m`.
 
 ## Code Review Standards
 

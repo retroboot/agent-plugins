@@ -188,8 +188,9 @@ Display each: `Linear: {identifier} — {title}`.
    for the first child of an XL parent, the parent's `README.md` when it is untracked or changed.
    Follow **Staging** in the `core` skill: `git status --short` must show nothing staged that this
    run did not write.
-4. Commit `docs(plans): add {slug} plan pack`, with the issue numbers in the body as `Refs #{number}`
-   (never `Closes`: the slice issues stay open until their own PRs merge).
+4. Commit `docs(plans): add {slug} plan pack` through a file, as **Commit** in the `core` skill shows,
+   with the issue numbers in the body as `Refs #{number}` (never `Closes`:
+   the slice issues stay open until their own PRs merge).
 5. `git push -u origin plan/{slug}`, then open the PR with the **Create PR** command, passing
    `--base {integration}` explicitly. Title `Plan: {pack title}`; body: the pack path, its Route,
    the created issues, and `Next: ship-issue docs/plans/{slug}` once this PR merges.
