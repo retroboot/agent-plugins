@@ -11,7 +11,7 @@ will.
 
 For each reference in `issues_closed`:
 
-1. Read its `parent` using the **Read hierarchy** command from the loaded reference. No parent —
+1. Read its `parent` using the **Read hierarchy** command from the loaded provider reference (`github.md`). No parent —
    which is the common case — means nothing to do.
 2. Read the parent's `subIssuesSummary` — **after** the children above were closed, never before.
    `completed` reflects state at query time, so a summary read taken before the closing loop reports
@@ -24,9 +24,9 @@ For each reference in `issues_closed`:
 A parent that is already closed needs no action. A parent with open children is left open —
 **never** close a parent with unfinished children, and never reopen one.
 
-Then mark the closed parent Done on the board using the same rules as its children
-([`board.md`](board.md), run when `project` is present): if the parent is not on the board, warn and
-skip rather than adding it at merge time.
+Do not mark parents Done here. [`board.md`](board.md), which runs after this step when `project` is
+present, marks each parent in `parents_closed` Done by the same rules as its children: not on the
+board means warn and skip, never add.
 
 Every step here warns and continues. A failure to close a parent must not affect the merge, which
 has already happened.
