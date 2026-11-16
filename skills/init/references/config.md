@@ -221,7 +221,8 @@ exactly, case included; a listed job is still named in `merge-pr`'s CI line, nev
 stage of a blocked pipeline, stays `created`, and `merge-pr` reports it as `manual` under its own
 name. Allowlisting `deploy-prod` alone still stops on its `smoke-prod`; list both.
 
-**A value that is not an array of strings is treated as `[]`**, so every manual job blocks.
+**A value that is not an array of strings is treated as `[]`**, so every manual job blocks. A `ci`
+key that is not an object is treated the same way, as if absent.
 `merge-pr` names the bad value once and carries on with the empty list. Unlike other wrong-type keys
 this is not a hard error, because the fallback already fails closed: the worst it can do is stop a
 merge, never let one through.

@@ -214,6 +214,8 @@ one a person, one a look at the fetch:
   it finishes, or, if the job is genuinely optional, add its name to `ci.optionalManualJobs`.
 - Unknown → `CI: no jobs returned for pipeline {PIPELINE_ID} — nothing was checked`. Stop, and show
   any error the jobs call printed. It is a failed fetch, not a pipeline that is still running.
+- Any Check CI call that exits non-zero, or prints an error on stderr, is a failed fetch too: stop
+  with `CI: could not read the pipeline — {error}`. Silence from a failed call is never a pass.
 - A GitHub check that stays `pending` long after the rest finished may be a `STARTUP_FAILURE`,
   which `gh` buckets as pending — say so rather than only telling the user to wait.
 
