@@ -520,7 +520,7 @@ Write a conventional commit message:
 - Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
 - Include issue references in the body: `Closes #{number}` for each issue (GitHub/GitLab) or the Linear identifier (e.g. `ENG-123`) if `ISSUE_TRACKER=linear`
 
-Commit with: `git commit -m "{message}"`
+Commit the message through a file, never `-m`: follow [**Commit**](../core/SKILL.md#commit) in `core`.
 
 Display: `Commit: {message}`
 

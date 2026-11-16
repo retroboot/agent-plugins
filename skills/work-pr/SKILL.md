@@ -185,7 +185,7 @@ Write a conventional commit message:
 - Types: `fix`, `refactor`, `test`, `docs`, `chore`
 - Body: briefly list what feedback was addressed
 
-Commit with: `git commit -m "{message}"`
+Commit as [**Commit**](../core/SKILL.md#commit) in the `core` skill shows: `-F` and a file.
 
 Display: `Commit: {message}`
 
