@@ -304,8 +304,8 @@ Skip this in Record only mode; write each fix as `Proposed: …` in its Resoluti
   `; superseded by ADR-NNN`, and nothing else. In Record only mode, propose both instead.
 - Never renumber a PRD criterion; a new one goes at the end of its story. A fix that adds a
   criterion also adds it to a slice's Acceptance and the Traceability table.
-- Fix only what an item asked for. A wider rework is a re-slice or a re-route: say so in the
-  Resolution and leave it to the developer.
+- Fix only what an item asked for. A wider rework is a `planning` step — Re-slice, Revise spec or
+  Re-route: name it in the Resolution and leave it to the developer.
 
 After the fixes, run the Phase 2 checks again; expected no output.
 

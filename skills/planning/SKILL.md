@@ -17,7 +17,9 @@ Keep moving through the phases. Stop only at a checkpoint or where a phase says 
 The pack format of record is `$CLAUDE_SKILL_DIR/references/pack-format.md`, and the templates are in
 `$CLAUDE_SKILL_DIR/references/templates/`. Read `pack-format.md` §2 (routing) and §3 (README
 contract and Status) before Phase 3. When this skill and the format disagree, the format is right.
-Publish's tracker detail is in `$CLAUDE_SKILL_DIR/references/publish.md`.
+Publish's tracker detail is in `$CLAUDE_SKILL_DIR/references/publish.md`, and the rework steps
+(Re-route, Re-slice, Revise spec) are in `$CLAUDE_SKILL_DIR/references/reroute.md`: where each is
+offered, the Open questions lines it writes, and its steps. Read it before offering or running one.
 
 Rules that hold in every phase:
 
@@ -62,38 +64,22 @@ skill's own completion and read only these fields:
 | extras | `brainstorm`: `route`. `spec`: `files`. `slice`: `slices`. `cold-read`: `model` (may be `null`), `rounds`, `blocking` |
 
 - **`pack_status` is `null`:** stop. Say `No pack at {path}`. Never treat `null` as a Status. The
-  exception is `BRAINSTORM DISCARDED` with `pack` `null`, which means nothing was kept (Phase 2).
+  exceptions are `BRAINSTORM DISCARDED` and `BRAINSTORM NOT ROUTED` with `pack` `null`: nothing was
+  written, and Phase 2 gives each its own message.
 - **`SPEC STOPPED`, `SLICE STOPPED` or `COLD READ STOPPED`:** a stop, not a failure. Do not advance.
   Show the developer the reason the skill gave (its last message before the JSON) and the unchanged
   Status. Files written so far stay on disk. Where the reason asks for a re-route (`slice`: over 12
-  slices, a size mismatch, or a Bug's plan declined), offer **Re-route** (below); otherwise end with
-  `Resume: planning {path}`. A `COLD READ STOPPED` round does not count as a cold read.
+  slices, a size mismatch, or a Bug's plan declined), offer **Re-route**; where it asks to revise
+  the spec (`slice`: a gap, an untouched map step, or a size mismatch), offer **Revise spec** (both
+  in `reroute.md`); otherwise end with `Resume: planning {path}`. A `COLD READ STOPPED` round does
+  not count as a cold read.
 - **`COLD READ BLOCKED`:** handled in Phase 6.
 - **`{SKILL} COMPLETE` with an unexpected `pack_status`:** stop and show both values. Never set
   the Status the skill did not. The expected value depends on the Status the run started at: the
   skill's own Status when it started at the one before (`spec` from `routed` gives `specified`,
   `slice` from `specified` gives `sliced`, `cold-read` from `sliced` gives `reviewed`), and the
-  **unchanged** Status otherwise (`spec` Re-route, `slice` Re-slice, `cold-read` re-read, and a
-  Spike outcome, which stays `specified`).
-
----
-
-## Re-route
-
-A route can grow at any checkpoint, including the wrapper's own Route checkpoint (S-03.4). Offer it
-at Approve (Phase 7) and after a phase skill stops asking for one; on a resume, do not ask.
-
-1. Run the Phase 3 checkpoint again with the new Type, Size and Modifiers, each with its reason.
-   Never delete a pack file or rewrite one wholesale. Status stays where it is, except a Spike
-   re-route, which sets `routed` (Phase 4).
-2. Rewrite the header rows and the **Route** section as Phase 3 does. Add the sections the new
-   route needs (Repro and root cause, Child packs) and keep every other section.
-3. When Status is `sliced` or later, add to the README **Open questions** the line
-   `Cold read pending after re-route on {date}.` (Phase 6 gates on it).
-4. Then run the phases again from Specify: `spec` (its Re-route mode at `specified` or later adds
-   the files the new route needs and lists every revised section in **Open questions**), `slice`
-   (Re-slice, unless the size is S), and `cold-read`, then Approve. A re-route to XL instead writes
-   **Child packs** (Phase 3) and stops.
+  **unchanged** Status otherwise (`spec` Re-route or Revise spec, `slice` Re-slice, `cold-read`
+  re-read, and a Spike outcome, which stays `specified`).
 
 ---
 
@@ -106,6 +92,8 @@ The input is one of:
   issue** command from the loaded reference. Their titles, bodies and acceptance criteria are folded
   into the Brief (Phase 2).
 - **A pack path:** `docs/plans/<slug>`. Resume it (below).
+- **A pack path and a rework step:** `docs/plans/<slug> {re-route | re-slice | revise spec}`. Run
+  that step, where `reroute.md` allows it, instead of resuming.
 
 A topic or issue references go on to Phase 2.
 
@@ -123,6 +111,9 @@ Read `{path}/README.md`.
 - **XL parent:** when the Size row starts with `XL` and Status is `routed` or later, show **Child
   packs** with each child's Status (from its README, or `not started`), then stop. This comes before
   the table, so a pack re-routed to XL past `routed` never reaches `slice`.
+- **Rework in progress** (`reroute.md`, **Pending lines**), before the table; the first match wins:
+  a `Spec pending …` line resumes at Phase 4, passing its request; a `Revised by spec …` line at
+  Phase 4; a `Revised by slice …` or `Re-slice pending …` line at Phase 5. Then run on as usual.
 - Otherwise read the header **Status**, **Type** and **Size**, and resume at the phase after the
   Status, without repeating a finished phase and without asking about the route (S-02.2):
 
@@ -146,8 +137,9 @@ pack PR never finished; say so and offer to run step 4 again, which skips what i
 
 **Progress status at `executing`.** Resolve `{integration}` as Phase 8 does, run
 `git fetch origin {integration}`, and for each slice in `plan.md` (at size S, Slice 1) read the
-Status line of `progress/slice-NN.md` with `git show origin/{integration}:docs/plans/{slug}/progress/slice-NN.md`.
-A slice with no file there is `not started`.
+Status line of `progress/slice-NN.md` with
+`git show origin/{integration}:docs/plans/{slug}/progress/slice-NN.md`. A slice with no file there
+is `not started`.
 
 Display: `Pack: {path} | Status: {status} | Resuming at: {phase}`, or for new input
 `Topic: {topic} | Source: {topic | issue refs}`.
@@ -178,8 +170,11 @@ scope — for example an issue with acceptance criteria — ask once: **Skip dis
 some. It holds its own conversation and asks keep or discard. Read its result (above):
 
 - `BRAINSTORM COMPLETE` with `pack_status` `discovered`: go to Phase 3 with `pack` and `route`.
-- `BRAINSTORM DISCARDED` with `pack` `null`: nothing was kept. When brainstorm said the work is not
-  routed, repeat its `ship-issue` recommendation (S-09.3). Say `Nothing written.` and stop.
+- `BRAINSTORM DISCARDED` with `pack` `null`: the developer threw the thinking away. Say
+  `Brainstorm discarded: nothing written.` and stop.
+- `BRAINSTORM NOT ROUTED` with `pack` `null`: the work is a batch of independent small items, so no
+  pack was offered. Say `Not routed: planning adds nothing here.`, repeat brainstorm's `ship-issue`
+  recommendation (its last message before the JSON, S-09.3), and stop.
 
 ---
 
@@ -220,8 +215,9 @@ leaves the README as it is (S-02.3).
 
 **On confirm**, edit the README in place:
 
-1. **Slug changed:** the pack is untracked, so rename the folder with `mv docs/plans/{old} docs/plans/{new}`,
-   then replace `{old}` with `{new}` in the README's **How to execute this pack** rule 1.
+1. **Slug changed:** the pack is untracked, so rename the folder with
+   `mv docs/plans/{old} docs/plans/{new}`, then replace `{old}` with `{new}` in the README's **How
+   to execute this pack** rule 1.
 2. **Header:** Type; Size as `S — 1 slice`, `M — 2–6 slices`, `L — 7–12 slices`,
    `XL — {n} child packs`, or `n/a` for a Spike; Modifiers, or `none`.
 3. **Route section:** replace it with one bullet each for type, size and modifiers, with its reason.
@@ -232,7 +228,7 @@ leaves the README as it is (S-02.3).
 5. **XL:** write **Child packs** from the template, after Brief, Ruled out and Key insights: one row
    per child, in order, with its pack path, what it covers and what it depends on. An XL parent has
    no Slice section.
-6. **Status:** `routed`, when it was `discovered`. In a re-route, leave it (Re-route, above).
+6. **Status:** `routed`, when it was `discovered`. In a re-route, leave it (`reroute.md`).
 
 Display `Pack routed: {path} (Status: {status})`.
 
@@ -244,10 +240,11 @@ and its README is committed with the first child's pack PR (Phase 8).
 
 ## Phase 4 — Specify
 
-Load the `spec` skill with `docs/plans/{slug}`. It holds the acceptance, ADR and design checkpoints
-and sets `specified` on approval. Read its result: `SPEC COMPLETE` with `pack_status` `specified`
-goes on; a stop is handled as above (S-02.3.e1: a rejected PRD checkpoint leaves `prd.md` on disk
-and Status `routed`).
+Load the `spec` skill with `docs/plans/{slug}` (with `: {request}` from a `Spec pending` line). It
+holds the acceptance, ADR and design checkpoints and sets `specified` on approval. Read its result:
+`SPEC COMPLETE` with the expected `pack_status` goes on, after removing any `Spec pending after …`
+line from **Open questions**; a stop is handled as above (S-02.3.e1: a rejected PRD checkpoint
+leaves `prd.md` on disk and Status `routed`).
 
 **Size S (Change included):** `spec` writes the README's single **Slice**. Nothing else is needed
 here. **A Spike** follows the steps below instead of going on to Phase 5.
@@ -278,9 +275,10 @@ A Spike skips Slice, Cold read, Approve and Publish for itself (S-03.5).
 entry to the README **Read order**, renumbering it. Go to Phase 6.
 
 Otherwise load the `slice` skill with `docs/plans/{slug}`. It holds the slice checkpoint and sets
-`sliced` on approval (a Re-slice leaves Status unchanged). On any `SLICE COMPLETE` with the expected
-`pack_status`, update the README Size row to `{size} — {slices} slices`. A stop is handled as above; `slices` over 12 means the draft needs child
-packs, so offer a re-route to XL (S-09.4).
+`sliced` on approval (a Re-slice leaves Status unchanged). On any `SLICE COMPLETE` with the
+expected `pack_status`, update the README Size row to `{size} — {slices} slices` and remove any
+`Re-slice pending after …` line from **Open questions**. A stop is handled as above; `slices` over
+12 means the draft needs child packs, so offer a re-route to XL (S-09.4).
 
 ---
 
@@ -294,14 +292,15 @@ on a pass from `sliced`. Read its `status`, not only `pack_status`:
   `reviewed`.
 - **`COLD READ BLOCKED` (S-05.3):** do not publish. Show the remaining questions from the closing
   **Result** of `cold-read.md`, each with its Resolution, and `blocking`. Status stays where it was
-  (`sliced` on a first read). Say `Answer these, then planning docs/plans/{slug} to run the cold read again.`
-  and stop.
+  (`sliced` on a first read). When a Resolution names a re-slice, re-route or spec revision, offer
+  that step (`reroute.md`). On no, or when none is named, say
+  `Answer these, then planning docs/plans/{slug} to run the cold read again.` and stop.
 - **`COLD READ STOPPED`:** handled as above. It does not count as a cold read.
 
-**After a Re-slice or Re-route past `sliced`** (Status `reviewed` or `approved`), the cold read that
-passed saw the old plan, and Status no longer shows it. The Re-slice or Re-route therefore writes
-`Cold read pending after {re-slice | re-route} on {date}.` to **Open questions**, and this phase runs
-`cold-read` again; it fixes the pack but leaves Status as it is.
+**After a rework step past `sliced`** (Status `reviewed` or `approved`), the cold read that passed
+saw the old plan, and Status no longer shows it. The step therefore writes a `Cold read pending
+after …` line to **Open questions** (`reroute.md`), and this phase runs `cold-read` again; it fixes
+the pack but leaves Status as it is.
 
 **Gate before Approve and Publish.** Phases 7 and 8, including on a resume, run only when
 `cold-read.md`'s closing **Result** says `Pass after …` and **Open questions** holds no
@@ -312,7 +311,8 @@ passed saw the old plan, and Status no longer shows it. The Re-slice or Re-route
 ## Phase 7 — Approve
 
 **Checkpoint (held here).** Publish needs Status `reviewed` (or `approved` after a re-read) and
-the Phase 6 gate; never approve a pack at `sliced`. Read `plan.md`, or at size S the README **Slice**, and show:
+the Phase 6 gate; never approve a pack at `sliced`. Read `plan.md`, or at size S the README
+**Slice**, and show:
 
 ```text
 Approve for publish: docs/plans/{slug}
@@ -332,28 +332,21 @@ Ready to create {n} issue(s){ + 1 epic} in {tracker}, then open the pack PR.
   slice is larger).
 - **Epic:** as `publish.md` **Epic** says.
 
-Ask: **approve**, **change**, **re-slice**, **re-route** or **stop**.
+Ask: **approve**, **change**, **re-slice**, **revise spec**, **re-route** or **stop**.
 
 - **Approve:** set Status `approved` (from `reviewed`). Go to Phase 8.
 - **Change:** revise titles, labels or the epic, and show this again. Nothing in the pack changes.
-- **Re-slice:** write `Cold read pending after re-slice on {date}.` to **Open questions**, load
-  `slice` (its Re-slice mode), then Phase 6 again, then this checkpoint.
-- **Re-route:** see **Re-route** above.
+- **Re-slice**, **revise spec** or **re-route:** run that step (`reroute.md`), which returns here.
 - **Stop:** Status is unchanged.
 
 ---
 
 ## Phase 8 — Publish
 
-Follow `$CLAUDE_SKILL_DIR/references/publish.md`, its five steps in order (6.1):
-
-1. Create one issue per slice, in slice order, each body holding the marker, the Outcome and the
-   acceptance IDs with their text; then edit each body to add its `Depends on #N` lines.
-2. Write the issue numbers into `plan.md` (or the README Slice) and the README Issues row.
-3. The epic, hierarchy, board and Linear behaviours (6.2), with the epic body linking the README.
-4. Set Status `published`, create `plan/{slug}` from `origin/{integration}`, stage the pack by name,
-   commit, push, and open the pack PR.
-5. Offer `ship-pr` on that PR, or tell the developer to merge it before executing.
+Follow `$CLAUDE_SKILL_DIR/references/publish.md`, its five steps in order (6.1): one issue per
+slice with its marker, then its `Depends on #N` lines; the issue numbers written into the pack; the
+epic, hierarchy, board and Linear behaviours (6.2); Status `published` and the pack PR from
+`plan/{slug}`; then `ship-pr` offered on that PR.
 
 **Integration branch.** `branches.integration` from `.hivrr.json`, then the repository default
 branch, then `origin/HEAD`, then `main`.
