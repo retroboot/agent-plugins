@@ -250,13 +250,25 @@ awk -v want="Outcome|Acceptance|Contracts|Stop conditions|Verify|Pattern to foll
 
 Then read each slice: every heading has content, and the header line has the fields above.
 
-**Fences (S-04.3).** Every opening fence, at any indentation and with backticks or tildes, is
-tagged `bash`, `sh`, `mermaid` or `text`. This prints each one that is not, untagged included;
-expected no output:
+**Fences (S-04.3).** Every opening fence, at any indentation, is exactly three backticks tagged
+`bash`, `sh`, `mermaid` or `text` (`pack-format.md` §6). This prints each `~~~`, four-backtick or
+`>`/list-marker fence as `fence form`, each tag that is not allowed (untagged included), each fence
+line inside an open fence as `fence nested`, and each file left with a fence open as
+`fence unclosed`; expected no output:
 
 ```bash
-awk '/^[ \t]*(```|~~~)/ { if (open) { open = 0; next } open = 1; t = $0; sub(/^[ \t]*(```|~~~)[`~]*/, "", t); sub(/[ \t\r]+$/, "", t)
-  if (t != "bash" && t != "sh" && t != "mermaid" && t != "text") print FILENAME ":" FNR ": fence \"" t "\"" }' docs/plans/{slug}/plan.md
+awk 'FNR == 1 { if (open) print f ": fence unclosed"; open = 0; f = FILENAME }
+  { s = $0; pre = 0; sub(/^[ \t]+/, "", s)
+    while (sub(/^(>|[-*+][ \t]|[0-9]+[.)][ \t])[ \t]*/, "", s)) pre = 1 }
+  !match(s, /^(```+|~~~+)/) { next }
+  { n = RLENGTH; r = substr(s, 1, n); t = substr(s, n + 1); sub(/[ \t\r]+$/, "", t) }
+  open { if (substr(r, 1, 1) != oc || n < on || t != "") print FILENAME ":" FNR ": fence nested \"" r t "\""
+         else { open = 0; if (good && (r != "```" || pre)) print FILENAME ":" FNR ": fence form \"" r "\"" }
+         next }
+  { open = 1; oc = substr(r, 1, 1); on = n; good = (r == "```" && !pre)
+    if (!good) print FILENAME ":" FNR ": fence form \"" r "\""
+    if (t != "bash" && t != "sh" && t != "mermaid" && t != "text") print FILENAME ":" FNR ": fence \"" t "\"" }
+  END { if (open) print f ": fence unclosed" }' docs/plans/{slug}/plan.md
 ```
 
 Then read each fence: a `bash` or `sh` fence sits under a Verify heading and holds only commands,

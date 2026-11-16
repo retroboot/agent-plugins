@@ -306,9 +306,24 @@ exactly one of:
 - `text`: trees, layouts and wireframes.
 
 An untagged fence is rejected, because it could hide code. So are `json`, `yaml` and every other
-tag. The structural check in `docs/verification.md` enforces the info string (`PACK CODE FENCE`)
-and that every folder directly under `docs/plans/` has a README (`PACK NO README`). `slice` and
-`cold-read` enforce what is inside each fence.
+tag.
+
+A fence opens with **exactly three backticks**, at any indentation: a fence indented under a list
+item is as valid as one at column 0, and is checked the same way. `~~~` fences and fences of four
+or more backticks are rejected, whatever their tag. A pack has nothing to nest, since no fence holds
+code, so the longer and alternative forms buy nothing a reader or a check needs, and allowing them
+would let a fence hide inside another one.
+
+A fence closes on a line holding only three backticks, at any indentation. Nothing inside a fence
+may look like a fence: a pack nests nothing, so any other fence line before the closer is
+rejected, and so is a fence left open at the end of a file. A pack puts no fence on a `>`
+blockquote line or a list-marker line (`- `, `* `, `+ `, `1. `, `1) `): put the fence on its own line,
+indented under the item instead.
+
+The structural check in `docs/verification.md` enforces the form (`PACK FENCE FORM`), the info
+string (`PACK CODE FENCE`), nesting (`PACK FENCE NESTED`), closing (`PACK FENCE UNCLOSED`) and
+that every folder directly under `docs/plans/` has a README (`PACK NO README`). `slice` and
+`cold-read` run the same fence rule as a self-check, and enforce what is inside each fence.
 
 ---
 

@@ -167,20 +167,28 @@ printf '%s\n' "$agent_links" | grep . | while read -r name; do
     [ -d "$p" ] || echo "AGENTS SKILL DANGLING $name"
   done
 
-# every plan pack under docs/plans/ has a README, and its fences are tagged bash, sh, mermaid or text
+# every plan pack under docs/plans/ has a README, and opens each fence with exactly three backticks tagged bash, sh, mermaid or text
 if [ -d docs/plans ]; then
   for d in docs/plans/*/ docs/plans/.[!.]*/; do
     [ -d "$d" ] || continue
     [ -f "${d}README.md" ] || echo "PACK NO README ${d%/}"
   done
-  # the pattern is built with printf so this block never holds a fence-shaped line of its own
-  pack_fence=$(printf '\140\140\140')
+  # the backtick is built with printf so this block never holds a fence-shaped line of its own
+  pack_bt=$(printf '\140')
   find docs/plans -type f -name '*.md' | sort | while read -r f; do
-      awk -v fence="$pack_fence" -v file="$f" '
-        index($0, fence) != 1 { next }
-        open { open = 0; next }
-        { open = 1; info = substr($0, 4); sub(/[ \t\r]+$/, "", info)
-          if (info !~ /^(bash|sh|mermaid|text)$/) print "PACK CODE FENCE " file ":" NR }' "$f"
+      awk -v bt="$pack_bt" -v file="$f" '
+        BEGIN { run_re = "^(" bt bt bt "+|~~~+)"; three = bt bt bt }
+        { s = $0; pre = 0; sub(/^[ \t]+/, "", s)
+          while (sub(/^(>|[-*+][ \t]|[0-9]+[.)][ \t])[ \t]*/, "", s)) pre = 1 }
+        !match(s, run_re) { next }
+        { n = RLENGTH; run = substr(s, 1, n); info = substr(s, n + 1); sub(/[ \t\r]+$/, "", info) }
+        open { if (substr(run, 1, 1) != oc || n < on || info != "") print "PACK FENCE NESTED " file ":" NR
+               else { open = 0; if (good && (run != three || pre)) print "PACK FENCE FORM " file ":" NR }
+               next }
+        { open = 1; oc = substr(run, 1, 1); on = n; good = (run == three && !pre)
+          if (!good) print "PACK FENCE FORM " file ":" NR
+          if (info !~ /^(bash|sh|mermaid|text)$/) print "PACK CODE FENCE " file ":" NR }
+        END { if (open) print "PACK FENCE UNCLOSED " file }' "$f"
     done
 fi
 ```
@@ -204,7 +212,7 @@ See **Path resolution** in `CLAUDE.md` for the contract the first three checks e
 | 11 | `README.md`'s Overview table names exactly the registered plugins | `PLUGIN UNDOCUMENTED`, `PLUGIN NOT REGISTERED` |
 | 12 | `review-pr` declares itself read-only and grants no unrestricted tool | `REVIEW NOT READ-ONLY`, `REVIEW MAY WRITE` |
 | 13 | Every `skills/` directory has a matching, non-dangling `.agents/skills/` symlink | `AGENTS SKILL MISSING`, `AGENTS SKILL NOT SYMLINK`, `AGENTS SKILL DANGLING` |
-| 14 | Every folder directly under `docs/plans/` has a `README.md`, and every opening fence in `docs/plans/**/*.md` is tagged `bash`, `sh`, `mermaid` or `text` | `PACK NO README {dir}`, `PACK CODE FENCE {file}:{line}` |
+| 14 | Every folder directly under `docs/plans/` has a `README.md`, and every opening fence in `docs/plans/**/*.md`, at any indentation, is exactly three backticks tagged `bash`, `sh`, `mermaid` or `text`, not on a `>` or list-marker line, with no fence inside it and a closing fence of its own | `PACK NO README {dir}`, `PACK FENCE FORM {file}:{line}`, `PACK CODE FENCE {file}:{line}`, `PACK FENCE NESTED {file}:{line}`, `PACK FENCE UNCLOSED {file}` |
 
 A few mechanics worth knowing before editing this block:
 
@@ -234,12 +242,22 @@ A few mechanics worth knowing before editing this block:
 - **The duplication check (4) covers one pair, deliberately.** Other same-named skills share lines
   over the threshold today (`planning`/`brainstorm`); widening it needs a per-pair allowlist since
   some sharing is required rather than accidental.
-- **Check 14 builds its fence pattern with `printf`**, exactly as the loader does, so the block
-  never holds a line that starts with three backticks. A literal one would end the extracted block
-  early and silently drop every check after it. It prints nothing when `docs/plans/` is absent,
-  and a backtick run mid-line is not a fence. It reads column-0 backtick fences only: `~~~` and
-  indented fences are outside the rule it was specified with, and a four-backtick fence is reported
-  rather than passed, so the check fails closed. Trailing spaces, tabs and `\r` after the info
+- **Check 14 builds its backtick with `printf`**, exactly as the loader does, so the block never
+  holds a line that starts with three backticks. A literal one would end the extracted block early
+  and silently drop every check after it. It prints nothing when `docs/plans/` is absent. A fence
+  line is any line whose first non-blank characters, after any `>` blockquote and list markers
+  (`-`, `*`, `+`, `1.`, `1)`) are stripped, are three or more backticks or tildes. So a fence
+  indented under a list item is read like one at column 0, and a fence on a marker line is read
+  too; a backtick run mid-line is not a fence. An opening fence that is not exactly three backticks
+  — `~~~`, four or more backticks, or any fence on a `>` or list-marker line — reports
+  `PACK FENCE FORM`; one whose info string is not `bash`, `sh`, `mermaid` or `text` reports
+  `PACK CODE FENCE`, and `~~~python` reports both. Tracking follows rendering: a fence closes on a
+  line holding nothing but a run of its opener's character at least as long as the opener's run.
+  When a three-backtick fence closes on any other form, that closer reports `PACK FENCE FORM`. Any
+  other fence line while a fence is open reports `PACK FENCE NESTED` and leaves the fence open, so
+  a fence that a mis-pairing would hide — such as a four-space-indented line that Markdown renders
+  as indented code, followed by a real `python` fence — is still reported. A fence still open at
+  the end of a file reports `PACK FENCE UNCLOSED`. Trailing spaces, tabs and `\r` after the info
   string are ignored. The rule it enforces is the plan-pack fence rule in
   `skills/planning/references/pack-format.md` §6.
 - **Checks 6, 9, and 11 read sections of `README.md`** (the per-plugin skill tables, the `## Commands`

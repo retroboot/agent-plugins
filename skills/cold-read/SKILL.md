@@ -97,14 +97,25 @@ Display: `Pack: {path} | Status: {status} | Mode: {mode} | Slices: {count} | Ear
 Before any reader sees the pack, fix what a command can find. A reader's attention is for gaps only
 a reader can find.
 
-**Fences (S-04.3).** Every opening fence in every pack file, at any indentation and with backticks or
-tildes, is tagged `bash`, `sh`, `mermaid` or `text`. This prints each one that is not, untagged
-included; expected no output:
+**Fences (S-04.3).** Every opening fence in every pack file, at any indentation, is exactly three
+backticks tagged `bash`, `sh`, `mermaid` or `text` (`pack-format.md` §6). This prints each `~~~`,
+four-backtick or `>`/list-marker fence as `fence form`, each tag that is not allowed (untagged
+included), each fence line inside an open fence as `fence nested`, and each file left with a fence
+open as `fence unclosed`; expected no output:
 
 ```bash
-find docs/plans/{slug} -name '*.md' -print0 | xargs -0 awk 'FNR == 1 { open = 0 }
-  /^[ \t]*(```|~~~)/ { if (open) { open = 0; next } open = 1; t = $0; sub(/^[ \t]*(```|~~~)[`~]*/, "", t); sub(/[ \t\r]+$/, "", t)
-  if (t != "bash" && t != "sh" && t != "mermaid" && t != "text") print FILENAME ":" FNR ": fence \"" t "\"" }'
+find docs/plans/{slug} -name '*.md' -print0 | xargs -0 awk 'FNR == 1 { if (open) print f ": fence unclosed"; open = 0; f = FILENAME }
+  { s = $0; pre = 0; sub(/^[ \t]+/, "", s)
+    while (sub(/^(>|[-*+][ \t]|[0-9]+[.)][ \t])[ \t]*/, "", s)) pre = 1 }
+  !match(s, /^(```+|~~~+)/) { next }
+  { n = RLENGTH; r = substr(s, 1, n); t = substr(s, n + 1); sub(/[ \t\r]+$/, "", t) }
+  open { if (substr(r, 1, 1) != oc || n < on || t != "") print FILENAME ":" FNR ": fence nested \"" r t "\""
+         else { open = 0; if (good && (r != "```" || pre)) print FILENAME ":" FNR ": fence form \"" r "\"" }
+         next }
+  { open = 1; oc = substr(r, 1, 1); on = n; good = (r == "```" && !pre)
+    if (!good) print FILENAME ":" FNR ": fence form \"" r "\""
+    if (t != "bash" && t != "sh" && t != "mermaid" && t != "text") print FILENAME ":" FNR ": fence \"" t "\"" }
+  END { if (open) print f ": fence unclosed" }'
 ```
 
 Then read each fence: a `bash` or `sh` fence sits under a Verify heading and holds only commands,
