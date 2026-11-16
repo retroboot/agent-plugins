@@ -578,9 +578,9 @@ Take this path when a stop condition triggers in Phase 6 or Phase 7, with or wit
    the question, and the stop condition that triggered (quote the slice's bullet, or name the
    README rule). Leave README Status and the Retro alone.
 3. Stage the partial work and the progress file by name, following **Staging** in `core`, and make
-   one commit: `wip: slice {slice_number} {what it does} (blocked)`, with the question and the
-   progress file's path in the body, then `Refs #{number}` (`Refs ENG-123` for a Linear issue). Not
-   `Closes`: nothing is ready to close.
+   one commit through a file, as [**Commit**](../core/SKILL.md#commit) in `core` shows: `wip: slice
+   {slice_number} {what it does} (blocked)`, with the question and the progress file's path in the
+   body, then `Refs #{number}` (`Refs ENG-123` for a Linear issue). Not `Closes`: nothing is ready.
    The state now survives a new session or machine.
 4. Push the branch: `git push -u origin {branch_name}`.
 5. Open no PR. Display `Blocked: slice {slice_number} — {question}`, then emit the Phase 12 JSON

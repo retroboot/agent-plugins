@@ -83,14 +83,15 @@ path must pass that path as a pathspec too: `git commit -F "$file" -- {path}`, w
 **Pass the message through a file, never `git commit -m "{message}"`.** Inside double quotes the
 shell runs every backticked span and every `$(…)`, and messages here routinely name skills, paths
 and flags in backticks. Write the message to a file outside the checkout with a single-quoted
-heredoc, commit with `-F`, then remove the file:
+heredoc, commit with `-F`, then remove the file. **Run the block as one Bash call**: `$file` is a
+shell variable and does not survive into a separate call.
 
 ```bash
 file=$(mktemp)
 cat > "$file" <<'HIVRR_COMMIT_7f3a'
 …message, verbatim…
 HIVRR_COMMIT_7f3a
-git commit -F "$file"
+git commit -F "$file"    # one known path: git commit -F "$file" -- {path}
 rm -f "$file"
 ```
 
