@@ -14,11 +14,53 @@ Read `verify.test` and `verify.lint` from `.hivrr.json` and run each command dir
 [`config.md`](config.md) for the read steps and per-key precedence.
 
 **If `verify` is absent from config** (or there is no `.hivrr.json`), detect the commands yourself
-using the detection tables in `init` Phase 4, run them, and then offer to record what you found so
-the next run does not repeat the guesswork.
+using **Detecting the commands** below, run them, and then offer to record what you found so the
+next run does not repeat the guesswork.
 
 **If a key is recorded as `null`**, that repo genuinely has no such command — report `skipped`, and
 do not go looking.
+
+---
+
+## Detecting the commands
+
+The detection tables `init` Phase 4 Step 2 runs, and the fallback above uses when `verify` is
+absent. Detection can only find what these tables know about; a repo whose verification is real but
+unconventional records it by hand with the `["manual"]` sentinel (see [`config.md`](config.md)).
+
+Look for a test command, in this order, and stop at the first match:
+
+| Source | Command |
+|---|---|
+| `package.json` with a `scripts.test` entry | `npm test` |
+| `Makefile` with a `test:` target | `make test` |
+| `pyproject.toml` with `[tool.pytest…]`, or `pytest.ini` | `pytest` |
+| `jest.config.{js,ts,mjs,cjs}` | `npx jest` |
+| `go.mod` | `go test ./...` |
+| `Cargo.toml` | `cargo test` |
+| A CI workflow that runs a test step | the command that workflow runs |
+
+Then a lint command, same rule:
+
+| Source | Command |
+|---|---|
+| `package.json` with a `scripts.lint` entry | `npm run lint` |
+| `eslint.config.{js,mjs,cjs,ts}` — **flat config** | `npx eslint .` |
+| `.eslintrc`, `.eslintrc.{js,cjs,json,yaml,yml}` — legacy config | `npx eslint .` |
+| `ruff.toml`, or `pyproject.toml` with `[tool.ruff]` | `ruff check .` |
+| `.flake8`, or `setup.cfg` with `[flake8]` | `flake8 .` |
+| `Makefile` with a `lint:` target | `make lint` |
+| A CI workflow that runs a lint step | the command that workflow runs |
+
+Check flat config **and** legacy config. Matching only `.eslintrc*` is how a repo on
+`eslint.config.js` silently reports `lint skipped`.
+
+Record the file and key that justified each command in `verify.detectedFrom`, e.g.
+`["package.json:scripts.test", "eslint.config.js"]`. This is the fingerprint, not decoration —
+`init` Phase 4 Step 3 compares against it to tell a stale command from a current one.
+
+If a repo genuinely has no test or lint setup, record the key as `null` rather than omitting it.
+`null` means "checked, there is nothing"; absent means "never checked".
 
 ---
 
