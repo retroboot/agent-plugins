@@ -195,6 +195,13 @@ Phase 4 owns the checkpoint for this workflow. Its summary already shows the run
 - keeps `{source}`, via Branch Deletion Safety Rule 1 and Rule 2
 - skips the issue-closing loop
 
+**`merge-pr` stops on any unplayed manual CI job**, and `--auto` does not change that. Ladder
+pipelines often carry manual deploy jobs, so a GitLab promotion can stop at Phase 4 with
+`CI: {n} waiting on a manual job — {names}`. Report that stop as the promotion's `reason`. Then
+either play the job, or, if the job is a deploy-on-demand that the promotion does not need, list it
+in `.hivrr.json` `ci.optionalManualJobs` (see [`config.md`](../init/references/config.md)) and
+re-run. Listed jobs are still named in the CI line.
+
 **Never pass `--strategy squash`** and never delete the source branch by hand. `{source}` is a live environment; the next promotion cycle starts from it.
 
 Display: `Promoted: {source} → {target} (merge commit) | {source} intact`

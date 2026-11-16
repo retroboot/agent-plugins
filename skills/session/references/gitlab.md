@@ -125,11 +125,77 @@ glab mr merge {N} --repo {PROJECT} --squash --remove-source-branch
 
 Apply the branch-deletion safety rules in `merge-pr/SKILL.md` before passing `--remove-source-branch`.
 
-**Check CI**
+**Check CI** — three calls, run in order, because the second and third need the first's output:
+the MR's latest pipeline, then its jobs, then its trigger jobs (`/bridges`). Each starts with
+`glab` and pipes only into `jq`, so a skill granted `Bash(glab:*)` and `Bash(jq:*)` can run all
+three; `review-pr` runs them as dependent steps rather than in parallel with its other fetches.
+
 ```
-glab api projects/{PROJECT_ENCODED}/merge_requests/{N}/pipelines | jq -r '.[0].status // "none"'
-     # Returns: "success" | "failed" | "canceled" | "running" | "pending" | "none" (no pipeline)
+glab api projects/{PROJECT_ENCODED}/merge_requests/{N}/pipelines | jq -r '.[0] | if . == null then "none" else "\(.id) \(.status)" end'
+     # Returns: "{PIPELINE_ID} {STATUS}", or "none" when the MR has no pipeline
 ```
+
+Unless that printed `none`, classify the pipeline's jobs:
+
+```
+glab api --paginate "projects/{PROJECT_ENCODED}/pipelines/{PIPELINE_ID}/jobs?per_page=100" | jq -s -r --arg pipeline '{STATUS}' '
+  map(if type == "array" then .[] else error("not a job list: \(tostring)") end)
+  | if length == 0 then "unknown\t(no jobs returned)\t\($pipeline)" else
+      ((if $pipeline == "success" or $pipeline == "skipped" then empty
+        else {name: "(pipeline)", status: $pipeline, class: (
+          if $pipeline == "failed" or $pipeline == "canceled" then "failed"
+          elif $pipeline == "manual" then "manual" else "unfinished" end)} end),
+       (.[] | {name, status, class: (.status as $s
+          | if $s == "success" or $s == "skipped" or ($s == "failed" and .allow_failure) then "passed"
+            elif $s == "failed" or $s == "canceled" or $s == "canceling" then "failed"
+            elif $s == "manual" or ($s == "created" and ($pipeline == "success" or $pipeline == "manual")) then "manual"
+            else "unfinished" end)}
+        | select(.class != "passed")))
+      | "\(.class)\t\(.name)\t\(.status)" end'
+     # Prints one "{class}<TAB>{name}<TAB>{status}" line per job that has not passed;
+     # no output means every job passed. {class} is failed | unfinished | manual | unknown.
+```
+
+Then classify its trigger jobs the same way. An empty list is normal here — most pipelines trigger
+nothing — so this call prints no `unknown` or `(pipeline)` row:
+
+```
+glab api --paginate "projects/{PROJECT_ENCODED}/pipelines/{PIPELINE_ID}/bridges?per_page=100" | jq -s -r --arg pipeline '{STATUS}' '
+  map(if type == "array" then .[] else error("not a job list: \(tostring)") end)
+  | .[] | {name, status, class: (.status as $s
+      | if $s == "success" or $s == "skipped" or ($s == "failed" and .allow_failure) then "passed"
+        elif $s == "failed" or $s == "canceled" or $s == "canceling" then "failed"
+        elif $s == "manual" or ($s == "created" and ($pipeline == "success" or $pipeline == "manual")) then "manual"
+        else "unfinished" end)}
+  | select(.class != "passed") | "\(.class)\t\(.name)\t\(.status)"'
+```
+
+The pipeline status alone is not enough: a `manual` job with `allow_failure: true` that nobody
+played leaves the pipeline `success`, which is how unsigned bundles once merged. So:
+
+- **`manual`** — a job waiting to be played. A job still `created` in a pipeline at rest (`success`
+  or `manual`) is waiting behind one, so it is reported as `manual` too.
+- **`unfinished`** — `created`, `pending`, `running`, `preparing`, `waiting_for_resource`,
+  `scheduled` (a delayed job), and any status not listed here.
+- **`failed`** — `failed` without `allow_failure`, `canceled`, `canceling`. A failed job with
+  `allow_failure: true` already lets the pipeline pass, and passes here.
+- **`unknown`** — the jobs call returned no jobs, so nothing was checked. A pipeline always has at
+  least one job, so this means the fetch failed; it is never a pass.
+- **`(pipeline)`** — a row for the pipeline itself whenever its status is not `success` or
+  `skipped`. It fails closed: a `running` pipeline whose listed jobs all passed is still
+  unfinished, and a `manual` (blocked) pipeline is still manual.
+
+Each call is classified on its own, so a failed jobs fetch cannot hide behind trigger jobs that came
+back. A non-JSON error body stops `jq` with `not a job list`, and an error `glab` prints on either
+call is a stop, not an empty list — read stderr before trusting silence.
+
+`/jobs` omits retried attempts by default, so a job retried to success reads as passed.
+
+**Child pipelines are not inspected.** A trigger job reports its own status, not its child's. With
+`trigger: strategy: depend` the trigger job mirrors the child pipeline, so an unplayed manual job
+in the child keeps the parent from reading as passed. Without it, the trigger job succeeds once the
+child is created, and a manual job inside the child is invisible here. Use `strategy: depend` on
+any trigger whose child holds a job that must run before merge.
 
 ---
 
