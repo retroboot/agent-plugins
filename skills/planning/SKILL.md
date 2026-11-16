@@ -111,10 +111,9 @@ Read `{path}/README.md`.
 - **XL parent:** when the Size row starts with `XL` and Status is `routed` or later, show **Child
   packs** with each child's Status (from its README, or `not started`), then stop. This comes before
   the table, so a pack re-routed to XL past `routed` never reaches `slice`.
-- **Rework in progress:** a re-route, re-slice or spec revision that has not finished leaves lines
-  in **Open questions** (`reroute.md`, **Pending lines**). Except for a Spike, a `Revised by spec …`
-  line resumes at Phase 4; otherwise a `Revised by slice …` or `Re-slice pending …` line resumes at
-  Phase 5. The phases then run on as usual. This check comes before the table.
+- **Rework in progress** (`reroute.md`, **Pending lines**), before the table; the first match wins:
+  a `Spec pending …` line resumes at Phase 4, passing its request; a `Revised by spec …` line at
+  Phase 4; a `Revised by slice …` or `Re-slice pending …` line at Phase 5. Then run on as usual.
 - Otherwise read the header **Status**, **Type** and **Size**, and resume at the phase after the
   Status, without repeating a finished phase and without asking about the route (S-02.2):
 
@@ -241,10 +240,11 @@ and its README is committed with the first child's pack PR (Phase 8).
 
 ## Phase 4 — Specify
 
-Load the `spec` skill with `docs/plans/{slug}`. It holds the acceptance, ADR and design checkpoints
-and sets `specified` on approval. Read its result: `SPEC COMPLETE` with `pack_status` `specified`
-goes on; a stop is handled as above (S-02.3.e1: a rejected PRD checkpoint leaves `prd.md` on disk
-and Status `routed`).
+Load the `spec` skill with `docs/plans/{slug}` (with `: {request}` from a `Spec pending` line). It
+holds the acceptance, ADR and design checkpoints and sets `specified` on approval. Read its result:
+`SPEC COMPLETE` with the expected `pack_status` goes on, after removing any `Spec pending after …`
+line from **Open questions**; a stop is handled as above (S-02.3.e1: a rejected PRD checkpoint
+leaves `prd.md` on disk and Status `routed`).
 
 **Size S (Change included):** `spec` writes the README's single **Slice**. Nothing else is needed
 here. **A Spike** follows the steps below instead of going on to Phase 5.

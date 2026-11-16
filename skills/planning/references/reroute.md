@@ -18,7 +18,10 @@ the right phase (`SKILL.md` Phase 1, **Resume**).
 On a resume, do not offer one. The developer may still ask for one by name, as
 `planning docs/plans/<slug> {re-route | re-slice | revise spec}` (Phase 1). That works at Status
 `specified` to `approved`; a Spike takes only a re-route, and size S has no re-slice. Otherwise say
-`{step} is not available: the pack is at Status {status}.` and resume as usual.
+`{step} is not available: the pack is at Status {status}.` and resume as usual. When any pending,
+`Revised by spec …` or `Revised by slice …` line below is already in **Open questions**, an earlier
+rework is unfinished: say `A rework is still in progress; finishing it first. Ask for {step} again
+after it.` and resume instead.
 
 When the developer declines an offer, the result that led to it stands: after a `COLD READ BLOCKED`,
 say `Answer these, then planning docs/plans/{slug} to run the cold read again.` and stop; after a
@@ -28,7 +31,13 @@ say `Answer these, then planning docs/plans/{slug} to run the cold read again.` 
 
 ## Pending lines
 
-Before loading any skill, a step at Status `sliced` or later writes to **Open questions**:
+Before loading any skill, a step writes to **Open questions**:
+
+- For Re-route and Revise spec, at any Status: `Spec pending after re-route on {date}.`, or
+  `Spec pending after spec revision: {request} on {date}.` Phase 4 removes it on `SPEC COMPLETE`;
+  a resume passes the request back to `spec` as `docs/plans/{slug}: {request}`.
+
+At Status `sliced` or later, also:
 
 - `Cold read pending after {re-route | re-slice | spec revision} on {date}.` Phase 6 removes it on
   `COLD READ COMPLETE`, and the gate before Approve and Publish waits for that.
@@ -37,7 +46,9 @@ Before loading any skill, a step at Status `sliced` or later writes to **Open qu
   `SLICE COMPLETE`.
 
 Together with the `Revised by spec …` and `Revised by slice …` lines that `spec` and `slice` write
-and remove at their checkpoints, these lines are what **Resume** reads.
+and remove at their checkpoints, these lines are what **Resume** reads, in this order: `Spec
+pending`, then `Revised by spec`, then `Revised by slice` or `Re-slice pending`. The cold-read line
+is read by the Phase 6 gate. A re-route to XL writes none of them: it stops at **Child packs**.
 
 ---
 
@@ -50,7 +61,7 @@ A route can grow at any checkpoint, including the wrapper's own Route checkpoint
    re-route, which sets `routed` (Phase 4).
 2. Rewrite the header rows and the **Route** section as Phase 3 does. Add the sections the new
    route needs (Repro and root cause, Child packs) and keep every other section.
-3. Write the pending lines (above).
+3. Unless the new size is XL, write the pending lines (above).
 4. Then run the phases again from Specify: `spec` (its Re-route mode at `specified` or later adds
    the files the new route needs and lists every revised section in **Open questions**), `slice`
    (Re-slice, unless the size is S), and `cold-read`, then Approve. A re-route to XL instead writes
