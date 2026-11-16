@@ -13,10 +13,6 @@ Before starting: read this entire skill, then create a focused todo list, then e
 
 You run each command yourself and read its output. There is no merge script — every step below is a command you issue directly, so nothing is hidden from you and nothing depends on a subprocess having a TTY.
 
-This skill no longer ships a command wrapper — `command/merge-pr.md` has been retired now that every
-target coder supports invoking a skill directly. The bootstrap chain that command used to run lives
-here instead.
-
 ---
 
 ## Bootstrap
@@ -51,19 +47,9 @@ Display: `Input: PR/MR #{pr_number} | auto: {auto_mode}`
 
 **This binds every merge in this skill**, however the merge is performed. Read it before performing any merge step.
 
-Deleting a branch is not cleanup when the branch is long-lived — it destroys an environment. A `dev → staging` promotion merged with `--delete-branch` deletes `dev` both locally and on the remote.
+Deleting a branch is not cleanup when the branch is long-lived — it destroys an environment. A `dev → staging` promotion merged with `--delete-branch` deletes `dev` both locally and on the remote. Before deleting a head branch, check all three rules. **If any rule trips, do not delete.**
 
-Before deleting a head branch, check all three rules. **If any rule trips, do not delete.**
-
-**Rule 1 — Protected names.** Never delete a head branch in the protected set.
-
-Read `branches.protected` from `.hivrr.json`; see [`config.md`](../init/references/config.md) for the read steps and per-key precedence. When the file or the key is absent, the set defaults to:
-
-```
-main, master, dev, develop, staging, release/*
-```
-
-Entries may use a trailing `*` wildcard — `release/*` matches any branch whose name starts with `release/`.
+**Rule 1 — Protected names.** Never delete a head branch in the protected set. Read `branches.protected` from `.hivrr.json`; see [`config.md`](../init/references/config.md) for the read steps and per-key precedence. When the file or the key is absent, the set defaults to `main, master, dev, develop, staging, release/*`. Entries may use a trailing `*` wildcard — `release/*` matches any branch whose name starts with `release/`.
 
 **Rule 2 — The base branch.** Never delete a branch equal to the PR's base branch (`baseRefName` / `target_branch`).
 
@@ -77,9 +63,7 @@ gh pr list --repo {repo_slug} --base {head_branch} --state open --json number --
 glab api "projects/{repo_encoded}/merge_requests?state=opened&target_branch={head_branch}" --jq 'length'
 ```
 
-A result greater than `0` means other work is stacked on this branch. Do not delete it.
-
-**If the query itself fails**, treat that as a trip, not a pass. An unevaluable safety rule is not a satisfied one — keep the branch and report that the check could not run.
+A result greater than `0` means other work is stacked on this branch. Do not delete it. **If the query itself fails**, treat that as a trip, not a pass. An unevaluable safety rule is not a satisfied one — keep the branch and report that the check could not run.
 
 **When any rule trips:**
 
@@ -94,13 +78,11 @@ A result greater than `0` means other work is stacked on this branch. Do not del
 
 ## Phase 2 — Fetch the PR/MR
 
-**GitHub:**
 ```bash
+# GitHub
 gh pr view {pr_number} --repo {repo_slug} --json title,body,headRefName,state,baseRefName,reviews
-```
 
-**GitLab:**
-```bash
+# GitLab
 glab api projects/{repo_encoded}/merge_requests/{pr_number}
 ```
 
@@ -143,9 +125,7 @@ Read `branches.ladder` from `.hivrr.json`, defaulting to `[default branch]` when
 
 Deletion is still governed by Branch Deletion Safety. On a promotion both rungs are normally in `branches.protected`, so Rule 1 already prevents deleting the head; the promotion predicate does not replace those rules, it agrees with them.
 
-**Issue-closing on promotions is skipped.** A promotion PR body aggregates every `Closes #N` from the commits beneath it. Those issues were already closed when their `issue/N → dev` PR merged, so re-polling costs a `gh issue view` per issue — each with the Phase 7 retry — to confirm what is already true.
-
-This is the **only** case where skipping is correct. On a feature merge the close loop is mandatory, because closing keywords do not fire on a non-default base.
+**Issue-closing on promotions is skipped.** A promotion PR body aggregates every `Closes #N` from the commits beneath it. Those issues were already closed when their `issue/N → dev` PR merged, so re-polling costs a `gh issue view` per issue — each with the Phase 7 retry — to confirm what is already true. This is the **only** case where skipping is correct. On a feature merge the close loop is mandatory, because closing keywords do not fire on a non-default base.
 
 Store `is_promotion` and `strategy`.
 
@@ -160,9 +140,7 @@ Scan `pr_title` and `pr_body` for closing keywords followed by an issue referenc
 - `#123` — GitHub/GitLab numeric
 - `ENG-123` — Linear-style, pattern `[A-Z]+-[0-9]+`
 
-Keywords: `close`, `closes`, `closed`, `fix`, `fixes`, `fixed`, `resolve`, `resolves`, `resolved` — case-insensitive. Deduplicate the results.
-
-Store as `linked_issues`.
+Keywords: `close`, `closes`, `closed`, `fix`, `fixes`, `fixed`, `resolve`, `resolves`, `resolved` — case-insensitive. Deduplicate the results. Store as `linked_issues`.
 
 Display: `Linked issues: {list | none}`
 
@@ -250,9 +228,7 @@ Present the merge summary and **wait for the user's answer**:
   CI:      {ci_result}
 ```
 
-Ask whether to proceed. Anything other than an affirmative answer stops the workflow with nothing merged.
-
-This is a genuine checkpoint, not a formality — it is the last point at which a wrong PR number costs nothing.
+Ask whether to proceed. Anything other than an affirmative answer stops the workflow with nothing merged. This is a genuine checkpoint, not a formality — it is the last point at which a wrong PR number costs nothing.
 
 ---
 
@@ -260,9 +236,7 @@ This is a genuine checkpoint, not a formality — it is the last point at which 
 
 Skip this phase when `already_merged` is true.
 
-Evaluate the Branch Deletion Safety rules against `head_branch` first, then merge using the `strategy` from Phase 2b.
-
-Map `strategy` to the provider flag:
+Evaluate the Branch Deletion Safety rules against `head_branch` first, then merge using the `strategy` from Phase 2b, mapped to the provider flag:
 
 | `strategy` | GitHub | GitLab |
 |---|---|---|
@@ -270,24 +244,14 @@ Map `strategy` to the provider flag:
 | `merge` | `--merge` | *(no flag — a merge commit is `glab mr merge`'s default)* |
 | `rebase` | `--rebase` | `--rebase` |
 
-**GitHub — no rule tripped:**
+Pass the deletion flag only when **no** rule tripped — when one did, run the same command without it:
+
 ```bash
+# GitHub — drop --delete-branch when a rule tripped
 gh pr merge {pr_number} --repo {repo_slug} {strategy_flag} --delete-branch
-```
 
-**GitHub — a rule tripped:**
-```bash
-gh pr merge {pr_number} --repo {repo_slug} {strategy_flag}
-```
-
-**GitLab — no rule tripped:**
-```bash
+# GitLab — drop --remove-source-branch when a rule tripped
 glab mr merge {pr_number} --repo {repo_slug} {strategy_flag} --remove-source-branch
-```
-
-**GitLab — a rule tripped:**
-```bash
-glab mr merge {pr_number} --repo {repo_slug} {strategy_flag}
 ```
 
 If the merge command fails, re-check the PR state before concluding anything — `--delete-branch` can fail on an already-deleted branch *after* the merge itself succeeded, which looks like a failed merge but is not:
@@ -312,11 +276,7 @@ Display: `Merged: PR/MR #{pr_number} → {base_branch} ({strategy})`
 
 **Skip this phase entirely when `is_promotion` is true** — the closing loop, the parent-closing step, and the board update below. Report `Issues: skipped (promotion PR) | Board: unchanged` and continue to Phase 8. Those issues closed and were marked Done at their feature merge; see Phase 2b for why re-checking them is pure cost.
 
-For every other merge:
-
-**This loop is required, not cleanup. Do not remove it as redundant.**
-
-GitHub honors `Closes #N` in a PR body **only when the PR merges into the repository's default branch**. Once integration moves to `dev`, closing keywords never fire on their own, and this loop becomes the sole mechanism that closes anything. It looks redundant on a repo whose default branch is also its integration branch — that is exactly the situation in which deleting it causes silent damage later.
+For every other merge, **this loop is required, not cleanup. Do not remove it as redundant.** GitHub honors `Closes #N` in a PR body **only when the PR merges into the repository's default branch**. Once integration moves to `dev`, closing keywords never fire on their own, and this loop becomes the sole mechanism that closes anything. It looks redundant on a repo whose default branch is also its integration branch — that is exactly the situation in which deleting it causes silent damage later.
 
 For each reference in `linked_issues`:
 
@@ -347,51 +307,13 @@ Display: `Issues: {count} verified, {count} closed | none`
 
 ### Close the parent when its last child closes
 
-GitHub does not do this — a parent whose children are all closed reports `percentCompleted: 100`
-and stays `OPEN`. Nothing acts on the rollup, so if this skill does not close the parent, nothing
-will.
-
-Skip this entirely when `issues.hierarchy` is disabled or absent. The phase-level skip above
-already covers `is_promotion`, so do not re-check it here.
-
-For each reference in `issues_closed`:
-
-1. Read its `parent` using the **Read hierarchy** command from the loaded reference. No parent —
-   which is the common case — means nothing to do.
-2. Read the parent's `subIssuesSummary` — **after** the children above were closed, never before.
-   `completed` reflects state at query time, so a summary read taken before the closing loop reports
-   the parent as unsatisfied for every child including the last, and no parent is ever closed. Close
-   the parent with the **Close** command **only** when `completed == total` and `total > 0`.
-3. Deduplicate by parent **before** step 2, not after. Several children of one epic closing in a
-   single merge must produce one close attempt, not one per child — and deduplicating after the
-   summary read would still issue one query per child.
-
-A parent that is already closed needs no action. A parent with open children is left open —
-**never** close a parent with unfinished children, and never reopen one.
-
-Then mark the closed parent Done on the board using the same rules as its children: if the parent
-is not on the board, warn and skip rather than adding it at merge time.
-
-Every step here warns and continues. A failure to close a parent must not affect the merge, which
-has already happened.
-
-Collect closed parents into `parents_closed` and include them in the Phase 11 completion JSON.
+**Only when `issues.hierarchy` is enabled** — when it is disabled or absent, skip this and `parents_closed` is `[]`. The phase-level skip above already covers `is_promotion`. GitHub never closes a parent whose children are all closed, so this skill must: **after** the loop above has finished, read and follow `$CLAUDE_SKILL_DIR/references/hierarchy.md`. Its gates: deduplicate parents first, read each parent's `subIssuesSummary` only after its children closed, and close it only when `completed == total` and `total > 0` — **never** close a parent with open children, and never reopen one. Every step warns and continues. Collect `parents_closed`.
 
 Display: `Parents closed: {list}` or nothing when none qualified.
 
 ### Move the board cards to Done
 
-Reached only on a non-promotion merge — the phase-level skip above already covers promotions, so do not re-check `is_promotion` here.
-
-**Skip silently when `project` is absent from `.hivrr.json`.** See **Board operations** in [`config.md`](../init/references/config.md) for the commands and the shared rules.
-
-For each issue in `linked_issues`:
-
-1. Resolve its item ID
-2. If it is not on the board, warn and skip it — do not add an issue to the board at merge time just to immediately mark it Done, which would manufacture a card for work the board never tracked
-3. Set Status to Done using `project.statusFieldId` and `project.status.done`
-
-**Warn and continue on any failure.** The merge has already landed; a board error cannot be allowed to make a completed merge look failed.
+**Only when `project` is present in `.hivrr.json`** — skip silently when it is absent. The phase-level skip above already covers promotions. Read and follow `$CLAUDE_SKILL_DIR/references/board.md` for each issue in `linked_issues` and each closed parent. Its gate: an issue not on the board is warned about and skipped, never added at merge time. Warn and continue on any failure — a board error must not make a completed merge look failed.
 
 Display: `Board: {n} issue(s) → Done`, or nothing when unconfigured
 
@@ -412,132 +334,23 @@ Display: `{base_branch}: updated`
 
 ## Phase 9 — Clean Up Branches
 
-**Step 1 — This PR's head branch.**
+The full commands and reasons for this phase are in `$CLAUDE_SKILL_DIR/references/cleanup.md`; each step below says which section to read and when. Every step warns and continues on failure: the PR has already merged, so cleanup failing must not be reported as a failed merge. Report what was left behind so it can be cleaned by hand.
 
-Skip entirely if a deletion rule tripped in Phase 6.
+**Step 1 — This PR's head branch.** Skip entirely if a deletion rule tripped in Phase 6.
 
-**Worktree cleanup runs before branch deletion — the order is enforced by git, not chosen.**
-
-Skip this sub-step entirely when `worktree` is absent from `.hivrr.json`, and when the merged PR is
-a promotion (`is_promotion` true) — promotion branches are long-lived rungs and never have
-worktrees.
-
-Check whether a worktree holds the head branch:
-
-```bash
-git worktree list --porcelain
-```
-
-When one does, work in this order. Skipping a step makes the next one fail:
-
-1. **Leave it.** If this session is inside that worktree, exit with `ExitWorktree` using
-   `action: "remove"`. A session cannot remove the worktree it is standing in.
-
-2. **Remove it.** For a worktree this session did not create:
-
-   ```bash
-   git worktree remove {path}
-   ```
-
-   This **refuses when the worktree has uncommitted or untracked files**:
-
-   ```
-   fatal: '{path}' contains modified or untracked files, use --force to delete it
-   ```
-
-   That refusal is a safety feature. **Stop and ask** — report the path and what is uncommitted, and
-   force only on an explicit answer. Never pass `--force` automatically: the PR merged, so anything
-   still uncommitted there is work that never reached it.
-
-3. **Prune.** A worktree whose directory was deleted by hand leaves a `prunable` entry that keeps
-   blocking branch deletion:
-
-   ```bash
-   git worktree prune
-   ```
-
-4. **Then delete the branch,** applying the existing `branches.protected` rules unchanged.
-
-Attempting deletion before this sequence produces:
-
-```
-error: cannot delete branch '{branch}' used by worktree at '{path}'
-```
-
-Every step warns and continues on failure. The PR has already merged; cleanup failing must not be
-reported as a failed merge. Report what was left behind so it can be cleaned by hand.
-
-Display: `Worktree: removed {path}` | `Worktree: left in place — uncommitted work` | nothing when none.
+**Worktree first — only when `worktree` is present in `.hivrr.json` and `is_promotion` is false.** Run `git worktree list --porcelain`. When an entry holds `{head_branch}`, **read and follow cleanup.md § Remove the head branch's worktree before deleting anything** — git refuses to delete a branch a worktree holds. Its one stop: if `git worktree remove` refuses because of modified or untracked files, **stop and ask**, and never pass `--force` without an explicit answer.
 
 Then delete the branch:
 
 ```bash
 git show-ref --verify --quiet refs/heads/{head_branch}   # exists locally?
 git branch -D {head_branch}
-```
-
-If `remote_branch_deleted` is false, delete the remote branch too:
-
-```bash
+# only if remote_branch_deleted is false — the remote branch too:
 git ls-remote --heads origin {head_branch}
 git push origin --delete {head_branch}
 ```
 
-**Step 2 — Prune stale local branches.**
-
-Nothing else cleans these up, so they accumulate indefinitely. Note that **ancestry checks do not work here**: this repo squash-merges, so a merged branch shares no commit with the base and `git branch --merged` finds nothing. Use the remote's view instead.
-
-```bash
-git fetch --prune
-git branch -vv | grep ': gone]'
-```
-
-**`: gone]` means the remote ref disappeared — not that the work landed.** A PR closed without merging, a branch someone deleted on the remote, and a force-pushed rename all produce this same signature. Since `git branch -d` is useless here (squash merges leave no shared ancestry, so it refuses on every branch), git's own safety check is unavailable and has to be replaced rather than dropped.
-
-For each candidate, in order:
-
-**1 — Is it protected?** Check the name against the Rule 1 set individually. Never pipe the list straight into a delete. Protected → keep.
-
-**2 — Is it held by a worktree?** Skipped, along with the rest of this phase's worktree handling,
-when `worktree` is absent from `.hivrr.json`. A branch checked out in any worktree cannot be
-deleted, and the worktree may belong to a live session that is still working:
-
-```bash
-git worktree list --porcelain
-```
-
-Held → **keep it** and report as `kept: {branch} (held by worktree at {path})`. Never remove a
-worktree this skill did not create in order to delete a branch; the head branch handled in Step 1 is
-the only worktree this phase acts on.
-
-**This must come before check 3, which deletes.** Check 3 is not a filter — its positive branch runs
-`git branch -D`, so a worktree check placed after it never prevents anything: the delete has already
-failed with `cannot delete branch … used by worktree`. It is also purely local, so running it first
-skips a network call on every held branch. Step 1 already orders the worktree work ahead of its
-delete; this keeps the two steps consistent.
-
-**3 — Did it actually merge?**
-
-```bash
-# GitHub
-gh pr list --repo {repo_slug} --head {branch} --state merged --json number --jq 'length'
-
-# GitLab
-glab api "projects/{repo_encoded}/merge_requests?state=merged&source_branch={branch}" --jq 'length'
-```
-
-If the query fails, keep the branch — the same rule as Rule 3. A check that could not run is not a check that passed.
-
-- Greater than `0` → the work landed. Delete it:
-  ```bash
-  git branch -D {branch}
-  ```
-- `0` → the work did **not** land. **Keep the branch** and report it with its unmerged commit count, so the user can decide rather than discovering the loss later:
-  ```bash
-  git log origin/{base_branch}..{branch} --oneline | wc -l
-  ```
-
-Report skipped branches as `kept: {branch} ({n} unmerged commits)`.
+**Step 2 — Prune stale local branches.** Always runs: **read and follow cleanup.md § Prune stale local branches.** It lists `: gone]` branches — the remote ref disappeared, **not** proof the work landed — and checks each one individually, in this order, never piping the list into a delete: protected (the Rule 1 set) → keep; held by a worktree (checked only when `worktree` is present) → keep, `kept: {branch} (held by worktree at {path})`; a merged PR for the branch → `git branch -D`; no merged PR, or a query that failed → keep, `kept: {branch} ({n} unmerged commits)`.
 
 **Step 3 — Report what happened.** Cleanup must be visible, not silent:
 
@@ -549,27 +362,7 @@ Cleanup: head {deleted | kept — {rule}} | pruned: {branch names | none}
 
 ## Phase 10 — Capture Follow-up Work
 
-After merge, collect any unaddressed PR/MR feedback that should become future issues. This prevents good suggestions from being lost.
-
-Use the **PR conversation thread** command from the loaded reference to fetch the main discussion thread.
-
-Use the **Latest commit timestamp** command from the loaded reference. Only consider comments whose `created_at` is after that timestamp — these are the most recent round of feedback posted since the last push.
-
-Look for:
-- Suggestions that were acknowledged but deferred ("will do in a follow-up")
-- Ideas that weren't addressed in the PR/MR
-- TODO or FIXME comments added during the review
-- Any feedback that doesn't have a clear resolution in the thread
-
-**If `--auto` is set:** Create an issue for every unaddressed suggestion automatically using the **Create issue** command from the loaded reference. Load the label reference from `$CLAUDE_SKILL_DIR/../init/references/labels.md` and use it to select appropriate labels — label critical ones `P1` and optional ones `P2`. The philosophy: capture everything now, triage during implementation.
-
-**If `--auto` is not set:** List the unaddressed suggestions and ask which ones to create issues for.
-
-**If there is no unaddressed feedback:** display "Follow-up: nothing to capture" and skip issue creation.
-
-For each issue created:
-- Title: a clear, actionable summary of the suggestion
-- Body: context from the PR/MR comment, link back to the PR/MR
+Always runs: **read and follow `$CLAUDE_SKILL_DIR/references/followup.md`.** It fetches the thread with the **PR conversation thread** command, keeps only comments newer than the **Latest commit timestamp**, and looks for feedback with no clear resolution. Under `--auto` it creates an issue for every unaddressed suggestion (labelled `P1` critical, `P2` optional); without `--auto` it lists them and asks which to create; with none it displays "Follow-up: nothing to capture".
 
 Display: `Follow-up: {count} issues created {issue_numbers.join(', ') || ''}`
 
@@ -593,9 +386,7 @@ your entire final response — no markdown, no preamble, no trailing text:
 }
 ```
 
-`branch_deleted` is `"none"` when a branch-deletion safety rule prevented the delete.
-
-Include `parents_closed` as an array, empty when none qualified or when `issues.hierarchy` is off. Omitting the key on a hierarchy-enabled repo is indistinguishable from the operation having failed.
+`branch_deleted` is `"none"` when a branch-deletion safety rule prevented the delete. Include `parents_closed` as an array, empty when none qualified or when `issues.hierarchy` is off. Omitting the key on a hierarchy-enabled repo is indistinguishable from the operation having failed.
 
 ---
 
