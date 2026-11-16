@@ -18,9 +18,10 @@ the right phase (`SKILL.md` Phase 1, **Resume**).
 On a resume, do not offer one. The developer may still ask for one by name, as
 `planning docs/plans/<slug> {re-route | re-slice | revise spec}` (Phase 1). That works at Status
 `specified` to `approved`; a Spike takes only a re-route, and size S has no re-slice. Otherwise say
-`{step} is not available: the pack is at Status {status}.` and resume as usual. When any pending,
-`Revised by spec …` or `Revised by slice …` line below is already in **Open questions**, an earlier
-rework is unfinished: say `A rework is still in progress; finishing it first. Ask for {step} again
+`{step} is not available: the pack is at Status {status}.` and resume as usual. When a `Spec
+pending`, `Re-slice pending`, `Revised by spec …` or `Revised by slice …` line is already in **Open
+questions**, an earlier rework is unfinished (a `Cold read pending` line alone does not count: any
+rework rewrites it and ends with a cold read): say `A rework is still in progress; finishing it first. Ask for {step} again
 after it.` and resume instead.
 
 When the developer declines an offer, the result that led to it stands: after a `COLD READ BLOCKED`,
@@ -59,10 +60,10 @@ A route can grow at any checkpoint, including the wrapper's own Route checkpoint
 1. Run the Phase 3 checkpoint again with the new Type, Size and Modifiers, each with its reason.
    Never delete a pack file or rewrite one wholesale. Status stays where it is, except a Spike
    re-route, which sets `routed` (Phase 4).
-2. Rewrite the header rows and the **Route** section as Phase 3 does. Add the sections the new
-   route needs (Repro and root cause, Child packs) and keep every other section.
-3. Unless the new size is XL, write the pending lines (above).
-4. Then run the phases again from Specify: `spec` (its Re-route mode at `specified` or later adds
+2. In one README edit, rewrite the header rows and the **Route** section as Phase 3 does, add the
+   sections the new route needs (Repro and root cause, Child packs), keep every other section, and,
+   unless the new size is XL, write the pending lines (above).
+3. Then run the phases again from Specify: `spec` (its Re-route mode at `specified` or later adds
    the files the new route needs and lists every revised section in **Open questions**), `slice`
    (Re-slice, unless the size is S), and `cold-read`, then Approve. A re-route to XL instead writes
    **Child packs** (Phase 3) and stops.
@@ -88,4 +89,4 @@ Modifiers, **Route** and Status stay as they are.
 2. Load `spec` with `docs/plans/{slug}: {what to revise}`. Status is `specified` or later, so it
    runs in its Re-route mode on the same route.
 3. Then `slice` (Slice at `specified`, Re-slice later, skipped at size S), `cold-read`, then
-   Approve, as Re-route step 4.
+   Approve, as Re-route step 3.
