@@ -52,6 +52,7 @@ Decision and Consequences.
 | The developer stated it outright | `accepted` | `developer` |
 | The author made it; shown at the `spec` checkpoint (a "contested" ADR) | `proposed` | `author (<skill>)`, the skill that wrote it |
 | The developer approved a proposed ADR | `accepted (developer, <date>)` | unchanged, plus `; accepted by the developer at <checkpoint>` |
+| The author wrote it from a developer answer outside a `spec` checkpoint (a `cold-read` question) | `accepted (developer, <date>)` | `author (<skill>); accepted by the developer in <where>`, such as `in cold-read round 2` |
 
 **Lifecycle.** A `proposed` ADR may be revised in place until the developer approves it. An
 accepted ADR (`accepted` or `accepted (developer, <date>)`) is **never edited**. To change or
@@ -60,6 +61,9 @@ old ADR's Status line, the only edit an accepted ADR ever takes:
 
 - `; amended by ADR-NNN, <what it changes>` when the new ADR changes part of it;
 - `; superseded by ADR-NNN` when the new ADR replaces it outright.
+
+Append the clause only once the new ADR is accepted: at once when it is written accepted,
+otherwise when the developer approves it. While the new ADR is `proposed`, the old one is untouched.
 
 A superseded ADR stays in `decisions/`, and its number is never reused. This holds for every
 skill that writes a pack, at every Status, and in a re-route (§2).

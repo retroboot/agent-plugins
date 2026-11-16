@@ -221,8 +221,9 @@ further round — never carried into the next round in the hope a reader settles
 with the reader's wording, the file, and the options the pack leaves open. Then:
 
 - **Answered:** resolve it as below, recording the developer's answer and date in the Resolution.
-  An ADR the developer confirms becomes `accepted (developer, {date})`, and its Proposed by line
-  gains `; accepted by the developer in cold-read round {N}`.
+  A `proposed` ADR the developer confirms becomes `accepted (developer, {date})`, and its Proposed
+  by line gains `; accepted by the developer in cold-read round {N}`. An already accepted ADR the
+  developer confirms is left unchanged; the Resolution records the confirmation.
 - **Not answered** (the developer defers it or stops): it remains blocking. Record the round, then
   go to Phase 6 without dispatching another round. The run ends `COLD READ BLOCKED`.
 
@@ -239,8 +240,9 @@ Skip this in Record only mode; write each fix as `Proposed: …` in its Resoluti
   why the pack stands as it is. Either way the Resolution says which.
 - **Never edit an accepted ADR** (`pack-format.md` §1, Lifecycle). An answer that changes or
   reverses one is a new ADR from the `adr.md` template, numbered after the highest in `decisions/`,
-  its Context naming the old ADR. It records the developer's answer, so it is accepted as a
-  confirmed ADR is above, with Proposed by `author (cold-read)` before that clause.
+  its Context naming the old ADR. It records the developer's answer, so it is written accepted:
+  Status `accepted (developer, {date})`, Proposed by
+  `author (cold-read); accepted by the developer in cold-read round {N}`.
   The old ADR's Status line gains `; amended by ADR-NNN, {what it changes}` or
   `; superseded by ADR-NNN`, and nothing else. In Record only mode, propose both instead.
 - Never renumber a PRD criterion; a new one goes at the end of its story. A fix that adds a

@@ -12,11 +12,13 @@ change the Status to `accepted (developer, <date>)`. Save the file as
 _Guidance: Proposed by is `developer` when the developer stated the decision, otherwise
 `author (<skill>)`, naming the skill that wrote it, such as `author (spec)`. When the developer
 approves a proposed ADR, append `; accepted by the developer at <checkpoint>`, such as
-`at the spec ADR checkpoint`._
+`at the spec ADR checkpoint`. An ADR the author writes from a developer answer outside a `spec`
+checkpoint is accepted at once: `author (cold-read); accepted by the developer in cold-read round <N>`._
 
 _Guidance: once accepted, this ADR is never edited (`pack-format.md` §1, Lifecycle). A later
 change is a new ADR whose Context names this one; this one then gains a single clause at the end
-of its Status line: `; amended by ADR-<NNN>, <what it changes>` or `; superseded by ADR-<NNN>`.
+of its Status line: `; amended by ADR-<NNN>, <what it changes>` or `; superseded by ADR-<NNN>`,
+added only once the new ADR is accepted.
 When this ADR amends or supersedes an earlier one, say so in the first sentence of its Context._
 
 ## Context

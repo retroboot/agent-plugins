@@ -97,7 +97,8 @@ phase as in Specify, but against the files already there (`pack-format.md` §2, 
   When the developer approves the checkpoint that shows that file, remove its lines; write
   "None." if the list is then empty. A stop before approval leaves them in place.
 - ADR numbers continue after the highest one in `decisions/`; none is renumbered. An accepted ADR
-  is never revised: a changed decision is a new ADR that amends or supersedes it (Phase 5).
+  is never revised: a changed decision is a new ADR that amends or supersedes it, marked on the old
+  ADR only once the new one is accepted (Phase 5).
 - Status is not changed by this run (Phase 9).
 
 Specify at `routed` follows the same rules for any spec file already in the folder (an earlier
@@ -227,9 +228,10 @@ stated in the Brief or at Phase 4, and choices you made while writing the prd an
 - **Proposed by** `developer` for an `accepted` one; `author (spec)` for a `proposed` one.
 - Options: at least two, every rejected one with its reason.
 - **Lifecycle** (`pack-format.md` §1). Only a `proposed` ADR is revised in place. An accepted ADR
-  is never edited: when a decision it records changes, write a new ADR whose Context names it, and
-  append to the old one's Status line `; amended by ADR-NNN, {what it changes}`, or
-  `; superseded by ADR-NNN` when the new one replaces it. List both paths in `files`.
+  is never edited: when a decision it records changes, write a new ADR whose Context names it.
+  Once the new ADR is accepted — at once when the developer stated it, otherwise at the checkpoint's
+  Approve or Change — append to the old one's Status line `; amended by ADR-NNN, {what it changes}`,
+  or `; superseded by ADR-NNN` when the new one replaces it. List both paths in `files`.
 
 ### Spike outcome
 
@@ -245,7 +247,8 @@ Show each `proposed` ADR, one at a time and in number order, and ask: **approve*
 **stop**.
 
 - **Approve:** set its Status to `accepted (developer, {date})`, and append
-  `; accepted by the developer at the spec ADR checkpoint` to its Proposed by line.
+  `; accepted by the developer at the spec ADR checkpoint` to its Proposed by line. If it amends
+  or supersedes an accepted ADR, append that ADR's Status clause now (Lifecycle above).
 - **Change:** revise it in place (it is still `proposed`), or record the developer's choice as the
   Decision with the chosen option moved and the reason for each rejection kept, accepted as in
   Approve. Show it again if it is still `proposed`.
