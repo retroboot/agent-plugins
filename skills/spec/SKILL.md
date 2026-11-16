@@ -30,7 +30,7 @@ Rules that hold in every phase:
   **Read order** in the same step, using the template's wording and order and renumbering the list.
   `decisions/` gets one entry, however many ADRs it holds.
 - **Never delete or rewrite wholesale.** An existing file is extended or revised section by
-  section (Phase 1, Re-route, and `references/reroute.md`).
+  section (Phase 1, Re-route, and `$CLAUDE_SKILL_DIR/references/reroute.md`).
 - **Do not stage or commit.** The pack stays untracked until the `planning` wrapper publishes it.
 
 ## Bootstrap
@@ -103,6 +103,7 @@ checkpoint:
   if the list is then empty. A stop before approval leaves them in place.
 - A run with no request whose **Open questions** already hold `Revised by spec …` lines is a
   resumed revision: show those sections at the checkpoints for approval.
+- Same route: the checkpoints show only the files revised.
 - Status is not changed by a Re-route of either form (Phase 9).
 
 Display: `Pack: {path} | Status: {status} | Route: {type}, {size}, {modifiers} | Mode: {mode}`, then
@@ -277,17 +278,18 @@ Required for Refactor, Migration, Greenfield and Rewrite, and for Feature at siz
 Bug: required at size M or larger when the route has modifiers, so their sections always have a
 home in design.md. Otherwise optional: when the fix crosses components, propose it before writing,
 saying what it would hold, and write it only on a yes. Write it from `templates/design.md`, with
-each section exactly when its `pack-format.md` §2 trigger applies. **Before writing it, read
-`$CLAUDE_SKILL_DIR/references/design.md`, design.md sections:** which sections to include, and what
-State machines, Test strategy, Pre-mortem, a Rewrite cutover and Migration or Rewrite rollback hold.
+each section exactly when its `pack-format.md` §2 trigger applies. **Before writing or extending
+it, read `$CLAUDE_SKILL_DIR/references/design.md`, design.md sections:** which sections to include,
+and what State machines, Test strategy, Pre-mortem, a Rewrite cutover and Migration or Rewrite
+rollback hold.
 
 ### Modifier sections
 
-Each modifier on the route adds one `## Modifier: <name>` section. The section goes in `design.md`;
-where the pack has no design.md (only at size S), it goes in the README, after the Slice section and
-before Route. **When the route has any modifier, read `$CLAUDE_SKILL_DIR/references/design.md`,
-Modifier sections, before writing them:** what each must state, including the `ux.md` that `ui` at
-size M or larger writes, and the inline parts it takes at size S.
+Each modifier on the route adds one `## Modifier: <name>` section, stating everything
+`pack-format.md` §2, **Modifiers**, requires for it. It goes in `design.md`; with no design.md
+(only at size S), in the README, after the Slice section and before Route. **When the route has any
+modifier, read `$CLAUDE_SKILL_DIR/references/design.md`, Modifier sections, before writing them:**
+what each must state, including the `ux.md` that `ui` at size M+ writes, and its inline parts at S.
 
 ### README Slice, at size S
 
