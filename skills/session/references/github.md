@@ -260,7 +260,25 @@ Apply the branch-deletion safety rules in `merge-pr/SKILL.md` before passing `--
 **Check CI**
 ```
 gh pr checks {N} --repo {OWNER}/{REPO}
+     # Non-TTY output, one check per line, tab-separated: {name} {bucket} {elapsed} {link} {description}
 ```
+
+Read the second column, the bucket — `gh` folds each raw check state into one of five:
+
+| Bucket | Class | Raw states it covers |
+|---|---|---|
+| `pass`, `skipping` | passed | `SUCCESS`, `NEUTRAL`, `SKIPPED` |
+| `fail`, `cancel` | failed | `FAILURE`, `ERROR`, `TIMED_OUT`, `ACTION_REQUIRED`, `CANCELLED` |
+| `pending` | unfinished | everything else — `PENDING`, `QUEUED`, `IN_PROGRESS`, `WAITING`, `REQUESTED`, `EXPECTED` |
+
+GitHub has no manual jobs, so nothing here is classed `manual`. The nearest thing — a job waiting
+on an environment's required reviewers — reads as `pending`, and settles only when someone
+approves it. A bucket not in this table counts as unfinished.
+
+The exit code is not the verdict: `gh pr checks` exits `1` when a check failed and also when no
+checks are configured (`no checks reported on the '…' branch`), and `8` when checks are pending.
+Read the output. `gh` 2.45.0 has no `--json` flag on this command, which is why the text columns
+are what this reference specifies.
 
 **Latest commit timestamp**
 ```

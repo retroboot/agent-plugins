@@ -77,9 +77,10 @@ Skip this phase — and set `state` to `clean_unmerged` — when `no_merge` is t
 Load the `merge-pr` skill with `pr_number` and `--auto`. Its `## Phase 11 — Done` inlines the
 contract `{status, pr, issues_closed, parents_closed, branch_deleted, followup_issues}`.
 
-`merge-pr` has its own hard stops — a closed PR, or CI that is failing or still running. If it stops
-rather than merging, do not report a merge that didn't happen: set `state` to `stuck` and carry
-`merge-pr`'s reported reason into the final output instead of `issues_closed`/`followup_issues`.
+`merge-pr` has its own hard stops — a closed PR, or CI that is failing, still running, or waiting on
+a manual job nobody played. If it stops rather than merging, do not report a merge that didn't
+happen: set `state` to `stuck` and carry `merge-pr`'s reported reason into the final output instead
+of `issues_closed`/`followup_issues`.
 
 Otherwise capture `issues_closed` and `followup_issues`, and set `state` to `merged`.
 
@@ -111,8 +112,8 @@ Emit this JSON as your entire final response — no markdown, no preamble, no tr
 
 ## Error Handling
 
-- A closed-but-not-merged PR, or CI that is failing or still running, are `merge-pr`'s own hard
-  stops — surface its reason and stop, do not retry.
+- A closed-but-not-merged PR, or CI that is failing, still running, or waiting on an unplayed
+  manual job, are `merge-pr`'s own hard stops — surface its reason and stop, do not retry.
 - Don't retry a round automatically beyond the 3-round cap — that cap exists so an unresolvable PR
   surfaces for human review instead of looping forever.
 - Leave every branch and PR exactly where `review-pr`/`work-pr`/`merge-pr` left it. This skill does

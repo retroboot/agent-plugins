@@ -172,34 +172,57 @@ Display: `Linked issues: {list | none}`
 
 Skip this phase when `already_merged` is true.
 
-**GitHub:**
-```bash
-gh pr checks {pr_number} --repo {repo_slug}
-```
+Run the **Check CI** command from the loaded reference and read its output. It sorts every check or
+job into one of four classes — **passed**, **failed**, **unfinished**, **manual** — and the
+reference says how each provider's states map onto them. Read job-level state, never just the
+pipeline's: a GitLab pipeline reports `success` while a manual job with `allow_failure: true` sits
+unplayed, and that is how `sign-bundles` was once skipped and unsigned bundles merged.
 
-`gh pr checks` exits non-zero when no checks are configured. Read the output before treating a non-zero exit as an error — text matching `no checks` means "nothing to verify", which is not a failure.
+**No checks configured passes.** On GitHub, `gh pr checks` exits non-zero when there are none. Read
+the output before treating a non-zero exit as an error — text matching `no checks` means "nothing to
+verify", which is not a failure. On GitLab, the first call prints `none` when the MR has no pipeline.
 
-**Exclude `claude-review` from failure detection.** That check is advisory and routinely reports non-success on PRs that are fine to merge; treating it as blocking would wedge every merge. Match its name case-insensitively against both `claude-review` and `claude review`.
+**Exclude `claude-review` from every class.** That check is advisory and routinely reports
+non-success on PRs that are fine to merge; treating it as blocking would wedge every merge. Match
+its name case-insensitively against both `claude-review` and `claude review`, on both providers.
+The exclusion is by name, so it cannot clear GitLab's `(pipeline)` row: a pipeline that failed only
+because a `claude-review` job did still stops, as it did before job-level checks. Giving that job
+`allow_failure: true` in the project's CI config is the fix.
 
-A check counts as **failed** when its state is one of `fail`, `failure`, `timed_out`, `cancelled`, `startup_failure`, `action_required`.
+**Optional manual jobs pass, out loud.** A `manual` job whose name is listed in `.hivrr.json`
+`ci.optionalManualJobs` does not block — see [`config.md`](../init/references/config.md). Name it in
+the clear line below so the skipped job is never silent. The list matches job names only; it never
+clears a `(pipeline)` row, because a pipeline whose own status is `manual` is blocked, and its later
+stages have not run.
 
-A check counts as **unfinished** when its state is `pending`, `queued`, or `in_progress`.
+**Failed, unfinished and manual all block the merge**, and the rule is identical across providers —
+merging on a pipeline that has not finished defeats the point of checking it, and a job nobody
+played has not finished. GitHub has no manual jobs; its nearest equivalent, a job waiting on an
+environment approval, reads as unfinished. Applying any of this to only one provider would let the
+same PR state merge on one host and block on the other. `--auto` changes none of it: this skill
+never plays a job or approves a deployment itself.
 
-**GitLab:**
-```bash
-glab api projects/{repo_encoded}/merge_requests/{pr_number}/pipelines | jq -r '.[0].status // "none"'
-```
-
-`success` and `none` pass. `failed` and `canceled` are **failed**. `running` and `pending` are **unfinished**.
-
-**Both failed and unfinished block the merge**, and the rule is identical across providers — merging on a pipeline that has not finished defeats the point of checking it. Applying this to only one provider would let the same PR state merge on GitHub and block on GitLab.
-
-**Report them differently**, because they call for different actions — one needs a fix, the other needs a wait:
+**Report them differently**, because they call for different actions — one needs a fix, one a wait,
+one a person:
 
 - Failed → `CI: {n} failing — {names}`. Stop.
-- Unfinished → `CI: {n} still running — {names}`. Stop, and say that re-running the command once CI settles will proceed.
+- Unfinished → `CI: {n} still running — {names}`. Stop, and say that re-running the command once CI
+  settles will proceed. A check waiting on an environment approval settles only when someone
+  approves it — say so when a pending check's description says it is waiting.
+- Manual → `CI: {n} waiting on a manual job — {names}`. Stop, and say: play the job and re-run once
+  it finishes, or, if the job is genuinely optional, add its name to `ci.optionalManualJobs`.
 
-Display when clear: `CI: {all checks passed | no checks configured}`
+When more than one class is present, print a line for each, then stop once.
+
+Display when clear: `CI: {all checks passed | no checks configured}`, followed by
+`; optional manual job(s) not played — {names}` when any were.
+
+**Why every unplayed manual job, not only blocking ones.** A manual job with `allow_failure: false`
+already blocks its pipeline, which then reports `manual`, so a pipeline-status check would catch it.
+The job that slipped through was the other kind — `allow_failure: true`, which GitLab treats as
+optional and the project did not. Nothing in the CI payload tells a deploy-on-demand job from a
+must-play one, so the default is to stop, and the allowlist is how a repo records the difference
+rather than this skill guessing it.
 
 ---
 
@@ -572,7 +595,8 @@ Include `parents_closed` as an array, empty when none qualified or when `issues.
 ## Error Handling
 
 - A closed-but-not-merged PR is a hard stop — never reopen it to force a merge
-- Failing CI is a hard stop, `claude-review` excepted
+- CI that is failing, still running, or waiting on an unplayed manual job is a hard stop —
+  `claude-review` excepted, and manual jobs listed in `ci.optionalManualJobs` reported, not blocking
 - A failed issue close is a warning; finish the remaining issues and report which failed
 - A failed branch delete is a warning; the merge already landed
 - Never treat a `--delete-branch` failure as a failed merge without re-checking the PR state first

@@ -54,6 +54,9 @@ in sync, not git.
     "carry": [".env", ".claude/settings.local.json"],
     "setup": "npm ci"
   },
+  "ci": {
+    "optionalManualJobs": ["deploy-review-app"]
+  },
   "verify": {
     "test": "npm test",
     "lint": "npx eslint .",
@@ -88,6 +91,7 @@ Every top-level key is optional. A file containing only `{}` is valid and resolv
 | `worktree.enabled` | boolean | `false` | `work-issue`, `wave` |
 | `worktree.carry` | string[] | `[]` | `work-issue`, `wave` |
 | `worktree.setup` | string \| `null` | `null` | `work-issue`, `wave` |
+| `ci.optionalManualJobs` | string[] | `[]` — every unplayed manual job blocks a merge | `merge-pr` |
 | `verify.test` | string \| `null` | model detects, then offers to record | `work-issue`, `work-pr` |
 | `verify.lint` | string \| `null` | model detects, then offers to record | `work-issue`, `work-pr` |
 | `verify.detectedFrom` | string[] | — | `init` Phase 4 (staleness check) |
@@ -203,6 +207,17 @@ The `.hivrr.json` key carries the settings; the CLAUDE.md line is what authorize
 Do not assume the third is already true. `.claude/` being gitignored is a convention, not a
 guarantee — and `carry`'s default list names `.claude/settings.local.json`, so an adopting repo is
 expected to have files under `.claude/` it cares about. Check rather than infer.
+
+### `ci`
+
+`optionalManualJobs` names the manual CI jobs that `merge-pr` may merge without anyone playing. By
+default every unplayed manual job stops a merge (`merge-pr` Phase 4), because nothing in the CI
+payload tells a must-play job such as `sign-bundles` from a deploy-on-demand one, and both can carry
+`allow_failure: true`. List a job here only when merging without it is genuinely fine. Names match
+exactly, case included; a listed job is still named in `merge-pr`'s CI line, never skipped silently.
+
+It is GitLab-only in practice: GitHub has no manual jobs, so there is nothing for the list to match.
+`init` never writes it, and like the rest of the file it is per checkout, not shared through git.
 
 ### `verify`
 
