@@ -51,7 +51,7 @@ Decision and Consequences.
 |---|---|---|
 | The developer stated it outright | `accepted` | `developer` |
 | The author made it; shown at the `spec` checkpoint (a "contested" ADR) | `proposed` | `author (<skill>)`, the skill that wrote it |
-| The developer approved a proposed ADR | `accepted (developer, <date>)` | unchanged, plus `; accepted by the developer at <checkpoint>` |
+| The developer approved a proposed ADR | `accepted (developer, <date>)` | unchanged, plus `; accepted by the developer at <checkpoint>` (or `in <where>` outside one) |
 | The author wrote it from a developer answer outside a `spec` checkpoint (a `cold-read` question) | `accepted (developer, <date>)` | `author (<skill>); accepted by the developer in <where>`, such as `in cold-read round 2` |
 
 **Lifecycle.** A `proposed` ADR may be revised in place until the developer approves it. An

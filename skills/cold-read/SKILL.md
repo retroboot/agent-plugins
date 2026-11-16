@@ -222,7 +222,8 @@ with the reader's wording, the file, and the options the pack leaves open. Then:
 
 - **Answered:** resolve it as below, recording the developer's answer and date in the Resolution.
   A `proposed` ADR the developer confirms becomes `accepted (developer, {date})`, and its Proposed
-  by line gains `; accepted by the developer in cold-read round {N}`. An already accepted ADR the
+  by line gains `; accepted by the developer in cold-read round {N}`. If it amends or supersedes an
+  accepted ADR, append that ADR's Status clause now (pack-format §1). An already accepted ADR the
   developer confirms is left unchanged; the Resolution records the confirmation.
 - **Not answered** (the developer defers it or stops): it remains blocking. Record the round, then
   go to Phase 6 without dispatching another round. The run ends `COLD READ BLOCKED`.
