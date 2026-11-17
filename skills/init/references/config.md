@@ -217,6 +217,13 @@ payload tells a must-play job such as `sign-bundles` from a deploy-on-demand one
 `allow_failure: true`. List a job here only when merging without it is genuinely fine. Names match
 exactly, case included; a listed job is still named in `merge-pr`'s CI line, never skipped silently.
 
+**Why every unplayed manual job, not only those that block their pipeline.** A manual job with
+`allow_failure: false` already blocks its pipeline, which then reports `manual`, so a
+pipeline-status check would catch it. The job that slipped through was the other kind —
+`allow_failure: true`, which GitLab treats as optional and the project did not. Nothing in the CI
+payload tells a deploy-on-demand job from a must-play one, so the default is to stop, and this
+allowlist is how a repo records the difference rather than `merge-pr` guessing it.
+
 **List the jobs behind it too.** A job that `needs:` an unplayed manual job, or sits in a later
 stage of a blocked pipeline, stays `created`, and `merge-pr` reports it as `manual` under its own
 name. Allowlisting `deploy-prod` alone still stops on its `smoke-prod`; list both.

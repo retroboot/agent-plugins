@@ -92,7 +92,7 @@ Extract `pr_title`, `pr_body`, `head_branch`, `base_branch`, and `pr_state`. Git
 
 | State | Action |
 |---|---|
-| `MERGED` | Already merged. Set `already_merged = true`, skip Phases 4–6, and go straight to Phase 7 cleanup. |
+| `MERGED` | Already merged. Set `already_merged = true`, skip Phases 4–6, and go straight to Phase 7 cleanup. Phase 9 then evaluates Branch Deletion Safety itself. |
 | `CLOSED` | Closed without merging. **Stop.** Report that a closed PR cannot be merged. Do not reopen it. |
 | `OPEN` | Continue. |
 
@@ -202,12 +202,8 @@ When more than one class is present, print a line for each, then stop once.
 Display when clear: `CI: {all checks passed | no checks configured}`, followed by
 `; optional manual job(s) not played — {names}` when any were.
 
-**Why every unplayed manual job, not only blocking ones.** A manual job with `allow_failure: false`
-already blocks its pipeline, which then reports `manual`, so a pipeline-status check would catch it.
-The job that slipped through was the other kind — `allow_failure: true`, which GitLab treats as
-optional and the project did not. Nothing in the CI payload tells a deploy-on-demand job from a
-must-play one, so the default is to stop, and the allowlist is how a repo records the difference
-rather than this skill guessing it.
+Why every unplayed manual job blocks, not only those whose pipeline reports `manual`: **`ci`** in
+[`config.md`](../init/references/config.md).
 
 ---
 
@@ -336,7 +332,7 @@ Display: `{base_branch}: updated`
 
 The full commands and reasons for this phase are in `$CLAUDE_SKILL_DIR/references/cleanup.md`; each step below says which section to read and when. Every step warns and continues on failure: the PR has already merged, so cleanup failing must not be reported as a failed merge. Report what was left behind so it can be cleaned by hand.
 
-**Step 1 — This PR's head branch.** Skip entirely if a deletion rule tripped in Phase 6.
+**Step 1 — This PR's head branch.** Skip entirely if a deletion rule tripped. If Phase 6 was skipped (`already_merged`), evaluate the Branch Deletion Safety rules against `{head_branch}` here first (`remote_branch_deleted` is false, as no merge command ran): when one trips, keep the local and the remote branch and report which rule tripped. Record `branch_deleted` — `{head_branch}` once deleted, or `none` when a rule tripped.
 
 **Worktree first — only when `worktree` is present in `.hivrr.json` and `is_promotion` is false.** Run `git worktree list --porcelain`. When an entry holds `{head_branch}`, **read and follow cleanup.md § Remove the head branch's worktree before deleting anything** — git refuses to delete a branch a worktree holds. Its one stop: if `git worktree remove` refuses because of modified or untracked files, **stop and ask**, and never pass `--force` without an explicit answer.
 
@@ -370,7 +366,7 @@ Display: `Follow-up: {count} issues created {issue_numbers.join(', ') || ''}`
 
 ## Phase 11 — Done
 
-Build the completion JSON from what you observed while running the phases above — `pr_number`, `issues_closed` and `parents_closed` from Phase 7, `branch_deleted` from Phase 6, and the follow-up issue numbers from Phase 10.
+Build the completion JSON from what you observed while running the phases above — `pr_number`, `issues_closed` and `parents_closed` from Phase 7, `branch_deleted` from Phase 6 (Phase 9 when `already_merged`), and the follow-up issue numbers from Phase 10.
 
 There is no command here to defer to — `command/merge-pr.md` has been retired. Emit this JSON as
 your entire final response — no markdown, no preamble, no trailing text:
