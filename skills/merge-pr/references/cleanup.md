@@ -8,7 +8,8 @@ gate and says when to read each section here:
 - **Prune stale local branches** — Step 2, on every run.
 
 Deletion here is still bound by **Branch Deletion Safety** in `SKILL.md`: the Rule 1 protected set
-is the one this file means by "protected", and if a rule tripped in Phase 6, Step 1 does not run.
+is the one this file means by "protected", and if a rule tripped, Step 1 does not run. On the already-merged path, where
+Phase 6 is skipped, `SKILL.md` Step 1 evaluates the rules itself before deleting anything.
 
 Every step in this file warns and continues on failure. The PR has already merged; cleanup failing
 must not be reported as a failed merge. Report what was left behind so it can be cleaned by hand.
