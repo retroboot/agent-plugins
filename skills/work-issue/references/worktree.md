@@ -49,12 +49,31 @@ On creation, `EnterWorktree` forks per `worktree.baseRef`, whose default (`fresh
 and the default branch is `main`. This is the same class of defect
 [`github.md`](../../session/references/github.md) already warns about for `gh pr create --base`.
 Re-point from inside the worktree rather than depending on a global setting every adopter would have
-to change:
+to change.
+
+**Check origin for `{branch}` first.** A new worktree does not mean new work: the branch may already
+exist on origin and not locally — a slice blocked and pushed from another machine, or work resumed
+in a fresh clone. Re-pointing that branch to `origin/{integration}` throws its commits away, and the
+caller's branch logic then sees a local `{branch}`, takes its resume path, and builds on the
+integration branch instead; the later push is rejected as non-fast-forward, or the earlier commits
+silently drop out of the PR.
 
 ```bash
 git fetch origin {integration}
-git checkout -B {branch} origin/{integration}
+git ls-remote --exit-code --heads origin {branch}    # exit 0 = exists on origin, 2 = it does not
 ```
+
+Then take exactly one of these two paths:
+
+- **Exit 0 — on origin** (resume) — fetch the branch itself, since the fetch above updated only
+  `origin/{integration}`, and re-point to it:
+  `git fetch origin {branch}`, then `git checkout -B {branch} origin/{branch}`
+- **Exit 2 — not on origin** (new work) — re-point to the integration branch:
+  `git checkout -B {branch} origin/{integration}`
+
+Any other exit code means `ls-remote` itself failed (no network, no access): surface the error and
+stop rather than guess, because guessing "new work" is exactly the reset this check exists to
+prevent.
 
 Resolve `{integration}` exactly as `work-issue` Phase 5's **Create the branch** does
 (`branches.integration`, then the repository default branch, then `origin/HEAD`, then `main`).
@@ -68,4 +87,4 @@ it is a large directory such as `node_modules`. A path that does not exist in th
 A non-zero exit is a **warning**: report the command and its exit code and continue. A worktree with
 missing dependencies is recoverable by hand; aborting loses the session.
 
-Display: `Worktree: {path} | branch: {branch} | carried: {n} | setup: ok | skipped | failed`
+Display: `Worktree: {path} | branch: {branch} (from origin/{branch} | origin/{integration}) | carried: {n} | setup: ok | skipped | failed`
