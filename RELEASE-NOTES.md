@@ -1,5 +1,19 @@
 # Agent Plugins Release Notes
 
+## v1.5.0 (2026-11-17)
+
+### Planner follow-ups, safer merges and shell-safe bodies
+
+- **`merge-pr` blocks on unplayed manual CI jobs (#243).** Phase 4 now reads job-level state on GitLab and a new `manual` class blocks like failed and unfinished jobs, so an `allow_failure: true` manual job nobody played no longer passes as a green pipeline. `.hivrr.json` `ci.optionalManualJobs` (default `[]`) lists jobs that may stay unplayed; they are still named in the CI line.
+- **`merge-pr` keeps Branch Deletion Safety on the already-merged path (#257).** Phase 9 now evaluates the rules itself when Phase 6 was skipped, so re-running `merge-pr`, `ship-pr` or `promote` on an already-merged ladder promotion can no longer delete `dev` or another protected branch.
+- **Bodies and commit messages go through a file (#240, #245).** PR, MR, comment and commit commands no longer pass `"{B}"` inline, where the shell ran every backticked span and `$(…)`. `core` defines the **Commit** form (`git commit -F`), and the provider references give a stdin form for read-only callers such as `review-pr`.
+- **`ship-issue` pack mode (#242)** ships a slice's existing open PR instead of opening a second one, accepts Linear `Issue: ENG-123` lines, and checks every slice issue's `Plan:` marker against `plan.md` before any slice starts.
+- **`planning` gains a Revise spec step, and `brainstorm` a distinct `BRAINSTORM NOT ROUTED` result (#241).**
+- **`cold-read` runs its reader in a clean worktree (#238)** of `origin/{integration}`, so a dirty checkout or an unmerged branch cannot leak context the pack does not hold.
+- **Pack format (#237, #239).** A pack fence opens with exactly three backticks at any indentation, which check 14 now enforces (`PACK FENCE FORM`). ADRs carry a **Proposed by** line, and an accepted ADR is amended or superseded by a new one rather than edited.
+- **`work-issue` worktrees resume remote-only branches (#256).** A new worktree for an `issue/{N}` that exists only on origin is re-pointed to `origin/{branch}` instead of the integration branch; `wave` gets the same fix.
+- `init`, `work-issue`, `merge-pr` and `spec` moved detail into `references/` to bring every `SKILL.md` under 400 lines (#250–#253), with no change in behaviour.
+
 ## v1.4.0 (2026-11-14)
 
 ### Planning redesign — plan packs
