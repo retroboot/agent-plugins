@@ -165,9 +165,9 @@ or false — the session works in the current checkout exactly as before.
 
 When it is true, follow [`references/worktree.md`](references/worktree.md) now, before creating
 the branch, with `{branch}` = `issue/{number}`. It checks the `CLAUDE.md` authorization (warning and
-continuing without a worktree when it is missing), re-enters an existing worktree for `{branch}` or
-creates one, and only on creation re-points it to `origin/{integration}`, carries untracked files
-and runs setup. Then continue with **Create the branch** below, inside the worktree.
+continuing without one when it is missing), re-enters an existing worktree for `{branch}` or creates
+one, and only on creation re-points it (to `origin/{branch}` if origin has it, else to
+`origin/{integration}`), carries untracked files and runs setup. Then do **Create the branch** in it.
 
 ### Create the branch
 

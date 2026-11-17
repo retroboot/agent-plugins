@@ -56,8 +56,10 @@ paragraph entirely and use the branch logic below unchanged.
 Follow [`work-issue/references/worktree.md`](../work-issue/references/worktree.md) with
 `{branch}` = `wave/{min}-{max}-{count}`. That file is written against `{branch}` for this reason;
 everything in it — the existing-worktree check, the create-only re-point, carry, and setup — applies
-unchanged. The config key set without the `CLAUDE.md` authorization warns once and continues in the
-current checkout; it never fails the wave.
+unchanged. That includes the re-point's origin check: a wave branch that exists on origin but not
+locally is re-pointed to `origin/{branch}`, not reset to `origin/{integration}`, so the resume path
+below finds the earlier issues' commits. The config key set without the `CLAUDE.md` authorization
+warns once and continues in the current checkout; it never fails the wave.
 
 The resume logic below is unchanged and runs **after** entry. Scanning
 `git log origin/{integration}..HEAD` inside the worktree yields the same answer as in the main
