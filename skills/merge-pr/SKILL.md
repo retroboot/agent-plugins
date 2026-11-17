@@ -332,7 +332,7 @@ Display: `{base_branch}: updated`
 
 The full commands and reasons for this phase are in `$CLAUDE_SKILL_DIR/references/cleanup.md`; each step below says which section to read and when. Every step warns and continues on failure: the PR has already merged, so cleanup failing must not be reported as a failed merge. Report what was left behind so it can be cleaned by hand.
 
-**Step 1 — This PR's head branch.** Skip entirely if a deletion rule tripped. If Phase 6 was skipped (`already_merged`), evaluate the Branch Deletion Safety rules against `{head_branch}` here first (`remote_branch_deleted` is false, as no merge command ran): when one trips, keep the local and the remote branch, record `branch_deleted: none` and report which rule tripped.
+**Step 1 — This PR's head branch.** Skip entirely if a deletion rule tripped. If Phase 6 was skipped (`already_merged`), evaluate the Branch Deletion Safety rules against `{head_branch}` here first (`remote_branch_deleted` is false, as no merge command ran): when one trips, keep the local and the remote branch and report which rule tripped. Record `branch_deleted` — `{head_branch}` once deleted, or `none` when a rule tripped.
 
 **Worktree first — only when `worktree` is present in `.hivrr.json` and `is_promotion` is false.** Run `git worktree list --porcelain`. When an entry holds `{head_branch}`, **read and follow cleanup.md § Remove the head branch's worktree before deleting anything** — git refuses to delete a branch a worktree holds. Its one stop: if `git worktree remove` refuses because of modified or untracked files, **stop and ask**, and never pass `--force` without an explicit answer.
 
