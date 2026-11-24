@@ -20,15 +20,17 @@ developer answers what is theirs, then runs `cold-read {path}` again for up to 3
 
 ## Checklist proposals and panel findings
 
-The line is followed by these subsections, with nothing after them.
+After the line come, in order: on a block, the blocking items; in Record only, any `Proposed:`
+README **Read order** line; then these subsections, with nothing after them.
 
 - `### Checklist proposals` lists every proposal in the run, one bullet per
   `Checklist line proposed for {role}: …` in a Resolution. Each bullet gives the item's Id, the role
   card's file and the proposed line verbatim, for example
   `- aQ3 → test-engineer.md: **V7** …`. A run with none writes `None.`. A proposal is never
   applied to the card here: cards change only through a PR the developer makes.
-- `### Panel without a reader` is written instead of a result line when the run stopped before any
-  round was recorded, holding that pass's findings in the Questions table form. A stopped run goes
-  from Phase 3 straight to Phase 7, so `panel.md` **No reader runs** writes it on the way, in this
-  shape, with `### Checklist proposals` reading `None.` since no reader item was traced. It is left
-  out otherwise.
+- `### Panel without a reader` is written when the run stops before this run recorded a round,
+  holding the panel's findings in the Questions table form. A stopped run goes to Phase 7 from
+  Phase 2 (a void re-check) or Phase 3 and never reaches Phase 6, so `panel.md` **No reader runs**
+  writes it on the way, with `### Checklist proposals` reading `None.` since no reader item was
+  traced. It goes after the existing result line, which a stopped run leaves as it was; a new file
+  has none. It is left out otherwise.

@@ -34,7 +34,7 @@ Checked on branch `issue/263`, forked from `origin/main` at `b9cbcd3` (Slices 1�
 | S-06.4 | `references/result.md`: `COLD READ BLOCKED: {blocking} blocking question(s) left after round {N} ({total} rounds, {n} in this run).`, with `{N}` the last round's number, which equals `{total}` |
 | S-06.4.e1 (desk) | 3 earlier rounds, blocked after round 6 with 2 left: `{N}` = 6, `{total}` = 6, `{n}` = 3, so `COLD READ BLOCKED: 2 blocking question(s) left after round 6 (6 rounds, 3 in this run).` In the live dry run the line read `COLD READ BLOCKED: 7 blocking question(s) left after round 1 (1 rounds, 1 in this run).` and the header said 7 |
 | 5.1 | The template's Questions header is `Id \| Blocking \| Role \| File \| Gap \| Resolution` (Verify grep: 1) and its Result has `### Checklist proposals` |
-| 5.2 | The template's Result shows `### Panel without a reader`; `references/result.md` gives its shape, and `panel.md` **No reader runs** writes it in that shape (Deviations) |
+| 5.2 | The template's Result shows `### Panel without a reader`; `references/result.md` gives its shape, and `panel.md` **No reader runs** writes it, after any existing result line, when the run stops before this run recorded a round: from Phase 2 (a void re-check) or Phase 3 (Deviations) |
 
 ### Verify output
 
@@ -64,7 +64,7 @@ fixture and both trees were removed before this commit.
 
 | Plan said | Reality | Why | Contract affected |
 |---|---|---|---|
-| 5.2: "Phase 6 writes it when a run stopped before any reader" | `panel.md` **No reader runs** writes `### Panel without a reader`, in the shape `references/result.md` gives | A stopped run goes from Phase 3 straight to Phase 7 and never reaches Phase 6 | n |
+| 5.2: "Phase 6 writes it when a run stopped before any reader" | `panel.md` **No reader runs** writes `### Panel without a reader`, in the shape `references/result.md` gives, under one condition in all three files: the run stopped before this run recorded a round (PR #269 review) | A stopped run goes to Phase 7 from Phase 2 or Phase 3 and never reaches Phase 6 | n |
 | Move the Result text to `references/result.md` "if the skill nears 400 lines" | Moved: the edits brought `SKILL.md` to 395 lines; it is 383 after the move | The Files list allows it | n |
 | Seeded dry run | No review panel ran before the readers | The panel would have fixed most seeds first, leaving the readers nothing to trace; trace-back is what this slice changes | n |
 | The template's Contradictions Item | Opens with `aC1:` (Slice 4 review's deferred item) | `design.md` §2 Record puts the `{reader}C{n}` Id in the Item | n |
@@ -72,10 +72,11 @@ fixture and both trees were removed before this commit.
 
 ## Decisions
 
-- A `Checklist line proposed` takes the card's next free Id, and two proposals for one card take
-  consecutive Ids (`E7`, `E8`).
-- A reader item asking the same as another reader's (`bQ3` as `aQ2`) refers to its proposal rather
-  than proposing it twice, so each proposal is listed once.
+- Two proposals for one card take consecutive Ids (`E7`, `E8`), and an item asking what another
+  already proposed names that item instead (`bQ3` as `aQ2`). Both are now in Phase 5 step 2 (PR
+  #269 review).
+- Contradictions carry a Role in their Item (`aC1 (editor): …`), and a blocking failed citation gets
+  a Questions row `{reader}X{n}` (PR #269 review).
 - A fixture artifact a reader raises (the pack predating its merged slices) is traced `reader`.
 
 ## Discoveries

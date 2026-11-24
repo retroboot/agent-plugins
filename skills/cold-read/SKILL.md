@@ -238,10 +238,12 @@ Then mark each blocking item **developer-only** when only the developer can answ
 decision (scope, a goal or non-goal, what a user sees), or confirming, changing or reversing an
 ADR. Everything else is the author's to fix.
 
-**Trace each item to a Role**, the checklist it belongs to: `fact` (Fact-checker, F), `test` (Test
+**Trace each question and contradiction to a Role**, the checklist it belongs to: `fact` (Fact-checker, F), `test` (Test
 engineer, V), `editor` (Editor, E) or `trust` (Trust reviewer, T), when a line of that role card's
 job would have caught it; otherwise `reader`. A `P` item takes its role's value and an `A` item
 `author`. A reader item traced to a role is a miss by that role (`skills/planning/references/roles/`).
+A citation that does not hold and is classed Blocking also gets a Questions row, Id `{reader}X{n}`,
+traced the same way (`fact` when the Fact-checker's F1 would have caught it).
 
 ---
 
@@ -305,10 +307,13 @@ skeleton:
 2. **Questions:** one row per question and author finding — Id, Blocking (`y`/`n`, plus
    `developer-only` where it applies), Role, File, Gap, Resolution. Every row has a Resolution. A
    reader item whose Role is not `reader` ends it with `Checklist line proposed for {role}: …`, one
-   line for that card written as proposed text under the card's next free Id (`V7` after `V6`).
-   Cards change only through a PR the developer makes.
-3. **Contradictions:** one row each, its Item opening with its `{reader}C{n}` Id, and which place
-   changed.
+   line for that card written as proposed text under the card's next free Id, counting the Ids this
+   run already proposed for that card (`V7` after `V6`, then `V8`). An item asking what another
+   item of the run already proposed names that item's Id instead of proposing again. Cards change
+   only through a PR the developer makes.
+3. **Contradictions:** one row each, its Item opening with its `{reader}C{n}` Id and its Role in
+   brackets (`aC1 (editor): …`), and which place changed; a Role other than `reader` ends the
+   Resolution with a proposal, as in step 2.
 4. **Citations checked:** each reader's citations, each prefixed with its reader's letter, and whether
    each holds.
 

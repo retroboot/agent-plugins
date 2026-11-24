@@ -30,7 +30,7 @@ model as recorded, its findings and how many were blocking (cold-read `reference
 
 | Item | Resolution |
 |---|---|
-| aC1: <two places that disagree> | <which one changed> |
+| aC1 (<role>): <two places that disagree> | <which one changed; for a Role other than `reader`, ending `Checklist line proposed for {role}: …`> |
 
 ### Citations checked
 
@@ -51,5 +51,5 @@ or `None.`_
 
 ### Panel without a reader
 
-_Guidance: only when the run stopped before any reader was dispatched: that pass's findings in the
+_Guidance: only when the run stopped before this run recorded a round: the panel's findings in the
 Questions table form (cold-read `references/panel.md` **No reader runs**). Otherwise leave it out._
