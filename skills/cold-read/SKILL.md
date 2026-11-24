@@ -126,7 +126,7 @@ Then read each fence: a `bash` or `sh` fence sits under a Verify heading and hol
 filled in; expected no output from either.
 
 **Record only:** the reader sees the pack as `{base}` has it, so check that copy. Build this
-round's tree now (Phase 3, **Build the reader's tree**), run both checks in a subshell,
+round's tree now (Phase 3, **Build each reader's tree**, for reader `a`), run both checks in a subshell,
 `(cd "{tree}" && …)`, and keep the tree: Phase 3 uses it rather than building another.
 
 Every finding is a blocking item, recorded in the coming round's Questions table as an author
@@ -160,7 +160,9 @@ one reader reads the whole pack and the slice line is left out of the prompt.
 | No subagent tool | Do not read it yourself — you have seen the pack, so you are not cold. Say `No subagent available: run cold-read {path} in a session that can start one.` Record the panel's findings as `references/panel.md` **No reader runs** says, then go to Phase 7 | — |
 
 **Build each reader's tree**, all before any dispatch, as `references/readers.md` **Dispatch** says.
-Read and follow `$CLAUDE_SKILL_DIR/references/tree.md` for each: a detached
+In Record only, reader `a` takes the tree Phase 2 built, and every other reader gets a new tree of
+`{base}` with the copy line skipped. Otherwise read and follow
+`$CLAUDE_SKILL_DIR/references/tree.md` for each: a detached
 worktree of `{base}` outside this checkout with the pack copied in, the checksum guard run before
 and after every read, and the tree removed on every path out of this phase. A guard difference
 voids the round: say which files changed, record the panel's findings (`references/panel.md`
@@ -298,7 +300,8 @@ skeleton:
 2. **Questions:** one row per question and author finding — Id, Blocking (`y`/`n`, plus
    `developer-only` where it applies), File, Gap, Resolution. Every row has a Resolution.
 3. **Contradictions:** one row each, with which place changed.
-4. **Citations checked:** the reader's citations and whether each holds.
+4. **Citations checked:** each reader's citations, each prefixed with its reader's letter, and whether
+   each holds.
 
 Then rewrite the header table — **Model**, **Rounds** (all rounds in the file), **Result** — and the
 closing `## Result` section, which stays the last section of the file.

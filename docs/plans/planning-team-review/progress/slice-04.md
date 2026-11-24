@@ -28,10 +28,10 @@ Checked on branch `issue/262`, forked from `origin/main` at `1dfa34a` (Slices 1�
 | S-05.1.e1 | **seven** fixture, round 1: three `Haiku (Agent tool, model: haiku, Explore)` readers in one message, `a` with `Slice 1, Slice 2, Slice 3`, `b` with `Slice 4, Slice 5, Slice 6`, `c` with `Slice 7`, each in its own tree, all built and guarded before dispatch. Every guard held |
 | S-05.1.e2 | **small** fixture (size S, README Slice only): one reader `a` with `Slice 1`; complete report, 12 citations; guard held |
 | S-05.2 | `readers.md` **Grouping**: a later round reads only the slices whose `## Slice N` section, or a file in whose **Files** list, a fix edited, at most 3 per reader |
-| S-05.2.e1 | After round 1, two fixes by hand: one line in Slice 2's section (answering `aQ9`) and one in Slice 6's (answering `bQ2`). The touched set, computed from `diff -ru` of the pack against the snapshot, was Slices 2 and 6: one group, one reader `a` with `Slice 2, Slice 6`; complete report, 17 citations; guard held |
+| S-05.2.e1 | After round 1, two fixes by hand: one line in Slice 2's section (answering `aQ9`) and one in Slice 6's (answering `bQ2`). A snapshot was taken before the fixes and `diff -ru` written after, as `panel.md` **Snapshot** says; the touched set worked out from that diff (`readers.md` **Work out the touched set in Phase 5**, written into the skill after PR review) was `Touched: Slice 2, Slice 6`, with no Editor pass run (Deviations): one group, one reader `a` with `Slice 2, Slice 6`; complete report, 17 citations; guard held |
 | S-05.3 | `readers.md` **Check each report** (each report on its own, citations never pooled) and **Merge** (`aQ{n}`, `bC{n}`) |
 | S-05.3.e1 (desk) | Given reader `b`'s report with 6 citations: **Check each report** says "dispatch one more new reader for that group alone, in that reader's tree … the round's other reports wait", so `a` and `c` are not re-sent. A second short report "stops the run: say `Reader b (Slice 4, Slice 5, Slice 6) gave two incomplete reports.`, discard the round's other reports unrecorded, record the panel's findings … and go to Phase 7, which reports `COLD READ STOPPED`"; Phase 7 lists "two incomplete reports for one reader's group". In the live round 1 every report was complete (20, 17 and 17 citations), so the merge gave `aQ1`–`aQ14`, `aC1`–`aC10`, `bQ1`–`bQ13`, `bC1`–`bC9`, `cQ1`–`cQ12`, `cC1`–`cC9` (readers `a` and `c` had labelled their contradictions `K1` …; **Merge** gives every contradiction `C`) |
-| S-05.4 | **early** fixture (the small pack at Status `specified`, so **Slices to assign** lists none): one reader `a` on the whole pack, its prompt with the slice line left out; complete report, 11 citations; guard held |
+| S-05.4 | **early** fixture (the small pack at Status `specified`, its README **Slice** section kept; Phase 1 **Slices to assign** lists none because "a pack not sliced yet has none"): one reader `a` on the whole pack, its prompt with the slice line left out; complete report, 11 citations; guard held |
 | 4.1 | Verify's `diff` of the reader prompt against `origin/main` printed nothing |
 
 ### Verify output
@@ -50,7 +50,7 @@ ls docs/plans | grep zz-dryrun             -> (no output)
 |---|---|---|---|
 | **small:** a size-S copy | No size-S pack exists in the repo, so one was written: a one-slice Change to `init` Phase 4, its README citing real lines | There was nothing to copy | n |
 | S-05.4 on the small fixture | Shown on a second copy of it, **early**, at Status `specified` | A size-S pack at `sliced` has a Slice 1, so it cannot show "no slices" | n |
-| Dry run by running `cold-read` | Phase 3 and its grouping were run live; the review panel was not dispatched | The panel does not touch grouping or dispatch, and Slices 1–3 proved it | n |
+| Dry run by running `cold-read` | Phase 3 and its grouping were run live; the review panel, and the Editor pass between rounds, were not dispatched | They do not change grouping or dispatch, and Slices 1–3 proved them; a fix the Editor pass makes is added to the touched set by section | n |
 | Prompts dispatched as the skill says | The five round-1 readers of three fixtures went in one message | The seven fixture's three readers were one step as S-05.1.e1 requires; the two other runs were independent | n |
 
 ## Decisions
@@ -70,5 +70,11 @@ ls docs/plans | grep zz-dryrun             -> (no output)
   pack-wide question by the number of readers; Phase 4 classes them as separate items.
 - **For the retro.** The small fixture's readers both found that `eval "$(jq -r .verify.test
   .hivrr.json)"` cannot run in a fresh tree, the same gap the Test engineer found in Slice 3.
+- **For the retro or a design amendment.** The Files-list clause of "touched" can never fire:
+  Phase 5 fixes only edit pack files, and a slice's **Files** list names repository files. A fix to
+  a `design.md` section a slice's Contracts cite therefore re-reads no slice and falls back to one
+  whole-pack reader (PR #268 review). The wording follows `design.md` §2 Grouping verbatim.
+- **For Slice 5.** The template's Contradictions table has no place for the `{reader}C{n}` Id yet;
+  design §2 Record puts it in the Item, which Slice 5's Record row covers.
 - Costs: round 1 on the seven fixture took about 205 s wall time for three readers (a 206 s, b 195
   s, c 179 s), against a single reader's 240 s in Slice 3; round 2, 177 s.

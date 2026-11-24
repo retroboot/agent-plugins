@@ -15,6 +15,13 @@ The slices are those Phase 1 **Slices to assign** lists, in plan order.
   a fix edited its `## Slice N` section of `plan.md`, or a file its **Files** list names. A slice
   no fix touched is not read again.
 
+**Work out the touched set in Phase 5**, before **Next round, or stop** sends the run back to
+Phase 3, from the round's `{diff}` (`panel.md` **Re-check**, **Snapshot**), and before that file is
+removed: a slice is touched when a `plan.md` hunk falls inside its `## Slice N` section, or a hunk is
+in a file its **Files** list names. Then add each slice whose section the Editor pass's own fixes
+edit. Write the set down as `Touched: Slice 2, Slice 6` (or `Touched: none`) and carry that line
+into Phase 3; nothing else carries over.
+
 Split those slices into groups of at most 3, in plan order: the first three, the next three, and
 the rest. Seven slices make groups 1–3, 4–6 and 7; a size-S pack's one slice makes one group.
 
