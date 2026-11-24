@@ -34,13 +34,18 @@ Display: `Panel: {role} {model} — {f} findings ({b} blocking){, …} | fixed {
 
 ## Developer batch
 
-Every developer-only item of one pass, or of one reader round, reaches the developer in **one
-message**: at most one batch per pass and one per round. A pass with none sends no message.
+Every developer-only item reaches the developer in **one message**: at most one batch before the
+first reader (the panel pass's), and one per reader round. Nothing is asked twice: an item the
+developer deferred stays unanswered for the rest of the run. A batch with no items sends no message.
 
-- **Collect** every finding triage marked developer-only, and every Questionnaire row marked
-  blocking, from all the roles of the pass; for a reader round, every developer-only item of the
-  round with the **Sibling scan**'s findings. Merge duplicates: two roles asking the same thing are
-  one item, listed with both Ids.
+- **Collect**, before the first reader: every finding of the panel pass that triage marked
+  developer-only, and every Questionnaire row marked blocking, from all its roles. For a reader
+  round: every developer-only item the round's readers raised; every developer-only finding a
+  re-check held for this batch (**Re-check**); and the **Sibling scan**'s findings that triage
+  marks developer-only, with its Questionnaire rows marked blocking. Never an item already deferred:
+  a reader item asking what a deferred item asks is that item, recorded with its Id, still **Not
+  answered**.
+  Merge duplicates: two roles asking the same thing are one item, listed with both Ids.
 - **Send** one message listing each item with its Id, the role's or reader's wording, the file and
   section, and the options the pack leaves open. Then wait for the answer; do not fix, dispatch or
   send a second message in the meantime.
@@ -51,12 +56,14 @@ message**: at most one batch per pass and one per round. A pass with none sends 
 
 ## Sibling scan
 
-When a reader round's Phase 4 marks any item developer-only, dispatch the Trust reviewer once for
-the round, before the batch and before any fix, in a new tree under the guard as **Panel pass**
+When a reader round's Phase 4 marks any **reader** item developer-only, dispatch the Trust reviewer
+once for the round, before the batch and before any fix, in a new tree under the guard as **Panel pass**
 steps 2 to 5 say. `{seed}` is a file outside the tree, in a temporary directory of its own, holding
 each such item's Id, file and section, and its text verbatim; add it to the prompt as `dispatch.md`
-**Prompt frame** says. The reviewer's findings, renumbered as **Ids** below says, join the round's
-batch. A round with no developer-only item has no sibling scan.
+**Prompt frame** says. Triage its findings as **Panel pass** step 5 says, renumber them as **Ids**
+below says, and add the developer-only ones and its blocking Questionnaire rows to the round's
+batch. They are recorded in the round that triggered the scan, the one Phase 5 is writing. A round
+whose readers raised no developer-only item, other than one already deferred, has no sibling scan.
 
 ## Re-check
 
@@ -83,6 +90,11 @@ left to check it: a fixed finding it reports again is **held** (fixed → held),
 finding it reports stays open, unfixed. Both count as Blocking for the round, the readers are
 dispatched anyway, and Phase 5 fixes them after the round. A held finding is never re-checked
 again in this run.
+
+**Developer-only findings of a re-check.** A developer-only finding a re-check reports, new or
+reported again, is not asked before the readers: that would be a second message. It is **held**,
+counts as Blocking for the round, and goes in the first reader round's **Developer batch**. One the
+developer already deferred stays unanswered.
 
 **After a reader round: one Editor pass.** Phase 5 **Next round, or stop** runs it when it sends
 the run back to Phase 3: the Editor alone checks that round's `{diff}` before the next reader. It
@@ -112,7 +124,8 @@ as **Ids** says) and the checklist item in the Gap. Each is classed as an author
   `Proposed: …` in its Resolution, as for author findings.
 
 The round's summary paragraph gains one line for the pass: each role, its model as recorded, its
-findings and how many were blocking, `Trust: no outside inputs.` when the Trust reviewer's
+findings and how many were blocking, any `Sibling scan: Trust {model} — {f} findings ({b} blocking)`
+line, `Trust: no outside inputs.` when the Trust reviewer's
 Questionnaire is empty, plus `Panel run by the Facilitator: not independent.` or any
 `Panel: {role} gave no complete report; not reviewed by {role}.` line the pass produced.
 

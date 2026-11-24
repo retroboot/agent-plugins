@@ -241,9 +241,10 @@ ADR. Everything else is the author's to fix.
 
 **Stop condition.** Developer-only questions are asked after the sibling scan, before any fix and
 before any further round — never carried into the next round in the hope a reader settles it. Run
-the **Sibling scan**, then send every developer-only item of the round as one **Developer batch**
-(`references/panel.md`), each with the reader's wording, the file, and the options the pack leaves
-open. Then, item by item:
+the **Sibling scan**, then send the round's **Developer batch** (`references/panel.md`
+**Collect**), each item with its wording, the file, and the options the pack leaves open. A panel
+item the developer deferred earlier in this run is not asked again: it stays **Not answered**, so
+the run ends after this round. Then, item by item:
 
 - **Answered:** resolve it as below, recording the developer's answer and date in the Resolution.
   A `proposed` ADR the developer confirms becomes `accepted (developer, {date})`, and its Proposed
