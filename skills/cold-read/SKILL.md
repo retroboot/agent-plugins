@@ -274,7 +274,9 @@ Skip this in Record only mode; write each fix as `Proposed: …` in its Resoluti
 - Fix only what an item asked for. A wider rework is a `planning` step — Re-slice, Revise spec or
   Re-route: name it in the Resolution and leave it to the developer.
 
-After the fixes, run the Phase 2 checks again; expected no output.
+Before the first fix, take the snapshot in `references/panel.md` **Re-check**. After the fixes,
+run the Phase 2 Fences and Plan checks again, expected no output, then the re-check `panel.md`
+gives for a reader round: the Editor alone on this round's diff, never the whole panel.
 
 ### Write the round
 
