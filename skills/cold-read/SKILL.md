@@ -312,7 +312,8 @@ closing `## Result` section, which stays the last section of the file.
   excepted, since the reader saw the fixed pack; a held one counts): the pack **passes**. Go to Phase 6.
 - **Blocking items, all resolved, fewer than 3 rounds this run, and not Record only:** go back to
   Phase 3 with a new reader, after the Editor pass on this round's diff (`references/panel.md`
-  **Re-check**). Only a new reader can show the fixes worked.
+  **Re-check**) and after working out the touched set from that diff before it is removed
+  (`references/readers.md` **Grouping**). Only a new reader can show the fixes worked.
 - **Otherwise** — the third round of this run still had items classed Blocking, a developer-only
   question is unanswered, or the mode is Record only: go to Phase 6 without passing. Fixes already
   made stay in the pack, but no cold reader has checked them.
