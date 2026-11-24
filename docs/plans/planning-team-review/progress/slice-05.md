@@ -67,7 +67,7 @@ fixture and both trees were removed before this commit.
 | 5.2: "Phase 6 writes it when a run stopped before any reader" | `panel.md` **No reader runs** writes `### Panel without a reader`, in the shape `references/result.md` gives, under one condition in all three files: the run stopped before this run recorded a round (PR #269 review) | A stopped run goes to Phase 7 from Phase 2 or Phase 3 and never reaches Phase 6 | n |
 | Move the Result text to `references/result.md` "if the skill nears 400 lines" | Moved: the edits brought `SKILL.md` to 395 lines; it is 383 after the move | The Files list allows it | n |
 | Seeded dry run | No review panel ran before the readers | The panel would have fixed most seeds first, leaving the readers nothing to trace; trace-back is what this slice changes | n |
-| The template's Contradictions Item | Opens with `aC1:` (Slice 4 review's deferred item) | `design.md` §2 Record puts the `{reader}C{n}` Id in the Item | n |
+| The template's Contradictions Item | Opens with `aC1 (<role>):` (Slice 4 review's deferred item, then PR #269 review) | `design.md` §2 Record puts the `{reader}C{n}` Id in the Item; the Role makes contradictions traceable too | n |
 | Citations checked | Each row is prefixed with its reader's letter | Slice 4 added it to Phase 5 step 4; the template's example row is unchanged, since the letter is prose before the citation | n |
 
 ## Decisions
