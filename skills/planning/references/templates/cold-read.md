@@ -13,8 +13,9 @@ after the third go to the developer._
 
 ## Round 1 — <YYYY-MM-DD>
 
-_Guidance: which slices the reader thought through, how many citations it spot-checked and how many
-held, and whether it found any code._
+_Guidance: each reader's letter, model and the slices it thought through (cold-read
+`references/readers.md`), how many citations it spot-checked and how many held, and whether it found
+any code._
 
 _Guidance: then one line for the review panel pass before the reader, when one ran: each role, its
 model as recorded, its findings and how many were blocking (cold-read `references/panel.md`)._
@@ -23,7 +24,7 @@ model as recorded, its findings and how many were blocking (cold-read `reference
 
 | Id | Blocking | File | Gap | Resolution |
 |---|---|---|---|---|
-| Q1 | <y \| n> | <file and section> | <what was missing or ambiguous> | <the edit made, or why none> |
+| aQ1 | <y \| n> | <file and section> | <what was missing or ambiguous> | <the edit made, or why none> |
 
 ### Contradictions
 
