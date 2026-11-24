@@ -135,6 +135,10 @@ fix is developer-only — one that changes what a criterion means, or drops one;
 Phase 5. A **held** finding is not excepted from the pass rule: it counts as Blocking for this
 round even if Phase 5 fixes it, because no reader has seen the fix.
 
+### Review panel
+
+Then run the review panel: read and follow `$CLAUDE_SKILL_DIR/references/panel.md`.
+
 ---
 
 ## Phase 3 — Dispatch the Reader
@@ -152,52 +156,13 @@ round's fixes touched. With no slices, leave the slice line out of the prompt.
 |---|---|---|
 | A subagent tool with a model override (Claude Code's Agent tool) | `subagent_type: Explore`, which is read-only by tool set, with `model: haiku` | `Haiku (Agent tool, model: haiku, Explore)` |
 | A subagent tool with no model choice (R1 in the design) | A fresh subagent on the default model; a read-only type where one exists | The default model by name if known, else `default model`, and the tool used |
-| No subagent tool | Do not read it yourself — you have seen the pack, so you are not cold. Say `No subagent available: run cold-read {path} in a session that can start one.` Go to Phase 7 | — |
+| No subagent tool | Do not read it yourself — you have seen the pack, so you are not cold. Say `No subagent available: run cold-read {path} in a session that can start one.` Record the panel's findings as `references/panel.md` **No reader runs** says, then go to Phase 7 | — |
 
-**Build the reader's tree.** The reader never reads this checkout: uncommitted files and commits on
-this branch that `{integration}` lacks are context the pack does not hold, and an executor will not
-have them. It reads a detached worktree of `{base}`, outside the checkout, holding the pack and
-nothing else that is uncommitted. In every mode but Record only, the pack is copied in from the
-working copy, since it is usually uncommitted work in progress; in Record only the reader sees the
-pack as `{base}` has it. A dirty checkout is therefore not a stop. In Record only, Phase 2 has
-already built this round's tree; use it and skip to the guard below.
-
-Shell variables do not survive from one command to the next, so print the path and write it
-into every later command as `{tree}`, the way `{path}` is written. First clear trees an earlier,
-interrupted run left registered, and list any that remain; report each one to the developer and
-leave it in place:
-
-```bash
-git worktree prune
-git worktree list --porcelain | grep '^worktree .*/cold-read\.'
-mktemp -d "${TMPDIR:-/tmp}/cold-read.XXXXXX"
-```
-
-Then, with `{tree}` the path just printed:
-
-```bash
-git worktree add --detach "{tree}" {base}
-tree="{tree}"; rm -rf "${tree:?}/{path}" && mkdir -p "$tree/{path}" && cp -R {path}/. "$tree/{path}/"
-```
-
-Skip the second line in Record only. The tree is new for every round, so it carries the last
-round's fixes. Whatever path leaves this phase — a recorded round, a void one, an incomplete
-report — remove it first with `git worktree remove --force "{tree}"`; the fixes in Phase 5 go to
-this checkout, never to the tree.
-
-Frontmatter `allowed-tools` does not scope a spawned subagent, so when no read-only type exists the
-prompt's "change nothing" line is the only guard. Run this before and after every read, from the
-checkout, and compare the two outputs; they must be identical:
-
-```bash
-find {path} -type f -exec cksum {} + | sort -k3
-(cd "{tree}" || exit 1; find {path} -type f -exec cksum {} + | sort -k3; git status --porcelain --untracked-files=all)
-```
-
-It covers the pack in the checkout and anything the reader could write in its tree; a missing
-tree fails it. A
-difference means the reader changed something: the round is void. Say which files changed, remove
-the tree, and go to Phase 7.
+**Build the reader's tree.** Read and follow `$CLAUDE_SKILL_DIR/references/tree.md`: a detached
+worktree of `{base}` outside this checkout with the pack copied in, the checksum guard run before
+and after every read, and the tree removed on every path out of this phase. A guard difference
+voids the round: say which files changed, record the panel's findings (`references/panel.md`
+**No reader runs**), and go to Phase 7.
 
 **The prompt** is exactly this, with `{tree}`, `{path}` and `{slices}` filled in. Add nothing to it — no summary, no context, no reason for the read:
 
@@ -243,7 +208,8 @@ A table: citation | holds (yes/partly/no) | note.
 
 **Check the report.** It must have all five sections and at least 8 citations. If it does not,
 dispatch one more new reader for the same round, in the same tree; a second incomplete report goes
-to Phase 7 with the round unrecorded. Then remove the tree.
+to Phase 7 with the round unrecorded, after recording the panel's findings as `references/panel.md`
+**No reader runs** says. Then remove the tree.
 
 Display: `Round {N}: reader {model} — {q} questions ({b} blocking), {c} contradictions, {k} citations checked`.
 
@@ -260,7 +226,8 @@ Now read the earlier rounds in `cold-read.md` in full, and class every item in t
 | Contradiction | **Blocking** when two mandatory items (`pack-format.md` §4) or two contracts disagree, so no executor can satisfy both; otherwise non-blocking |
 | Citation that does not hold | **Blocking** when a slice's Contracts or Stop conditions rest on it; otherwise non-blocking |
 | Code in the pack | **Blocking**, always |
-| Author finding from Phase 2 | **Blocking**; already fixed, unless held in Phase 2 |
+| Author finding from Phase 2 (`A…`) | **Blocking**; already fixed, unless held in Phase 2 |
+| Panel finding from Phase 2 (`P…`) | As triaged in Phase 2 (`references/panel.md`): a blocking one is already fixed unless held; a non-blocking one keeps its Resolution |
 
 Then mark each blocking item **developer-only** when only the developer can answer it: a product
 decision (scope, a goal or non-goal, what a user sees), or confirming, changing or reversing an
@@ -330,8 +297,8 @@ closing `## Result` section, which stays the last section of the file.
 
 ### Next round, or stop
 
-- **No item classed Blocking in this round's Phase 4** (author findings fixed in Phase 2 excepted,
-  since the reader saw the fixed pack; a held one counts): the pack **passes**. Go to Phase 6.
+- **No item classed Blocking in this round's Phase 4** (author and panel findings fixed in Phase 2
+  excepted, since the reader saw the fixed pack; a held one counts): the pack **passes**. Go to Phase 6.
 - **Blocking items, all resolved, fewer than 3 rounds this run, and not Record only:** go back to
   Phase 3 with a new reader. Only a new reader can show the fixes worked.
 - **Otherwise** — the third round of this run still had items classed Blocking, a developer-only
@@ -343,7 +310,7 @@ closing `## Result` section, which stays the last section of the file.
 ## Phase 6 — Result and Status
 
 `blocking` is the number of items classed **Blocking** in the last round's Phase 4, author
-findings fixed in Phase 2 excepted (a held one counts), each counted once — so an item the author
+and panel findings fixed in Phase 2 excepted (a held one counts), each counted once — so an item the author
 re-classed blocking counts, one re-classed non-blocking with a cited pack location does not, and an
 unanswered developer-only question is already among them. It is 0 only on a pass.
 
@@ -386,12 +353,11 @@ Write `null` bare, never as the string `"null"`.
 - `rounds` is the number of rounds this run recorded; `blocking` as Phase 6 defines it.
 - `COLD READ COMPLETE` only when the last round passed.
 - `COLD READ BLOCKED` when the run ended without a pass: the third round still had items classed
-  Blocking (author findings fixed in Phase 2 excepted; a held one counts), a developer-only
+  Blocking (author and panel findings fixed in Phase 2 excepted; a held one counts), a developer-only
   question is unanswered, or a Record only round had one — in Record only mode every author
   finding is held.
 - `COLD READ STOPPED` when no round could be recorded: no README (in Record only, none on
-  `{base}`), no subagent available, two incomplete reports, or a void round (the reader changed
-  the pack or its tree). `model` is bare `null` when no reader
-  ran, `rounds` counts the rounds recorded before the stop, and `pack_status` is the unchanged
-  Status.
+  `{base}`), no subagent available, two incomplete reports, or a void round or panel pass (a reader
+  or a role changed the pack or its tree). `model` is bare `null` when no reader ran, `rounds`
+  counts the rounds recorded before the stop, and `pack_status` is the unchanged Status.
 - With no README at the path, `pack_status` is bare `null`.

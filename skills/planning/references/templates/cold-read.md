@@ -16,6 +16,9 @@ after the third go to the developer._
 _Guidance: which slices the reader thought through, how many citations it spot-checked and how many
 held, and whether it found any code._
 
+_Guidance: then one line for the review panel pass before the reader, when one ran: each role, its
+model as recorded, its findings and how many were blocking (cold-read `references/panel.md`)._
+
 ### Questions
 
 | Id | Blocking | File | Gap | Resolution |
