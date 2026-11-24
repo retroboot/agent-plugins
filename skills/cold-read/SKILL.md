@@ -253,7 +253,8 @@ with the reader's wording, the file, and the options the pack leaves open. Then:
 
 ### Fix the pack
 
-Skip this in Record only mode; write each fix as `Proposed: …` in its Resolution instead.
+Skip this in Record only mode; write each fix as `Proposed: …` in its Resolution instead. Before
+the first fix, take the snapshot in `references/panel.md` **Re-check**.
 
 - **Blocking:** edit the pack so an executor reading it cold would find the answer where it would
   look first — usually the slice's mandatory section, or the `design.md` section the slice cites.
@@ -274,9 +275,8 @@ Skip this in Record only mode; write each fix as `Proposed: …` in its Resoluti
 - Fix only what an item asked for. A wider rework is a `planning` step — Re-slice, Revise spec or
   Re-route: name it in the Resolution and leave it to the developer.
 
-Before the first fix, take the snapshot in `references/panel.md` **Re-check**. After the fixes,
-run the Phase 2 Fences and Plan checks again, expected no output, then the re-check `panel.md`
-gives for a reader round: the Editor alone on this round's diff, never the whole panel.
+After the fixes, run the Phase 2 Fences and Plan checks again; expected no output. The whole panel
+never runs again: the Editor alone checks this round's diff in **Next round, or stop**.
 
 ### Write the round
 
@@ -302,7 +302,8 @@ closing `## Result` section, which stays the last section of the file.
 - **No item classed Blocking in this round's Phase 4** (author and panel findings fixed in Phase 2
   excepted, since the reader saw the fixed pack; a held one counts): the pack **passes**. Go to Phase 6.
 - **Blocking items, all resolved, fewer than 3 rounds this run, and not Record only:** go back to
-  Phase 3 with a new reader. Only a new reader can show the fixes worked.
+  Phase 3 with a new reader, after the Editor pass on this round's diff (`references/panel.md`
+  **Re-check**). Only a new reader can show the fixes worked.
 - **Otherwise** — the third round of this run still had items classed Blocking, a developer-only
   question is unanswered, or the mode is Record only: go to Phase 6 without passing. Fixes already
   made stay in the pack, but no cold reader has checked them.

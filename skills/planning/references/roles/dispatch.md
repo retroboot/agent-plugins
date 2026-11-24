@@ -33,8 +33,8 @@ You are the {name} on a planning team. Review a plan pack with the checklist on 
 Repository: {tree}
 Pack: {tree}/{path}
 
-Read only files under {tree}: every path in the pack is relative to it. Change nothing in the
-pack. Run only commands that are read-only or whose writes are git-ignored build output in {tree}.
+Read only files under {tree}, and the input files named above. Every path in the pack is
+relative to {tree}. Change nothing in the pack. Run only commands that are read-only or whose writes are git-ignored build output in {tree}.
 
 Your role card:
 
