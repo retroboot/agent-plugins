@@ -61,7 +61,9 @@ fallback is in scope for the panel only.
   serve it.
 - **M:** about 5 slices, ordered by how many hyalos blockers each covers: the role card format and
   dispatch; Editor and Fact-checker (54 of 95); Test engineer and Trust reviewer (33); the parallel
-  round-1 cold read; tracing misses back and the Result-line fix.
+  round-1 cold read; tracing misses back and the Result-line fix. At the slice checkpoint the
+  Fact-checker moved into Slice 1, so that slice ships a working panel, and the Editor stands alone
+  in Slice 2 (`plan.md`).
 - **No modifiers:** Markdown and JSON skills; no UI, data, runtime or public API.
 
 ## Read order

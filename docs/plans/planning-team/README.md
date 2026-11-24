@@ -132,11 +132,10 @@ folder and the repository.
 - **Tracking the children.** After each child pack's last slice merges, run `planning
   docs/plans/planning-team` to see every child's Status, then start the next child in order with
   `planning "<that child's Covers text>"`, linking this README from its Brief.
-- **Where role cards live** (for example `skills/planning/references/roles/<role>.md`), and whether
-  a role card is shared across skills or owned by one. Child pack 1 decides; later children reuse
-  it.
-- **Is the roster right?** Tagging each of the 35 hyalos blockers with the role that should have
-  caught it tests it against real misses. This is research for child pack 1's spec.
+- **Settled by child pack 1:** role cards live in `skills/planning/references/roles/<role>.md`,
+  shared by every skill (`planning-team-review` ADR-001). The roster was tested against the 95
+  blockers from the 35 hyalos rounds: only 8 needed a cold reader (`planning-team-review/prd.md`,
+  Problem).
 
 ## Retro
 

@@ -16,11 +16,18 @@ Slices 1 and 4 both edit `skills/cold-read/SKILL.md` and `templates/cold-read.md
 3 both edit `skills/cold-read/references/panel.md`. Merge in slice order, 1, 2, 3, 4, 5, each
 rebased on the one before.
 
+**Line numbers in `skills/cold-read/SKILL.md` shift.** Slice 1 moves lines 157-200 to
+`references/tree.md`, and every slice adds pointers. A citation of that file in `context.md` or a
+slice names a line range and the section it sits in. At preflight, find the section by its heading.
+A section that moved but reads the same is a deviation to record, not a stop. Only a section whose
+content changed in a way that touches your Contracts is a stop (README rule 2).
+
 ## Traceability
 
 | Criterion | Slices |
 |---|---|
-| S-01.1, S-01.2, S-01.3, S-01.4 | 1 |
+| S-01.1, S-01.3, S-01.4 | 1 |
+| S-01.2 | 1, 2 |
 | S-02.1 | 1, 3 |
 | S-02.2, S-02.3 | 1 |
 | S-02.4 | 1, 3 |
@@ -84,7 +91,8 @@ are recorded as `PF{n}` items in the round.
 ### Acceptance
 
 - **S-01.1**
-- **S-01.2**
+- **S-01.2** (Fact-checker side): the Fact-checker's prompt is built from its card, `{tree}` and
+  `{path}` only. Slice 2 proves the Editor examples, S-01.2.e1 and S-01.2.e2.
 - **S-01.3**
 - **S-01.4**
 - **S-02.1** (dispatch side): the panel dispatches every card in `skills/planning/references/roles/`
@@ -142,7 +150,7 @@ Dry runs, each recorded against its IDs in `progress/slice-01.md` (fixtures as `
 
 - **seeded** fixture: run `cold-read docs/plans/zz-dryrun-seeded` following this repo's
   `skills/cold-read/SKILL.md`. Proves S-02.1 (dispatch side), S-02.3, S-02.4.e1, S-02.2.e1, 1.4, and
-  S-01.2.e1 and S-01.2.e2 from the prompt sent. Defer one held fact finding to prove S-02.4.e2's
+  S-01.2 (Fact-checker side) from the prompt sent. Defer one held fact finding to prove S-02.4.e2's
   held path with `PF` in place of `PT`.
 - S-02.2.e1 in this repo: there is no Rust, so the role writes a git-ignored file in its tree in
   place of `cargo check`; the guard must still hold.
@@ -190,6 +198,8 @@ and the panel stops after two re-check passes.
 
 ### Acceptance
 
+- **S-01.2** (Editor side): S-01.2.e1 and S-01.2.e2, from the Editor's first dispatch and its
+  re-check dispatch.
 - **S-03.1**
 - **S-03.2**
 - **S-03.3**
@@ -234,7 +244,8 @@ ls docs/plans | grep zz-dryrun
 Dry runs, recorded in `progress/slice-02.md`:
 
 - **seeded** fixture: fix one fact finding and one editor finding, then read the re-check dispatch.
-  Proves S-03.2.e1, S-03.1.e1 (the seeded rule restated in prd, design and a slice), and 2.3.
+  Proves S-03.2.e1, S-03.1.e1 (the seeded rule restated in prd, design and a slice), 2.3, and
+  S-01.2.e1 and S-01.2.e2 from the Editor prompts sent.
 - Desk check: S-03.3.e1, quoting the cap in `panel.md`.
 
 ### Pattern to follow
@@ -287,7 +298,7 @@ developer-only question triggers a Trust sibling scan so related questions arriv
 
 `design.md` §2: **Developer batch** and **Sibling scan** rows of **Panel procedure**; the Trust
 reviewer's `{seed}` input. cold-read Phase 5's **Developer-only first**
-(`skills/cold-read/SKILL.md:273-285`) asks the batch as one message; its "asked at once" becomes
+(`skills/cold-read/SKILL.md`, Phase 5 **Developer-only first**) asks the batch as one message; its "asked at once" becomes
 "asked after the sibling scan, before any fix and before any further round".
 
 ### Stop conditions
@@ -328,7 +339,8 @@ Dry runs, recorded in `progress/slice-03.md`:
 
 ### Pattern to follow
 
-- Asking developer-only questions before any fix: `skills/cold-read/SKILL.md:273-285`.
+- Asking developer-only questions before any fix: `skills/cold-read/SKILL.md`, Phase 5
+  **Developer-only first**.
 - The card shape from Slice 1: `skills/planning/references/roles/fact-checker.md`.
 
 ### Suggested path
@@ -470,9 +482,9 @@ grep -c '^## Phase' skills/cold-read/SKILL.md
 # expected: 7
 grep -c '| Id | Blocking | Role | File | Gap | Resolution |' skills/planning/references/templates/cold-read.md
 # expected: 1
-grep -c 'Pass after {total} round(s) ({n} in this run)' skills/cold-read/SKILL.md
+grep -rF 'Pass after {total} round(s) ({n} in this run)' skills/cold-read | wc -l
 # expected: 1
-grep -c '({total} rounds, {n} in this run)' skills/cold-read/SKILL.md
+grep -rF '({total} rounds, {n} in this run)' skills/cold-read | wc -l
 # expected: 1
 ls docs/plans | grep zz-dryrun
 # expected: no output
@@ -495,11 +507,12 @@ Default route. You may deviate if every mandatory item still holds; record why.
 
 1. Add the Role column to the template and the trace-back rule to cold-read Phase 4.
 2. Add the checklist-line Resolution and the Checklist proposals list to Phase 5 and Phase 6.
-3. Rewrite both Result lines in Phase 6. If the skill nears 400 lines, move the Result text to a
-   `skills/cold-read/references/` file behind a pointer, as Slice 1 does for `tree.md`.
+3. Rewrite both Result lines in Phase 6. If the skill nears 400 lines, move the Result text to
+   `skills/cold-read/references/result.md` behind a pointer, as Slice 1 does for `tree.md`.
 4. Dry run, record, delete the fixture.
 
 ### Files
 
 - Modify: `skills/cold-read/SKILL.md`
 - Modify: `skills/planning/references/templates/cold-read.md`
+- Create, only if the Result text moves: `skills/cold-read/references/result.md`
