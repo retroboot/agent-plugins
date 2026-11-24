@@ -42,19 +42,19 @@ Checked on branch `issue/259`, forked from `origin/main` at `d774ba5`.
 | S-02.2.e1 | No Rust here, so during the pass a git-ignored file, `node_modules/.cache/out.txt` (`.gitignore:1`), was written into the tree in place of `cargo check`. The guard before and after compared equal (`diff` printed `GUARD HOLDS`) with the file present |
 | S-02.2.e2 (desk) | `panel.md` step 4: "A difference voids the pass: say which files changed, remove the tree, and go to Phase 7 with `COLD READ STOPPED`"; `dispatch.md:63-65` says the same; Phase 7's STOPPED bullet now names "a void round or panel pass". An edited `plan.md` in the tree changes its `cksum` line, so the two guard outputs differ |
 | S-02.3 | Every panel finding was triaged with the cold read's blocking test and recorded in the round's Questions table as `PF1`–`PF8` (record below). PF1 was re-classed blocking with its reason in the Resolution, as **Triage** allows |
-| S-02.4 (fact side) | PF4 and PF5 (blocking) and PF1 were fixed before the reader; the reader's tree held the fixes, and the fixed items do not count toward the round's blocking total. PF2, held, counts |
+| S-02.4 (fact side) | PF1, PF4 and PF5 (blocking) and PF3 were fixed before the reader; the reader's tree held the fixes, and the fixed items do not count toward the round's blocking total. PF2, held, counts |
 | S-02.4.e1 | PF1 (a wrong line count, the fixture's stand-in for `live3.json`) recorded as `PF1`, fixed before the reader, not counted as blocking in the Result |
 | S-02.4.e2 (held path, `PF` in place of `PT`) | PF2 deferred by the developer (simulated, as Verify says): recorded `y, developer-only, held`, counted among the 6 blocking, and the run ended `COLD READ BLOCKED` after round 1 with the readers still dispatched |
 | 1.1 | `dispatch.md` has one `##` section per row of the Dispatch table: Model resolution, Prompt frame, Tree and guard, Output contract, Completeness check, Triage, No subagent tool (each `grep -c` printed 1) |
 | 1.2 | `awk` over the card's `## ` headings printed `Letter\|Model\|Job\|Inputs\|Checklist\|Output\|Blocking test\|`; letter `F`; `**F1**`–`**F6**`, one per Fact-checker seed, each naming its evidence |
-| 1.3 | Phase 2 ends with `### Review panel`, one line pointing to `references/panel.md`. Lines 157-200 moved to `references/tree.md`: `diff` of `origin/main` lines 157-200 against the file body printed `identical`. `grep -c '^## Phase'` printed 7; `wc -l` printed 360 |
+| 1.3 | Phase 2 ends with `### Review panel`, one line pointing to `references/panel.md`. Lines 157-200 moved to `references/tree.md`: `diff` of `origin/main` lines 157-200 against the file body printed `identical`. `grep -c '^## Phase'` printed 7; `wc -l` printed 363 (360 before the PR review fixes) |
 | 1.4 | Seeded fixture, 3 fact defects (D1–D3 below): the Fact-checker reported all 3 with evidence, PF3 (`sed -n 112p` printed nothing), PF1 (`wc -l` printed 397), PF2 (`ls` printed `No such file or directory`) |
 
 ### Verify output
 
 ```text
 eval "$(jq -r .verify.test .hivrr.json)"   -> structural checks pass
-wc -l < skills/cold-read/SKILL.md          -> 360
+wc -l < skills/cold-read/SKILL.md          -> 363
 grep -c '^## Phase' skills/cold-read/SKILL.md -> 7
 awk … fact-checker.md                      -> Letter|Model|Job|Inputs|Checklist|Output|Blocking test|
 grep … | sort | uniq -d                    -> (no output)
@@ -98,7 +98,9 @@ left after round 1`. The fixture was deleted before this commit. The round as re
 | PF8 | n | F4: model override settled only by the pack's measurement | Stands |
 
 Summary line written: `Panel: Fact-checker Sonnet (Agent tool, model: sonnet, Explore) — 8 findings
-(3 blocking); after triage 4 blocking, fixed 5, held 2`.
+(3 blocking); after triage 4 blocking, fixed 5, held 2`. Those counts were wrong; the table gives
+8 findings (4 blocking as reported, PF2, PF4, PF5 and PF6), 5 blocking after triage (PF1 added),
+4 fixed before the reader (PF1, PF3, PF4, PF5) and 2 held (PF2, PF6). PR review round 1 caught it.
 
 ## Deviations
 

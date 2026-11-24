@@ -55,9 +55,10 @@ reported. Write "None." under the heading when there are no findings.
 
 ## Tree and guard
 
-Build one detached tree of `{base}` with the pack copied in for each **pass**, following
-`$CLAUDE_SKILL_DIR/../cold-read/references/tree.md`, in every mode: in Record only, skip the copy
-line as that file says. A pass is one dispatch step, however many roles it sends; every role in
+Build a new detached tree of `{base}` with the pack copied in for each **pass**, by the commands
+in `$CLAUDE_SKILL_DIR/../cold-read/references/tree.md`, in every mode. In Record only, skip the copy
+line, and leave the tree `cold-read` Phase 2 built alone: it is the first reader's, and the panel
+never uses or removes it. A pass is one dispatch step, however many roles it sends; every role in
 it shares that tree, and `{tree}` in each prompt is its path.
 
 Run the checksum guard before the pass and after the last report. A difference outside git-ignored

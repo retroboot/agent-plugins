@@ -18,9 +18,9 @@ Run once per run, after the Author Checks and before the first reader, in every 
    **Model resolution**, all in one step: one message holding every dispatch, so they run at once.
    With no subagent tool, follow `dispatch.md` **No subagent tool** instead.
 4. **Guard and completeness.** When every report is in, run the guard again. A difference voids
-   the pass: say which files changed, remove the tree, and go to Phase 7 with
-   `COLD READ STOPPED`. Otherwise check each report as `dispatch.md` **Completeness check** says,
-   re-dispatching a role alone in a new tree when its report is incomplete. Then remove the tree.
+   the pass: say which files changed, remove the tree (in Record only, Phase 2's tree too), and go
+   to Phase 7 with `COLD READ STOPPED`. Otherwise check each report as `dispatch.md`
+   **Completeness check** says, re-dispatching a role alone in a new tree when its report is incomplete. Then remove the tree.
 5. **Triage** every finding as `dispatch.md` **Triage** says.
 6. **Fix** each blocking finding the author can fix now, by the rules of Phase 5 **Fix the pack**,
    so the pack the readers see already holds the fix. A developer-only finding is held, as a
@@ -46,7 +46,9 @@ The round's summary paragraph gains one line for the pass: each role, its model 
 findings and how many were blocking, plus `Panel run by the Facilitator: not independent.` or any
 `Panel: {role} gave no complete report; not reviewed by {role}.` line the pass produced.
 
-**No reader runs.** When the run stops before any reader is dispatched (no subagent for the
-readers, or a stop in Phase 3), there is no round for the findings to go in. Write them in the
-closing `## Result` of `cold-read.md`, under `### Panel without a reader`, in the Questions table
-form, creating the file from the template first if it does not exist. The fixes stay in the pack.
+**No reader runs.** When the run stops before a round is recorded (no subagent for the readers,
+or a Phase 3 stop after a reader was dispatched: a void round or two incomplete reports), there is
+no round for the findings to go in. Write them in the closing `## Result` of `cold-read.md`, under
+`### Panel without a reader`, in the Questions table form. When the file does not exist, write it
+from the template first and add its README **Read order** entry as Phase 5 **Write the round** does
+(in Record only, as a `Proposed:` line in the Result). The fixes stay in the pack.
