@@ -160,9 +160,9 @@ one reader reads the whole pack and the slice line is left out of the prompt.
 | No subagent tool | Do not read it yourself — you have seen the pack, so you are not cold. Say `No subagent available: run cold-read {path} in a session that can start one.` Record the panel's findings as `references/panel.md` **No reader runs** says, then go to Phase 7 | — |
 
 **Build each reader's tree**, all before any dispatch, as `references/readers.md` **Dispatch** says.
-In Record only, reader `a` takes the tree Phase 2 built, and every other reader gets a new tree of
-`{base}` with the copy line skipped. Otherwise read and follow
-`$CLAUDE_SKILL_DIR/references/tree.md` for each: a detached
+Read and follow `$CLAUDE_SKILL_DIR/references/tree.md` for each, guard included, with one Record
+only exception: reader `a` takes the tree Phase 2 built, and every other reader gets a new tree of
+`{base}` with the copy line skipped. Each tree is a detached
 worktree of `{base}` outside this checkout with the pack copied in, the checksum guard run before
 and after every read, and the tree removed on every path out of this phase. A guard difference
 voids the round: say which files changed, record the panel's findings (`references/panel.md`
