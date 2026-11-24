@@ -80,8 +80,8 @@ Each report has `## Checklist run` (item, result: done, or n/a with the reason) 
 ## Completeness check
 
 Check each role's report on its own, never the panel as a whole. A report is incomplete when a
-section is missing, a checklist item of its card is absent from **Checklist run**, or a blocking
-finding has no evidence. Dispatch that role alone once more, in a new tree under the same guard.
+section is missing (the two the prompt gives, and any the card's **Output** adds), a checklist
+item of its card is absent from **Checklist run**, or a blocking finding has no evidence. Dispatch that role alone once more, in a new tree under the same guard.
 A second incomplete report is recorded in the round summary as
 `Panel: {role} gave no complete report; not reviewed by {role}.`, and the run continues without it.
 

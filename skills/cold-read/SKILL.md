@@ -239,9 +239,11 @@ ADR. Everything else is the author's to fix.
 
 ### Developer-only first
 
-**Stop condition.** A developer-only question is asked at once, before any fix and before any
-further round — never carried into the next round in the hope a reader settles it. Show each one
-with the reader's wording, the file, and the options the pack leaves open. Then:
+**Stop condition.** Developer-only questions are asked after the sibling scan, before any fix and
+before any further round — never carried into the next round in the hope a reader settles it. Run
+the **Sibling scan**, then send every developer-only item of the round as one **Developer batch**
+(`references/panel.md`), each with the reader's wording, the file, and the options the pack leaves
+open. Then, item by item:
 
 - **Answered:** resolve it as below, recording the developer's answer and date in the Resolution.
   A `proposed` ADR the developer confirms becomes `accepted (developer, {date})`, and its Proposed

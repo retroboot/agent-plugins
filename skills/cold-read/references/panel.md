@@ -23,13 +23,40 @@ Run once per run, after the Author Checks and before the first reader, in every 
    **Completeness check** says, re-dispatching a role alone in a new tree when its report is
    incomplete. Then remove the tree.
 5. **Triage** every finding as `dispatch.md` **Triage** says.
-6. **Fix** each blocking finding the author can fix now, by the rules of Phase 5 **Fix the pack**,
-   so the pack the readers see already holds the fix. Take the **Snapshot** below first. A
-   developer-only finding is held, as a developer-only author finding is in Phase 2, and asked in
-   Phase 5 **Developer-only first**.
-7. **Re-check** the fixes as the section below says, before any reader is dispatched.
+6. **Ask** every developer-only finding of the pass, the Trust reviewer's blocking Questionnaire
+   rows included, as one **Developer batch** (below), before any fix.
+7. **Fix** each blocking finding the author can fix now, and each answered one, by the rules of
+   Phase 5 **Fix the pack**, so the pack the readers see already holds the fix. Take the
+   **Snapshot** below first. A deferred item is **held**.
+8. **Re-check** the fixes as the section below says, before any reader is dispatched.
 
 Display: `Panel: {role} {model} — {f} findings ({b} blocking){, …} | fixed {x}, held {h}`.
+
+## Developer batch
+
+Every developer-only item of one pass, or of one reader round, reaches the developer in **one
+message**: at most one batch per pass and one per round. A pass with none sends no message.
+
+- **Collect** every finding triage marked developer-only, and every Questionnaire row marked
+  blocking, from all the roles of the pass; for a reader round, every developer-only item of the
+  round with the **Sibling scan**'s findings. Merge duplicates: two roles asking the same thing are
+  one item, listed with both Ids.
+- **Send** one message listing each item with its Id, the role's or reader's wording, the file and
+  section, and the options the pack leaves open. Then wait for the answer; do not fix, dispatch or
+  send a second message in the meantime.
+- **Partial answer.** Each answered item is resolved as Phase 5 **Developer-only first** says, its
+  Resolution recording the answer and date. Each item left unanswered stays blocking: after a panel
+  pass it is **held** and the readers are still dispatched, and the run ends `COLD READ BLOCKED`
+  after that round; after a reader round, the run goes to Phase 6 as today.
+
+## Sibling scan
+
+When a reader round's Phase 4 marks any item developer-only, dispatch the Trust reviewer once for
+the round, before the batch and before any fix, in a new tree under the guard as **Panel pass**
+steps 2 to 5 say. `{seed}` is a file outside the tree, in a temporary directory of its own, holding
+each such item's Id, file and section, and its text verbatim; add it to the prompt as `dispatch.md`
+**Prompt frame** says. The reviewer's findings, renumbered as **Ids** below says, join the round's
+batch. A round with no developer-only item has no sibling scan.
 
 ## Re-check
 
@@ -62,19 +89,19 @@ the run back to Phase 3: the Editor alone checks that round's `{diff}` before th
 is outside ADR-004's cap and bounded by the cap of 3 rounds. Fix what it finds; a blocking finding
 not fixed counts as Blocking in the next round. When the run stops instead, there is no Editor pass.
 
-**Ids.** Every role numbers its findings from `P{letter}1`, so the Facilitator renumbers each
-re-check's findings: one that matches an earlier finding keeps that finding's Id, which is how a
-finding "reported again" is told apart; any other takes the next free `P{letter}{n}` Id in the
-run. Re-check findings are recorded with the pass's findings, in the round that follows. The summary line names each re-check pass, its roles and its
-findings.
+**Ids.** Every role numbers its findings from `P{letter}1`, so the Facilitator renumbers the
+findings of each re-check and sibling scan: one that matches an earlier finding keeps that
+finding's Id, which is how a finding "reported again" is told apart; any other takes the next free
+`P{letter}{n}` Id in the run. Re-check findings are recorded with the pass's findings, in the round
+that follows. The summary line names each re-check pass, its roles and its findings.
 
 Display: `Re-check {k}: {roles} — {f} findings ({b} blocking) | checked {c}, held {h}`.
 
 ## Recording panel findings
 
 Panel findings go in the Questions table of the round that follows the pass, beside the author
-findings, with Ids `P{letter}{n}` as the role gave them (`PF1`, `PF2` …) and the checklist item in
-the Gap. Each is classed as an author finding is in Phase 4:
+findings, with Ids `P{letter}{n}` (`PF1`, `PF2` …; re-check and sibling scan findings renumbered
+as **Ids** says) and the checklist item in the Gap. Each is classed as an author finding is in Phase 4:
 
 - **Fixed** before the readers were dispatched: it does not block the round, since the reader saw
   the fixed pack. Its Resolution says what changed.
@@ -85,7 +112,8 @@ the Gap. Each is classed as an author finding is in Phase 4:
   `Proposed: …` in its Resolution, as for author findings.
 
 The round's summary paragraph gains one line for the pass: each role, its model as recorded, its
-findings and how many were blocking, plus `Panel run by the Facilitator: not independent.` or any
+findings and how many were blocking, `Trust: no outside inputs.` when the Trust reviewer's
+Questionnaire is empty, plus `Panel run by the Facilitator: not independent.` or any
 `Panel: {role} gave no complete report; not reviewed by {role}.` line the pass produced.
 
 **No reader runs.** When the run stops before a round is recorded (no subagent for the readers,
