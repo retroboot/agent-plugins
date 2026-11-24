@@ -132,6 +132,6 @@ Questionnaire is empty, plus `Panel run by the Facilitator: not independent.` or
 **No reader runs.** When the run stops before a round is recorded (no subagent for the readers,
 or a Phase 3 stop after a reader was dispatched: a void round or two incomplete reports), there is
 no round for the findings to go in. Write them in the closing `## Result` of `cold-read.md`, under
-`### Panel without a reader`, in the Questions table form. When the file does not exist, write it
+`### Panel without a reader`, in the Questions table form and the shape `result.md` gives. When the file does not exist, write it
 from the template first and add its README **Read order** entry as Phase 5 **Write the round** does
 (in Record only, as a `Proposed:` line in the Result). The fixes stay in the pack.

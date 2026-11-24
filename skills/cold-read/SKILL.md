@@ -238,6 +238,11 @@ Then mark each blocking item **developer-only** when only the developer can answ
 decision (scope, a goal or non-goal, what a user sees), or confirming, changing or reversing an
 ADR. Everything else is the author's to fix.
 
+**Trace each item to a Role**, the checklist it belongs to: `fact` (Fact-checker, F), `test` (Test
+engineer, V), `editor` (Editor, E) or `trust` (Trust reviewer, T), when a line of that role card's
+job would have caught it; otherwise `reader`. A `P` item takes its role's value and an `A` item
+`author`. A reader item traced to a role is a miss by that role (`skills/planning/references/roles/`).
+
 ---
 
 ## Phase 5 — Resolve and Record
@@ -298,8 +303,12 @@ skeleton:
 1. **Summary paragraph:** each reader's letter, model and the slices it thought through, how many
    citations it checked and how many held, and whether it found any code.
 2. **Questions:** one row per question and author finding — Id, Blocking (`y`/`n`, plus
-   `developer-only` where it applies), File, Gap, Resolution. Every row has a Resolution.
-3. **Contradictions:** one row each, with which place changed.
+   `developer-only` where it applies), Role, File, Gap, Resolution. Every row has a Resolution. A
+   reader item whose Role is not `reader` ends it with `Checklist line proposed for {role}: …`, one
+   line for that card written as proposed text under the card's next free Id (`V7` after `V6`).
+   Cards change only through a PR the developer makes.
+3. **Contradictions:** one row each, its Item opening with its `{reader}C{n}` Id, and which place
+   changed.
 4. **Citations checked:** each reader's citations, each prefixed with its reader's letter, and whether
    each holds.
 
@@ -327,13 +336,10 @@ and panel findings fixed in Phase 2 excepted (a held one counts), each counted o
 re-classed blocking counts, one re-classed non-blocking with a cited pack location does not, and an
 unanswered developer-only question is already among them. It is 0 only on a pass.
 
-**On a pass:** the closing **Result** says `Pass after {n} rounds.`
-
-**Not passed:** the closing **Result** says `COLD READ BLOCKED: {blocking} blocking question(s) left after round {N}.`
-and lists each one with its Resolution: `resolved, not yet checked by a cold reader`,
-`awaiting the developer`, or, in Record only mode, the proposal. Show the same list to the
-developer — this is the cold read's checkpoint (S-05.3). Nothing is published from here: the
-developer answers what is theirs, then runs `cold-read {path}` again for up to 3 more rounds.
+Write the closing **Result** as `$CLAUDE_SKILL_DIR/references/result.md` says: the pass line, or
+the blocked line with each blocking item and its Resolution, shown to the developer as the cold
+read's checkpoint (S-05.3), both stating the total rounds and this run's; then
+`### Checklist proposals`.
 
 **Status.** **No skill lowers Status**, and cold-read writes `reviewed` only when the current
 Status is `sliced`, the one immediately before it:

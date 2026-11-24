@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | executing |
+| **Status** | done |
 | **Type** | Feature |
 | **Size** | M — 5 slices |
 | **Modifiers** | none |
@@ -123,3 +123,9 @@ None.
 
 | Cold read predicted | What diverged | Slice | Lesson for the next pack |
 |---|---|---|---|
+| Round 2 Q1: a deferred pre-reader item is held, the readers still run, and the run ends `COLD READ BLOCKED` | Phase 4 re-marked the held item developer-only and Phase 5 asked it again, so an answer the second time let the run continue; PR #267 review found it, and a live reader round proved the fix | 3 | When the cold read settles a rule that crosses phases, the dry run walks it live through each phase it crosses, not by desk check of one file |
+| Round 2 Q10: "touched" is a fix to a slice's section or a file in its Files list | The definition had no procedure, and the `{diff}` it needed was deleted before grouping ran (PR #268 review); the Files-list clause can never fire, since pack fixes never edit repository files | 4 | A definition is not a procedure: say when the value is computed and from what, and check that each clause can occur |
+| Round 1 Q7, Round 2 Q8: `.hivrr.json` is absent from a fresh tree | Every dry run's readers and the Test engineer raised it again: `eval "$(jq -r .verify.test .hivrr.json)"` exits 0 with nothing on stdout | 1–5 | A Verify line that can pass silently needs its own failing check, not a note elsewhere that no output fails |
+| not predicted | Slice 3 used Slice 2's `editor.md` and Slice 4 used Slice 1's `tree.md`, each declaring fewer dependencies; the merge order hid it | 3, 4 | The Editor's E4 should hold each slice's **Depends on** against every artifact it uses (dry-run proposal **E7**) |
+| not predicted | 5.2 said Phase 6 writes `### Panel without a reader`, but a stopped run never reaches Phase 6 | 5 | Trace every "Phase N writes X" against the paths that enter Phase N |
+| not predicted | The Slice 3 gate (at least 7 of 10 seeds) was met at 10 of 10, most seeds found by two or three roles | 3 | Seed subtler defects before trusting a gate to measure the panel |

@@ -22,15 +22,15 @@ model as recorded, its findings and how many were blocking (cold-read `reference
 
 ### Questions
 
-| Id | Blocking | File | Gap | Resolution |
-|---|---|---|---|---|
-| aQ1 | <y \| n> | <file and section> | <what was missing or ambiguous> | <the edit made, or why none> |
+| Id | Blocking | Role | File | Gap | Resolution |
+|---|---|---|---|---|---|
+| aQ1 | <y \| n> | <fact \| test \| editor \| trust \| reader \| author> | <file and section> | <what was missing or ambiguous> | <the edit made, or why none; for a reader item traced to a role, ending `Checklist line proposed for {role}: …`> |
 
 ### Contradictions
 
 | Item | Resolution |
 |---|---|
-| <two places that disagree> | <which one changed> |
+| aC1: <two places that disagree> | <which one changed> |
 
 ### Citations checked
 
@@ -41,3 +41,15 @@ model as recorded, its findings and how many were blocking (cold-read `reference
 ## Result
 
 _Guidance: rewritten after every round. "Pass" only when no blocking question remains._
+
+<`Pass after {total} round(s) ({n} in this run).` \| `COLD READ BLOCKED: {b} blocking question(s) left after round {N} ({total} rounds, {n} in this run).`>
+
+### Checklist proposals
+
+_Guidance: one bullet per checklist line proposed in this run, with the item Id and the role card,
+or `None.`_
+
+### Panel without a reader
+
+_Guidance: only when the run stopped before any reader was dispatched: that pass's findings in the
+Questions table form (cold-read `references/panel.md` **No reader runs**). Otherwise leave it out._
