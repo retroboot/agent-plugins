@@ -20,13 +20,55 @@ Run once per run, after the Author Checks and before the first reader, in every 
 4. **Guard and completeness.** When every report is in, run the guard again. A difference voids
    the pass: say which files changed, remove the tree (in Record only, Phase 2's tree too), and go
    to Phase 7 with `COLD READ STOPPED`. Otherwise check each report as `dispatch.md`
-   **Completeness check** says, re-dispatching a role alone in a new tree when its report is incomplete. Then remove the tree.
+   **Completeness check** says, re-dispatching a role alone in a new tree when its report is
+   incomplete. Then remove the tree.
 5. **Triage** every finding as `dispatch.md` **Triage** says.
 6. **Fix** each blocking finding the author can fix now, by the rules of Phase 5 **Fix the pack**,
-   so the pack the readers see already holds the fix. A developer-only finding is held, as a
-   developer-only author finding is in Phase 2, and asked in Phase 5 **Developer-only first**.
+   so the pack the readers see already holds the fix. Take the **Snapshot** below first. A
+   developer-only finding is held, as a developer-only author finding is in Phase 2, and asked in
+   Phase 5 **Developer-only first**.
+7. **Re-check** the fixes as the section below says, before any reader is dispatched.
 
 Display: `Panel: {role} {model} — {f} findings ({b} blocking){, …} | fixed {x}, held {h}`.
+
+## Re-check
+
+Every fix is checked by someone other than its author. A re-check is a pass: one new tree, the
+guard before and after, the dispatches in one step, and each report checked for completeness, all
+as **Panel pass** steps 2 to 5 say.
+
+**Snapshot.** Before the first fix of a pass or a reader round, copy the pack to a new temporary
+directory outside the checkout and outside any tree (`mktemp -d`, then `cp -R {path}/. "{snap}/"`).
+After the fixes, write `{diff}` in a second new temporary directory of its own, with
+`diff -ru "{snap}" {path} > "{diff}"`. Each re-check takes a new snapshot before its own fixes.
+Remove the snapshot and the `{diff}` directory once that re-check's guard has run.
+
+**Who is dispatched.** The Editor, with `{diff}` added to its prompt as `dispatch.md` **Prompt
+frame** says, plus each role whose finding a fix answered, on the fixed pack. Apart from the
+Editor, a role with no fixed finding is not dispatched; a fix that answers only an author finding
+or a reader item dispatches the Editor alone. With no fixes, there is no re-check.
+
+**After the panel pass: at most two re-checks** in a run, before the first reader (ADR-004).
+Triage the re-check's findings as **Panel pass** step 5 says. A fixed finding the role does not
+report again is checked. One it reports again, and every new blocking finding, is fixed and
+re-checked while the cap allows. **Make no fix after the second re-check**, since no re-check is
+left to check it: a fixed finding it reports again is **held** (fixed → held), and a new blocking
+finding it reports stays open, unfixed. Both count as Blocking for the round, the readers are
+dispatched anyway, and Phase 5 fixes them after the round. A held finding is never re-checked
+again in this run.
+
+**After a reader round: one Editor pass.** Phase 5 **Next round, or stop** runs it when it sends
+the run back to Phase 3: the Editor alone checks that round's `{diff}` before the next reader. It
+is outside ADR-004's cap and bounded by the cap of 3 rounds. Fix what it finds; a blocking finding
+not fixed counts as Blocking in the next round. When the run stops instead, there is no Editor pass.
+
+**Ids.** Every role numbers its findings from `P{letter}1`, so the Facilitator renumbers each
+re-check's findings: one that matches an earlier finding keeps that finding's Id, which is how a
+finding "reported again" is told apart; any other takes the next free `P{letter}{n}` Id in the
+run. Re-check findings are recorded with the pass's findings, in the round that follows. The summary line names each re-check pass, its roles and its
+findings.
+
+Display: `Re-check {k}: {roles} — {f} findings ({b} blocking) | checked {c}, held {h}`.
 
 ## Recording panel findings
 
