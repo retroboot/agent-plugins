@@ -126,7 +126,7 @@ Then read each fence: a `bash` or `sh` fence sits under a Verify heading and hol
 filled in; expected no output from either.
 
 **Record only:** the reader sees the pack as `{base}` has it, so check that copy. Build this
-round's tree now (Phase 3, **Build the reader's tree**), run both checks in a subshell,
+round's tree now (Phase 3, **Build each reader's tree**, for reader `a`), run both checks in a subshell,
 `(cd "{tree}" && …)`, and keep the tree: Phase 3 uses it rather than building another.
 
 Every finding is a blocking item, recorded in the coming round's Questions table as an author
@@ -146,9 +146,10 @@ Then run the review panel: read and follow `$CLAUDE_SKILL_DIR/references/panel.m
 Number this round `N`: one more than the rounds already in `cold-read.md`, or 1. This run holds at
 most **3 rounds**; a later run of this skill continues the numbering with a fresh cap of 3.
 
-**Assign slices.** Pick about a third of the slices, at least one, from those no earlier round
-covered, in plan order. Once every slice has been covered, prefer the slices whose files the last
-round's fixes touched. With no slices, leave the slice line out of the prompt.
+**Assign slices.** Read and follow `$CLAUDE_SKILL_DIR/references/readers.md` for the round: the
+first round of this run reads every slice and a later one only the slices the last fixes touched,
+in groups of at most 3, with one new reader per group, lettered `a`, `b`, `c` …. With no slices,
+one reader reads the whole pack and the slice line is left out of the prompt.
 
 **Choose the reader**, the first that this environment offers:
 
@@ -158,13 +159,16 @@ round's fixes touched. With no slices, leave the slice line out of the prompt.
 | A subagent tool with no model choice (R1 in the design) | A fresh subagent on the default model; a read-only type where one exists | The default model by name if known, else `default model`, and the tool used |
 | No subagent tool | Do not read it yourself — you have seen the pack, so you are not cold. Say `No subagent available: run cold-read {path} in a session that can start one.` Record the panel's findings as `references/panel.md` **No reader runs** says, then go to Phase 7 | — |
 
-**Build the reader's tree.** Read and follow `$CLAUDE_SKILL_DIR/references/tree.md`: a detached
+**Build each reader's tree**, all before any dispatch, as `references/readers.md` **Dispatch** says.
+Read and follow `$CLAUDE_SKILL_DIR/references/tree.md` for each, guard included, with one Record
+only exception: reader `a` takes the tree Phase 2 built, and every other reader gets a new tree of
+`{base}` with the copy line skipped. Each tree is a detached
 worktree of `{base}` outside this checkout with the pack copied in, the checksum guard run before
 and after every read, and the tree removed on every path out of this phase. A guard difference
 voids the round: say which files changed, record the panel's findings (`references/panel.md`
 **No reader runs**), and go to Phase 7.
 
-**The prompt** is exactly this, with `{tree}`, `{path}` and `{slices}` filled in. Add nothing to it — no summary, no context, no reason for the read:
+**The prompt** is exactly this for every reader, with its own `{tree}` and `{slices}` and the `{path}` filled in. Dispatch every reader in one step. Add nothing to it — no summary, no context, no reason for the read:
 
 ```text
 You are about to implement part of a plan pack, and you have never seen it. Read it cold.
@@ -206,18 +210,19 @@ A table: citation | holds (yes/partly/no) | note.
 
 `{slices}` reads `Slice 2, Slice 5` — numbers only, never names or what they contain.
 
-**Check the report.** It must have all five sections and at least 8 citations. If it does not,
-dispatch one more new reader for the same round, in the same tree; a second incomplete report goes
-to Phase 7 with the round unrecorded, after recording the panel's findings as `references/panel.md`
-**No reader runs** says. Then remove the tree.
+**Check each report** on its own: all five sections and at least 8 citations. A short one gets one
+more new reader for that group alone, in its tree; a second short report for the same group goes to
+Phase 7 with the round unrecorded, after recording the panel's findings as `references/panel.md`
+**No reader runs** says. Then merge the reports, each item keeping its reader's letter in its Id
+(`aQ1`, `bC2`), and remove every tree (`references/readers.md` **Check each report**, **Merge**).
 
-Display: `Round {N}: reader {model} — {q} questions ({b} blocking), {c} contradictions, {k} citations checked`.
+Display, one line per reader: `Round {N}, reader {letter} ({slices}): {model} — {q} questions ({b} blocking), {c} contradictions, {k} citations checked`.
 
 ---
 
 ## Phase 4 — Classify
 
-Now read the earlier rounds in `cold-read.md` in full, and class every item in the report:
+Now read the earlier rounds in `cold-read.md` in full, and class every item in the merged reports:
 
 | Item | Class |
 |---|---|
@@ -290,12 +295,13 @@ the template's wording and position. In Record only mode leave the README alone,
 entry as a `Proposed:` line in the closing Result instead. Fill the round from the template's
 skeleton:
 
-1. **Summary paragraph:** the reader and model, the slices it thought through, how many citations it
-   checked and how many held, and whether it found any code.
+1. **Summary paragraph:** each reader's letter, model and the slices it thought through, how many
+   citations it checked and how many held, and whether it found any code.
 2. **Questions:** one row per question and author finding — Id, Blocking (`y`/`n`, plus
    `developer-only` where it applies), File, Gap, Resolution. Every row has a Resolution.
 3. **Contradictions:** one row each, with which place changed.
-4. **Citations checked:** the reader's citations and whether each holds.
+4. **Citations checked:** each reader's citations, each prefixed with its reader's letter, and whether
+   each holds.
 
 Then rewrite the header table — **Model**, **Rounds** (all rounds in the file), **Result** — and the
 closing `## Result` section, which stays the last section of the file.
@@ -306,7 +312,8 @@ closing `## Result` section, which stays the last section of the file.
   excepted, since the reader saw the fixed pack; a held one counts): the pack **passes**. Go to Phase 6.
 - **Blocking items, all resolved, fewer than 3 rounds this run, and not Record only:** go back to
   Phase 3 with a new reader, after the Editor pass on this round's diff (`references/panel.md`
-  **Re-check**). Only a new reader can show the fixes worked.
+  **Re-check**) and after working out the touched set from that diff before it is removed
+  (`references/readers.md` **Grouping**). Only a new reader can show the fixes worked.
 - **Otherwise** — the third round of this run still had items classed Blocking, a developer-only
   question is unanswered, or the mode is Record only: go to Phase 6 without passing. Fixes already
   made stay in the pack, but no cold reader has checked them.
@@ -363,7 +370,8 @@ Write `null` bare, never as the string `"null"`.
   question is unanswered, or a Record only round had one — in Record only mode every author
   finding is held.
 - `COLD READ STOPPED` when no round could be recorded: no README (in Record only, none on
-  `{base}`), no subagent available, two incomplete reports, or a void round or panel pass (a reader
-  or a role changed the pack or its tree). `model` is bare `null` when no reader ran, `rounds`
-  counts the rounds recorded before the stop, and `pack_status` is the unchanged Status.
+  `{base}`), no subagent available, two incomplete reports for one reader's group, or a void round
+  or panel pass (a reader or a role changed the pack or its tree). `model` is bare `null` when no
+  reader ran, `rounds` counts the rounds recorded before the stop, and `pack_status` is the
+  unchanged Status.
 - With no README at the path, `pack_status` is bare `null`.
