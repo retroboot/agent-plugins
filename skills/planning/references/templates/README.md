@@ -27,7 +27,8 @@ this section if the Discover step was skipped._
 
 ## Child packs
 
-_XL parent only; delete otherwise. Guidance: one row per child pack, in execution order._
+_XL parent only; delete otherwise. Guidance: one row per child pack, in execution order. A child
+closed without planning keeps its row, marked as `pack-format.md` §3 says._
 
 | Order | Pack | Covers | Depends on |
 |---|---|---|---|

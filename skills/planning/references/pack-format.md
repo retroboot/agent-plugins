@@ -184,7 +184,9 @@ Sections, in order:
 9. **Retro.**
 
 `brainstorm` adds **Ruled out** and **Key insights** after Brief. An XL parent adds **Child packs**
-after Brief and has no Slice section.
+after Brief and has no Slice section. A child the developer closes without planning it keeps its
+row: its Pack cell gains `(closed, not planned)` after the path, its Covers cell ends
+`Closed on {date}: {reason}.`, and no folder is written for it.
 
 | README part | Written by |
 |---|---|
@@ -193,6 +195,7 @@ after Brief and has no Slice section.
 | **Slice** (size S) | `spec` |
 | Issues row | The wrapper, at Publish |
 | Status `executing`, Retro, Status `done` | `work-issue`, per rules 7 and 8 |
+| An XL parent's closed-child mark, Retro and Status `done` | The wrapper, at **XL close** |
 
 ### Status
 
@@ -208,7 +211,7 @@ Status always names the **last finished phase**. Values, in order:
 | `approved` | Developer approved for publish | publish |
 | `published` | Issues exist and the pack PR is open or merged | execute |
 | `executing` | At least one progress file exists | — |
-| `done` | Retro written; for a Spike, the outcome ADR written with no re-route | — |
+| `done` | Retro written; for a Spike, the outcome ADR written with no re-route; for an XL parent, every child `done` or closed and the Retro rolled up from theirs | — |
 
 ```mermaid
 stateDiagram-v2
@@ -217,6 +220,7 @@ stateDiagram-v2
   routed --> specified: spec checkpoint approved
   specified --> sliced: slice approved, or skipped at size S
   specified --> done: Spike outcome, no re-route
+  routed --> done: XL parent, every child done or closed
   specified --> routed: Spike re-routed
   sliced --> reviewed: cold read passes
   reviewed --> approved: developer approves
@@ -234,11 +238,18 @@ Illegal transitions:
   immediately before it; otherwise it leaves Status alone and says so. The one exception is the
   Spike re-route, `specified → routed`.
 - Skipping a state, except the skips by route. A skip still passes through each skipped value at
-  the moment of the skip.
+  the moment of the skip. The XL close, `routed → done`, is not a skip: an XL parent never
+  specifies, slices or executes itself, so it has no state between.
 - `sliced → approved` without `reviewed`. Publish needs a passed cold read.
 
 A Spike's Status goes `routed` → `specified` (question written) → `done` (outcome ADR, no
 re-route), or back to `routed` under its new type.
+
+**XL close.** An XL parent stays at `routed` while its children run. When every child in **Child
+packs** is `done` or marked closed, the wrapper offers to close it: it writes the parent's **Retro**
+with rows rolled up from the children's Retros (the Slice column names the child; a closed child
+gets a row for why it closed) and sets Status `done`. A parent with any child at another Status, or
+not started and not marked closed, is not offered the close.
 
 ---
 
