@@ -237,9 +237,9 @@ Illegal transitions:
 - **No skill lowers Status.** A skill writes its Status only when the current Status is the one
   immediately before it; otherwise it leaves Status alone and says so. The one exception is the
   Spike re-route, `specified → routed`.
-- Skipping a state, except the skips by route and the XL close, `routed → done`, which passes
-  through nothing because an XL parent never specifies, slices or executes itself. A skip still passes through each skipped value at
-  the moment of the skip.
+- Skipping a state, except the skips by route. A skip still passes through each skipped value at
+  the moment of the skip. The XL close, `routed → done`, is not a skip: an XL parent never
+  specifies, slices or executes itself, so it has no state between.
 - `sliced → approved` without `reviewed`. Publish needs a passed cold read.
 
 A Spike's Status goes `routed` → `specified` (question written) → `done` (outcome ADR, no
