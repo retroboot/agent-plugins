@@ -1,11 +1,11 @@
 ---
 name: core
-description: Hivrr core coding philosophy - quality gates, git safety, and task completion standards
+description: Core coding philosophy - quality gates, git safety, and task completion standards
 license: MIT
 compatibility: opencode
 ---
 
-# Hivrr Core Philosophy
+# Core Philosophy
 
 ## Task Completion
 

@@ -1,6 +1,6 @@
 <!-- Claude Code loads this file automatically as project-level instructions. -->
 
-# Hivrr Claude Plugin
+# Agent Plugins
 
 Skills and commands for implementation, brainstorming, planning, and code review workflows in Claude Code.
 
