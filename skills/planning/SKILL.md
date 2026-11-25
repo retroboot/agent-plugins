@@ -31,7 +31,8 @@ Rules that hold in every phase:
   holds only the Route and Approve checkpoints. It writes only the README parts `pack-format.md` §3
   gives it: the Discover-skip README, the confirmed Type, Size, Modifiers and **Route**, the Bug's
   **Repro and root cause**, an XL parent's **Child packs**, the `progress/` Read order entry at size
-  S, the Issues row, and the Status values for Route, a skipped phase, Approve and Publish.
+  S, the Issues row, the Status values for Route, a skipped phase, Approve and Publish, and an XL
+  parent's closed-child mark, Retro and `done` at **XL close** (`pack-format.md` §3).
 - **No skill lowers Status.** The wrapper sets a Status only when the current one is immediately
   before it. The one exception is a Spike re-route, `specified` back to `routed` (Phase 4).
 - **A skipped phase still passes through its Status.** When the route skips a phase, the wrapper
@@ -115,8 +116,14 @@ Read `{path}/README.md`.
   Phase 5 for `plan.md`. The phase skill re-runs that file's gate, its checkpoint removes the entry,
   and Status is unchanged.
 - **XL parent:** when the Size row starts with `XL` and Status is `routed` or later, show **Child
-  packs** with each child's Status (from its README, or `not started`), then stop. This comes before
-  the table, so a pack re-routed to XL past `routed` never reaches `slice`.
+  packs** with each child's Status (from its README, `closed` for a row marked
+  `(closed, not planned)`, or `not started`). This comes before the table, so a pack re-routed to XL
+  past `routed` never reaches `slice`. At `routed`, when every child is `done` or `closed`, ask
+  **Close the parent?** On yes, run **XL close** (`pack-format.md` §3): write the **Retro** rolled up
+  from the children's, set Status `done`, and display `Pack closed: {path} (Status: done)`. On no,
+  or when any child is at another Status, stop. At `done`, the `done` row of the table applies.
+  When the developer closes a child without planning it, write its closed-child mark (§3), then
+  show **Child packs** again.
 - **Rework in progress** (`reroute.md`, **Pending lines**), before the table; the first match wins:
   a `Spec pending …` line resumes at Phase 4, passing its request; a `Revised by spec …` line at
   Phase 4; a `Revised by slice …` or `Re-slice pending …` line at Phase 5. Then run on as usual.
