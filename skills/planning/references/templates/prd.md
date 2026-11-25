@@ -53,11 +53,13 @@ _Always with a prd. Guidance: one row per quality, every quality listed, each a 
 
 ## Assumptions
 
-_Always with a prd._
+_Always with a prd. The Analyst writes `not probed yet` in Probe; after the acceptance gate the
+Facilitator writes the Fact-checker's F7 result there: `held: {evidence}`, `false: {evidence}` or
+`not run: {reason}`._
 
-| Assumption | How to validate | If false |
-|---|---|---|
-| <assumption> | <check> | <what changes> |
+| Assumption | How to validate | If false | Probe |
+|---|---|---|---|
+| <assumption> | <check> | <what changes> | <not probed yet> |
 
 ## Story map
 

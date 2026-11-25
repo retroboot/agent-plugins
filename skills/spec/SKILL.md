@@ -159,6 +159,13 @@ and before Route): the single question the spike answers and its timebox. Take b
 and Key insights; ask the developer for whichever is missing. A Spike has no prd and no rules or
 examples. Go to Phase 4.
 
+### The Analyst
+
+The prd, or at size S the README Slice's Outcome and Acceptance, is drafted by the Analyst, as
+`dispatch.md` says for the Scout in Phase 2 (resolving `{base}` if Phase 2 did not):
+`roles/analyst.md`, `{file}` `prd.md` (at size S `README.md`, holding only those two headings),
+`{skill}` this file's Phase 3. Whoever drafts it follows the rules below.
+
 ### prd.md
 
 When prd is required, write it from `templates/prd.md`. Include each section **exactly** when its
@@ -200,6 +207,9 @@ In this phase, write **Outcome** and **Acceptance**:
   modes table.
 
 The rest of the Slice is written in Phase 7.
+
+Then run the **acceptance gate**, the Fact-checker and the Trust reviewer in one step, as `gates.md`
+says, with its **Gate pending** entry for the drafted file, and write its **Probe results**.
 
 ---
 

@@ -111,8 +111,9 @@ Read `{path}/README.md`.
 - **Handoff note** (`references/gates.md`, **Handoff**), before everything below: when
   `{path}/handoff.md` holds a `## Spec pending: {Id}` entry, resume at Phase 4, passing its answer
   as `spec`'s request. A `## Gate pending: {file}` entry resumes at the phase that owns its file,
-  whatever the Status: Phase 4 for `context.md`, `prd.md` or `design.md`, Phase 5 for `plan.md`. The
-  phase skill re-runs that file's gate, its checkpoint removes the entry, and Status is unchanged.
+  whatever the Status: Phase 4 for `context.md`, `prd.md`, `design.md` or a size S `README.md`,
+  Phase 5 for `plan.md`. The phase skill re-runs that file's gate, its checkpoint removes the entry,
+  and Status is unchanged.
 - **XL parent:** when the Size row starts with `XL` and Status is `routed` or later, show **Child
   packs** with each child's Status (from its README, or `not started`), then stop. This comes before
   the table, so a pack re-routed to XL past `routed` never reaches `slice`.
