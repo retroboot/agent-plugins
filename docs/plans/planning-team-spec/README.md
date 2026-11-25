@@ -108,7 +108,7 @@ None.
 
 | Cold read predicted | What diverged | Slice | Lesson for the next pack |
 |---|---|---|---|
-| Pass after 3 rounds: the pack was complete | Every slice PR's review found a route branch the pack never named: size S with a prd (3), a drafter for an existing file in a re-route (4), the Re-slice exception to that rule (5) | 3, 4, 5 | Adopt cold-read proposal F9: read every route branch of each phase a slice changes |
+| Pass after 3 rounds: the pack was complete | Paths the pack never named turned up after the cold read: the Approve refusal's way out (Slice 2, review), size S with a prd (Slice 3, review), a drafter for an existing file in a re-route (Slice 4, review), and the Re-slice exception to that rule (Slice 5, preflight) | 2, 3, 4, 5 | Adopt cold-read proposal F9: read every route branch of each phase a slice changes |
 | Gates continue `G` Ids from Deferred lines and `handoff.md` | A non-blocking Id from a first pass, never held, was reused by a resumed pass | 2, 3 | Number from every Id a pass reported, not only the held or deferred ones |
 | `spec` and `slice` had room for a pointer per step (A, `wc -l` at most 385) | `spec` ended at 398 and `slice` at 398, the latter only after moving Re-slice out (R2) | 1 to 5 | Move reference text out before adding pointers, not when the budget runs out |
 | Seeds would be applied per dry run | One live dispatch served several seeds in Slices 4 and 5, and the drafters' own open points caught fixture defects nobody seeded | 3, 4, 5 | Plan seeds per dispatch, and treat a drafter's open points on a fixture as findings |
