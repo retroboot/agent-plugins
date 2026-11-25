@@ -57,7 +57,7 @@ Skill dir, per dry run:
 |---|---|---|---|
 | Live runs: "the session with the planner plugin loaded from this checkout" (`design.md` §6) | As in Slices 1 to 3: each dry run followed the checkout's skill text, with `$CLAUDE_SKILL_DIR` resolved to the checkout | The session's `Skill` tool loads the cached plugin | n |
 | Four separate **fresh** runs | One live Architect dispatch served all four: the untagged-fence copy, the resume and the seeded open point were each applied to that dispatch's written draft or report, in the order the plan lists | Each seed acts after the draft is written, so a second dispatch would add nothing the first did not prove | n |
-| Files: `architect.md` and `spec` | `gates.md` also changed: one line Slice 3's review fix left over 100 characters was rewrapped | Wording unchanged | n |
+| Files: `architect.md` and `spec` | `gates.md` also changed: one line Slice 3's review fix left over 100 characters was rewrapped. `dispatch.md` gained the review's new-file rule | Wording unchanged in `gates.md`; the rule belongs to every drafter | n |
 
 ## Decisions
 
@@ -66,6 +66,11 @@ Skill dir, per dry run:
   that the Facilitator then adds the modifier sections and any `ux.md`. ADRs and `inventory.md` come
   from Phases 5 and 6, before the Architect runs. Phase 8 shows the drafting line, asks the held
   points as one batch, and removes the entry on approve. `spec` is 398 lines.
+- **Drafters draft only new files (PR #279 review).** `dispatch.md` **Drafting frame** now says a
+  drafter is dispatched only for a file the run writes new; in a Re-route or Revise spec, an
+  existing file is revised in place by the Facilitator, per `spec/references/reroute.md`. One rule
+  covers the Scout, the Analyst and the Architect, and costs `spec` no lines. No dry run covers a
+  re-route.
 - **The Checklist holds only R1 to R4**: criterion trace-back, citing `context.md`, following
   accepted ADRs, and developer-only choices as open points. Phase 7 and the design reference already
   hold every section rule.
