@@ -1,5 +1,14 @@
 # Agent Plugins Release Notes
 
+## v1.6.0 (2026-11-25)
+
+### Planning team — role-based subagents for the planner
+
+- **Role cards and a dispatch contract (#264–#269).** Each planning role is a card in `skills/planning/references/roles/`, dispatched by `dispatch.md` with its own model, tree and guard. `cold-read` now runs a review panel before the reader (Fact-checker, Editor, Test engineer and Trust reviewer), re-checks each fix only with the role it affects, and asks the developer one decision batch. Round 1 runs parallel cold readers over every slice, each miss is traced back to a role, and the Result records an honest `Pass after N rounds`.
+- **Role gates in `spec` and `slice` (#275–#280).** A Scout drafts `context.md` and the Fact-checker gates it. The Analyst drafts the PRD behind an acceptance gate and assumption probes, the Architect drafts the design and ADRs, and the Planner drafts `plan.md` behind the slice gate. Gate items wait for the next checkpoint's **Checkpoint batch** in `gates.md`, and a role runs only when its stage writes its file.
+- **Discovery research in `brainstorm` (#286–#291).** Before the opening, a research Scout, a Historian (past packs, retros and cold-read records) and a Skeptic read the repository in parallel in a read-only research tree, and the Facilitator brings their findings into the conversation. Phase 4 starts a new research step on ground no earlier step covered. A Skeptic case against building is a challenge the developer decides, never a ruled-out option on its own. With no subagent tool, the Facilitator works through the cards itself and says the research was not independent.
+- **XL parent packs can close (#293, #295).** `pack-format.md` adds `routed → done` for an XL parent once every child is `done` or marked `(closed, not planned)`, with its Retro rolled up from the children's. `planning` offers the close when it resumes such a parent.
+
 ## v1.5.0 (2026-11-17)
 
 ### Planner follow-ups, safer merges and shell-safe bodies
