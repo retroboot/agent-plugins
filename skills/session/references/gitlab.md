@@ -15,12 +15,12 @@ it survive.
 
 ```
 file=$(mktemp)
-cat > "$file" <<'HIVRR_BODY_7f3a'
+cat > "$file" <<'AGENT_PLUGINS_BODY_7f3a'
 …body text, verbatim…
-HIVRR_BODY_7f3a
+AGENT_PLUGINS_BODY_7f3a
 ```
 
-The delimiter is `HIVRR_BODY_7f3a`, not `EOF`: a body that quotes one of these snippets holds a line `EOF`,
+The delimiter is `AGENT_PLUGINS_BODY_7f3a`, not `EOF`: a body that quotes one of these snippets holds a line `EOF`,
 which would end the heredoc early and run the rest of the body as shell commands. If the body
 contains a line equal to the delimiter, choose another. Remove the file once the command has run;
 each command below ends with `rm -f {file}`.
@@ -105,9 +105,9 @@ The comment comes from `{file}`, as for every body. **A caller that may not writ
 same single-quoted heredoc and no scratch file: `-F body=@-` reads standard input.
 
 ```
-glab api --method POST projects/{PROJECT_ENCODED}/merge_requests/{N}/notes -F body=@- <<'HIVRR_BODY_7f3a'
+glab api --method POST projects/{PROJECT_ENCODED}/merge_requests/{N}/notes -F body=@- <<'AGENT_PLUGINS_BODY_7f3a'
 …body text, verbatim…
-HIVRR_BODY_7f3a
+AGENT_PLUGINS_BODY_7f3a
 ```
 
 **Create MR**

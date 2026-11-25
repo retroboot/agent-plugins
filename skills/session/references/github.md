@@ -11,12 +11,12 @@ first, outside the checkout (`mktemp`), with a single-quoted heredoc, then pass 
 
 ```
 file=$(mktemp)
-cat > "$file" <<'HIVRR_BODY_7f3a'
+cat > "$file" <<'AGENT_PLUGINS_BODY_7f3a'
 …body text, verbatim…
-HIVRR_BODY_7f3a
+AGENT_PLUGINS_BODY_7f3a
 ```
 
-The delimiter is `HIVRR_BODY_7f3a`, not `EOF`: a body that quotes one of these snippets holds a line `EOF`,
+The delimiter is `AGENT_PLUGINS_BODY_7f3a`, not `EOF`: a body that quotes one of these snippets holds a line `EOF`,
 which would end the heredoc early and run the rest of the body as shell commands. If the body
 contains a line equal to the delimiter, choose another. Remove the file once the command has run;
 each command below ends with `rm -f {file}`.
@@ -261,9 +261,9 @@ is read-only — passes the body on stdin instead, with the same single-quoted h
 file: `--body-file -` reads standard input.
 
 ```
-gh pr comment {N} --repo {OWNER}/{REPO} --body-file - <<'HIVRR_BODY_7f3a'
+gh pr comment {N} --repo {OWNER}/{REPO} --body-file - <<'AGENT_PLUGINS_BODY_7f3a'
 …body text, verbatim…
-HIVRR_BODY_7f3a
+AGENT_PLUGINS_BODY_7f3a
 ```
 
 **Create PR**

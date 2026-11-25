@@ -93,12 +93,12 @@ for f in skills/*/SKILL.md; do
   done
 
 # CLAUDE.md's stated check count matches the number of checks in this block
-if [ -n "${HIVRR_VERIFY_BLOCK:-}" ]; then
-    n=$(printf '%s\n' "$HIVRR_VERIFY_BLOCK" | grep -c '^# ')
+if [ -n "${AGENT_PLUGINS_VERIFY_BLOCK:-}" ]; then
+    n=$(printf '%s\n' "$AGENT_PLUGINS_VERIFY_BLOCK" | grep -c '^# ')
     said=$(sed -n 's/.*[^A-Za-z]\([A-Za-z][a-z]*\) checks:.*/\1/p' CLAUDE.md | head -1 | tr 'A-Z' 'a-z')
     [ "$(w2n "$said")" = "$n" ] || echo "CHECK COUNT DRIFT CLAUDE.md says $said, verification doc has $n"
   else
-    echo "CHECK COUNT UNCHECKED HIVRR_VERIFY_BLOCK unset, so nothing counted the block that ran"
+    echo "CHECK COUNT UNCHECKED AGENT_PLUGINS_VERIFY_BLOCK unset, so nothing counted the block that ran"
   fi
 
 # README's command usage block names exactly the registered commands
@@ -274,7 +274,7 @@ repo that has it. When scaffolding `.agent-plugins.json` here, set `verify.detec
 `verify.test` to exactly this:
 
 ```
-bash -c 'cd "$(git rev-parse --show-toplevel)" || exit 1; FENCE=$(printf "\140\140\140"); HIVRR_VERIFY_BLOCK=$(awk -v fence="$FENCE" "/^# Verification/ { v = 1; next } v && !f && /^## / { exit } v && index(\$0, fence) == 1 { if (f) exit; f = 1; next } v && f" docs/verification.md 2>/dev/null); export HIVRR_VERIFY_BLOCK; bad=$( { for f in .claude-plugin/marketplace.json docs/shared-lines-allowlist.txt docs/verification.md skills/work-pr/SKILL.md skills/work-issue/SKILL.md skills/init/SKILL.md CLAUDE.md README.md; do [ -f "$f" ] || echo "MISSING INPUT $f"; done; if [ -n "$HIVRR_VERIFY_BLOCK" ]; then bash -c "$HIVRR_VERIFY_BLOCK" </dev/null; else echo "NO VERIFY BLOCK docs/verification.md has no fenced bash block under # Verification"; fi; } 2>&1 ); [ -z "$bad" ] && echo "structural checks pass" || { echo "$bad"; exit 1; }'
+bash -c 'cd "$(git rev-parse --show-toplevel)" || exit 1; FENCE=$(printf "\140\140\140"); AGENT_PLUGINS_VERIFY_BLOCK=$(awk -v fence="$FENCE" "/^# Verification/ { v = 1; next } v && !f && /^## / { exit } v && index(\$0, fence) == 1 { if (f) exit; f = 1; next } v && f" docs/verification.md 2>/dev/null); export AGENT_PLUGINS_VERIFY_BLOCK; bad=$( { for f in .claude-plugin/marketplace.json docs/shared-lines-allowlist.txt docs/verification.md skills/work-pr/SKILL.md skills/work-issue/SKILL.md skills/init/SKILL.md CLAUDE.md README.md; do [ -f "$f" ] || echo "MISSING INPUT $f"; done; if [ -n "$AGENT_PLUGINS_VERIFY_BLOCK" ]; then bash -c "$AGENT_PLUGINS_VERIFY_BLOCK" </dev/null; else echo "NO VERIFY BLOCK docs/verification.md has no fenced bash block under # Verification"; fi; } 2>&1 ); [ -z "$bad" ] && echo "structural checks pass" || { echo "$bad"; exit 1; }'
 ```
 
 **This fence must stay below the checks fence, never above it.** It contains a triple-backtick
