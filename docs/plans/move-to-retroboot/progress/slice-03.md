@@ -38,7 +38,7 @@ Both are the expected values, so the stop condition does not trigger and Slice 2
 | S-06.2.e1 | `sed -n '14p;16p' skills/session/references/github.md` → `cat > "$file" <<'AGENT_PLUGINS_BODY_7f3a'` and `AGENT_PLUGINS_BODY_7f3a` |
 | S-06.2.e2 | the forbidden state is ruled out by the same pair `diff` loop (no `pair mismatch` line) |
 | S-06.3 | `grep -m1 '^bash -c ' docs/verification.md \| grep -c 'export AGENT_PLUGINS_VERIFY_BLOCK'` → 1 |
-| S-06.3.e1 | the bootstrap string printed `structural checks pass`, exit 0, both on the branch and in a fresh detached worktree of the commit (see Discoveries) |
+| S-06.3.e1 | the bootstrap string printed `structural checks pass`, exit 0, both on the branch and in a fresh detached worktree of commit `7bbc0f6` holding no local config (`git worktree add --detach` in the session scratchpad, removed after) |
 | S-06.3.e2 | the checks block run bare under `env -u AGENT_PLUGINS_VERIFY_BLOCK` printed `CHECK COUNT UNCHECKED AGENT_PLUGINS_VERIFY_BLOCK unset, so nothing counted the block that ran` |
 | S-06.4 | e2 and then e1 below, in the maintainer's own checkout. The maintainer authorised the executor to run the steps there (2026-11-25) |
 | S-06.4.e2 | before the replacement: `eval "$(jq -r .verify.test .agent-plugins.json)" 2>&1 \| grep -c '^CHECK COUNT UNCHECKED'` → `1`, `exit 1`. The checkout had just been migrated by `init`'s new Phase 3 (`INIT: upgraded .hivrr.json to .agent-plugins.json`, `cmp` identical to the old file) |
