@@ -163,7 +163,8 @@ resolution** says, and the line is `Drafted by the {role}, default model (Agent 
 ## Research frame
 
 One prompt per research role, exactly this, with `{tree}`, `{name}`, `{letter}` and `{card}` filled
-in as for **Prompt frame**, `{topic}`, `{path}` and `{sha}` from **Base**. `{topic}` is the
+in as for **Prompt frame**; `{topic}`, the Facilitator's statement below; `{path}`, the resumed
+pack's path relative to `{tree}`, or none; and `{sha}` from **Base**. `{topic}` is the
 Facilitator's own one- or two-sentence statement of the brainstorm's topic and framing, or of the
 new ground the conversation reached; never a transcript, and never a finding from another role.
 With no pack, the Pack line is `Pack: none`. Add nothing else.
