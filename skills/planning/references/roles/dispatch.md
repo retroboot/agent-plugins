@@ -7,8 +7,10 @@ checks each report and triages the findings. No role dispatches another, and the
 never a role itself.
 
 Each card's `## Kind`, after its `## Model`, says what the role does: `review` (it checks a pack and
-reports findings, by **Prompt frame**) or `draft` (it writes one pack file as its report, by
-**Drafting frame**). A card with no `## Kind`, or any other value, is dispatched by no one.
+reports findings, by **Prompt frame**), `draft` (it writes one pack file as its report, by
+**Drafting frame**) or `research` (it reads the repository for a brainstorm topic and reports
+findings, by **Research frame**; only `brainstorm` dispatches one). A card with no `## Kind`, or
+any other value, is dispatched by no one.
 
 Cold readers are not roles. They keep their own prompt and model rule in `cold-read` Phase 3.
 
@@ -158,6 +160,54 @@ The checkpoint that shows a drafted file shows its drafting line,
 line. When the tool rejects the card's model, the role runs on the default model as **Model
 resolution** says, and the line is `Drafted by the {role}, default model (Agent tool, Explore).`
 
+## Research frame
+
+One prompt per research role, exactly this, with `{tree}`, `{name}`, `{letter}` and `{card}` filled
+in as for **Prompt frame**; `{topic}`, the Facilitator's statement below; `{path}`, the resumed
+pack's path relative to `{tree}`, or none; and `{sha}` from **Base**. `{topic}` is the
+Facilitator's own one- or two-sentence statement of the brainstorm's topic and framing, or of the
+new ground the conversation reached; never a transcript, and never a finding from another role.
+With no pack, the Pack line is `Pack: none`. Add nothing else.
+
+```text
+You are the {name} on a planning team. Research a topic for a brainstorm, as your role card says.
+
+Repository: {tree}
+Topic: {topic}
+Pack: {tree}/{path}
+Commit: {sha}
+
+Read only files under {tree}, and cite every path relative to {tree}. Change nothing anywhere, run
+only read-only commands, and use no network. Do not address the developer: your report goes to the
+Facilitator, who decides what reaches the conversation. A question you would put to the developer
+is a finding whose text is that question.
+
+Your role card:
+
+{card}
+
+Your report has these sections, in this order, plus any your card's Output adds or replaces:
+
+## Sources read
+Every file you opened, by its path relative to {tree}.
+
+## Findings
+A table: Id | finding | evidence. Number the ids R{letter}1, R{letter}2 …. Evidence is what your
+card accepts: a path:line, or a past pack's Retro row or cold-read.md round. A finding with no
+evidence is not reported. Write "None." under the heading when there are no findings.
+```
+
+**Research report.** The Facilitator renumbers each report's Ids on intake, so a later research
+step continues from that role's last Id in the run.
+
+**Research completeness check.** Check each report on its own. It is incomplete when a section the
+frame or the card's **Output** gives is missing, a finding has no evidence, no report came back,
+the tool ended the dispatch with an error or cut the report short, or the developer interrupted
+it. There is no time limit. Dispatch that role alone once more, in a new tree whose guard baseline
+is taken when it is built. After a second incomplete report the line is
+`Research: {role} gave no complete report; not researched by {role}.`, and the step goes on
+without that role.
+
 ## Tree and guard
 
 Build a new detached tree of `{base}` with the pack copied in for each **pass**, by the commands
@@ -172,6 +222,15 @@ last report. A difference outside git-ignored output voids the pass: say which f
 remove the tree, and stop the run, `COLD READ STOPPED` in the panel and `{SKILL} STOPPED` in the
 skill that dispatched a drafter, with Status unchanged and the files on disk. Git-ignored build output in the tree, such as `target/`, is not a difference:
 the guard's `git status --porcelain` does not list ignored files. Remove the tree after the guard.
+
+**A research pass** is the one exception to the stop rule above. It builds a new detached tree of
+`{base}` for each research step and one more for each retry, by the same commands. The resumed pack
+is copied in as `{path}`; a new topic copies nothing, so the copy line is skipped and the guard runs
+only its tree part, `git status --porcelain --untracked-files=all`. The guard runs before the step
+and after its last report, and a retry's tree is guarded from its own baseline. A difference voids
+every report of that step, the retry's included: name the changed files, remove the tree, bring in
+no finding from it, and go on without research. A void is no stop and gives no new result status.
+Every role of a step shares its tree.
 
 `{diff}` and `{seed}` are files outside the tree, in a temporary directory of their own. `{diff}`
 is `diff -ru` of a copy of the pack taken before the fixes against the pack after them, since the
