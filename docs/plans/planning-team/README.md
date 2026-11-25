@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | routed |
+| **Status** | done |
 | **Type** | Feature |
 | **Size** | XL — 4 child packs |
 | **Modifiers** | none |
@@ -140,6 +140,11 @@ folder and the repository.
   roster scales with the route under `planning-team-spec` ADR-003: a role runs only when its stage
   writes its file. Every session that runs a phase skill is already the Facilitator. No
   `docs/plans/planning-team-facilitator` folder exists.
+- **Closed by hand (2026-11-25).** Every child pack is `done` or closed, so the developer closed
+  this parent. `pack-format.md` defines no close for an XL parent: it reaches `done` only from
+  `executing` or a Spike's `specified`, and a parent stays at `routed`. Status was set from `routed`
+  to `done` by hand, with the Retro below rolled up from the children's. #293 adds the transition
+  to the format.
 - **Settled by child pack 1:** role cards live in `skills/planning/references/roles/<role>.md`,
   shared by every skill (`planning-team-review` ADR-001). The roster was tested against the 95
   blockers from the 35 hyalos rounds: only 8 needed a cold reader (`planning-team-review/prd.md`,
@@ -147,8 +152,13 @@ folder and the repository.
 
 ## Retro
 
-_Written by the final slice. Guidance: compare what the cold read predicted with what really
-diverged, using the deviations in every progress file._
+This parent had no cold read of its own; each row rolls up its children's Retros. The **Slice**
+column names the child pack.
 
 | Cold read predicted | What diverged | Slice | Lesson for the next pack |
 |---|---|---|---|
+| Child 1 to 3 cold reads passed (child 2 after 3 rounds, child 3 after 2) | Paths the packs never named turned up in review and preflight: route branches in child 2, reused steps' exits in child 3, a stopped run never reaching Phase 6 in child 1 | children 1, 2, 3 | Read every route branch, and every reused step's exits, of each phase a slice changes |
+| Fixtures and seeds would behave as written | Seeds were found too easily (child 1, 10 of 10), one dispatch served several seeds (child 2), and named fixtures became repository content (child 3, T2 and T3 amended) | children 1, 2, 3 | Seed subtler defects, plan seeds per dispatch, and check a fixture's premise against the repository |
+| Line cites in the pack stay true | Cites to `dispatch.md` went stale once earlier slices inserted sections, in child 3 as in `planning-redesign` | child 3 | Cite sections by name, not line |
+| Child 4 would be planned as its own pack | A research step found its whole scope already delivered by children 1 to 3, and the developer closed it unplanned (#292) | child 4 | Run discovery research before planning a late child; earlier children may have absorbed it |
+| The format covers every pack's close | An XL parent has no `done` transition, so this parent was closed by hand | parent | #293 |
