@@ -4,7 +4,7 @@
 |---|---|
 | **Status** | done |
 | **Issue** | #281 |
-| **PR** | found from the branch `issue/281` |
+| **PR** | this PR |
 | **Executor model** | Opus 5.5 (claude-opus-5-5) |
 | **Date** | 2026-11-24 |
 
