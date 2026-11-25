@@ -273,5 +273,12 @@ In a gate (`../gates.md`), the Facilitator works through each of the gate's card
 same tree under the same guard, and the checkpoint says
 `Gate run by the Facilitator: not independent.`
 
+In a research step (`brainstorm`, Kind `research`), the Facilitator works through each research
+card in turn itself, in the step's one tree under the same guard, and writes each report in the
+research report's shape. A card it could not complete by its Output is worked through once more,
+then gives the **Research completeness check**'s missing line. Once per step, after the summary
+line, or after the missing lines when no card was completed, it says
+`Research run by the Facilitator: not independent.`
+
 Cold readers are not covered by this: a reader
 needs a subagent, and `cold-read` Phase 3 stops without one.

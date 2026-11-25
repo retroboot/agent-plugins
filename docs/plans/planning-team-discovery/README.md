@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | executing |
+| **Status** | done |
 | **Type** | Feature |
 | **Size** | M — 5 slices |
 | **Modifiers** | none |
@@ -115,3 +115,8 @@ diverged, using the deviations in every progress file._
 
 | Cold read predicted | What diverged | Slice | Lesson for the next pack |
 |---|---|---|---|
+| Pass after 2 rounds: the pack was complete | T3 ("correct one misspelled word") was named as a topic with little to argue against. The Skeptic found grounded reasons against it twice, including the parent's **Ruled out** "The full team on every pack". The developer amended S-03.2.e2 | 1 | Before naming a fixture as the empty case, check its premise against the repository's own records |
+| (same) | T2 ("a mobile push-notification service") was expected to give a report with no path. The Scout cited adjacent paths, including this pack's own `design.md`, which names T2 once the pack merged. The developer amended S-01.1.e2 | 2 | A pack that names its fixtures turns them into repository content. Write a nothing-found row for the adjacent paths it will cite |
+| (same) | The first forced-short prompt was ignored and a full report came back. Only an exact one-line reply forced an incomplete report | 3, 4 | When seeding an incomplete report, give its exact text |
+| (same) | Phase 4 research reused Phase 2 steps whose exits jump to Phase 3 (review of #290). Step 7 had no rule for a step with every role missing, which was deferred to Slice 5 | 4, 5 | When a section reuses another section's steps, read each reused step's exits in the new phase |
+| (same) | Line cites to `dispatch.md` in `context.md` and `plan.md` went stale once Slice 1 inserted the research sections (**No subagent tool** moved from `:203` to `:262`) | 1, 5 | Cite sections by name. This repeats `planning-redesign`'s lesson, and it still bit |
