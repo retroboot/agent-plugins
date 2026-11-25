@@ -95,6 +95,10 @@ Skill dir, per dry run:
   the gate found the dangling pointers (GF6). The fix settled each in the file, as
   `dispatch.md` **Draft completeness check** says.
 - **Where DS1's answer went:** `context.md` §2, the section the item named, with the date.
+- **The refusal's way out (PR #277 review).** On the **refuse** copy, `run planning {path}`
+  resumed at Phase 7 by Status and met the same refusal, because no phase skill re-ran the gate.
+  `planning` Resume now takes a Gate pending entry to the phase that owns its file, whatever the
+  Status. A desk run of that copy goes to Phase 5 (`slice`) for `plan.md`.
 
 ## Discoveries
 
@@ -109,5 +113,5 @@ Skill dir, per dry run:
   No live item collided, but a `G` Id is unique only among items still held or deferred.
 - **For Slice 5: the Scout's own defects are worth a gate.** The context gate found two real
   defects the Scout introduced (PF5, PF6). Neither was a seed.
-- **`spec` line budget.** `spec` is 384 lines and `planning` is 381, leaving 15 and 18 lines for
+- **`spec` line budget.** `spec` is 384 lines and `planning` is 385, leaving 15 and 14 lines for
   Slices 3 to 5.

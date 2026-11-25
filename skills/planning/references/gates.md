@@ -124,4 +124,5 @@ pending, and it is never the place for an answer, a fix or a deferral, which go 
   file and section, the answer and the date. `planning` Resume reads `handoff.md` before the README
   pending lines and resumes this entry at Phase 4, Specify, passing the answer as `spec`'s request.
   `spec` removes the entry when the checkpoint that shows the revised file approves.
-- `planning` refuses Approve and Publish while `handoff.md` exists.
+- `planning` refuses Approve and Publish while `handoff.md` exists, and its Resume takes a Gate
+  pending entry to the phase that owns the file, whatever the Status, so the refusal has a way out.
