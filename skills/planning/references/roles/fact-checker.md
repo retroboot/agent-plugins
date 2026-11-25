@@ -8,6 +8,10 @@ F
 
 sonnet
 
+## Kind
+
+review
+
 ## Job
 
 Prove or disprove every claim the pack makes about the repository and its tools: citations, named
