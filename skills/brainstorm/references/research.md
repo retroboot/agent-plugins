@@ -40,7 +40,8 @@ question. Before a topic exists, dispatch nothing.
 4. **Dispatch.** Send the Scout, the Historian and the Skeptic in one message, so they run at once,
    each by `dispatch.md` **Research frame** and **Model resolution**. `{topic}` is your own one- or
    two-sentence statement of `topic` and `framing`. `{path}` is `resume_pack`, or `none`. Wait for
-   every report. There is no time limit.
+   every report. There is no time limit. With no subagent tool, work through the three cards
+   yourself instead, as `dispatch.md` **No subagent tool** says for a research step.
 5. **Guard and completeness.** When every report is in, run the guard again. A difference voids the
    step, every report in it, any retry's included. Say
    `Research void: {files} changed in the research tree; no finding brought in.`, remove the tree,
@@ -53,9 +54,10 @@ question. Before a topic exists, dispatch nothing.
    `Research tree {tree} was not removed; the next cold-read run will list it.` and go on.
 7. **Summary line.** Say one line for the step:
    `Research: Scout {model} — {f} findings, Historian {model} — {f} findings, Skeptic {model} — {f} findings`.
-   `{model}` is the alias dispatched, or `default model`. `{f}` counts the findings of a complete
-   report. Leave a missing role out of the line; its missing line stands on its own. Say nothing
-   else about the research process unless the developer asks.
+   `{model}` is the alias dispatched, `default model`, or `Facilitator` for a card you worked
+   through yourself. `{f}` counts the findings of a complete report. Leave a missing role out of
+   the line; its missing line stands on its own. When no role is complete, give no summary line.
+   Say nothing else about the research process unless the developer asks.
 
 When **Base** fell back to `HEAD`, the tree may hold unmerged commits, and only merged work counts as
 history. Beside any Historian finding you bring in, say `(from HEAD, may include unmerged work)`.
@@ -75,7 +77,8 @@ its evidence, and whether it was run independently. Each finding is one of:
 A finding whose text is a question for the developer is yours to ask or not. When you ask it, ask it
 as your own, one question at a time. When the developer asks where a finding came from, name the
 role that gave it and its evidence: the `path:line`, the past pack and its record, or the Skeptic's
-line of reasoning.
+line of reasoning. For a finding from a card you worked through yourself with no subagent tool,
+also say that it was not run independently.
 
 ## Phase 3 opening
 
