@@ -1,21 +1,35 @@
 # Git Hygiene — the reasoning behind `init` Phases 6 and 7
 
-`init` Phase 6 (keep `.hivrr.json` out of git) and Phase 7 (report orphan worktrees) keep their
+`init` Phase 6 (keep `.agent-plugins.json` out of git) and Phase 7 (report orphan worktrees) keep their
 steps, commands, gates and report strings in [`SKILL.md`](../SKILL.md). This file holds the reasoning
 behind them. Read it when a step there names a section here — typically when a result looks
 surprising, or before changing either phase.
 
 ---
 
-## Phase 6 — why `.hivrr.json` stays out of git
+## Phase 6 — why `.agent-plugins.json` stays out of git
 
-`.hivrr.json` is per-checkout, not shared — each teammate, agent, and CI run derives its own copy by
+`.agent-plugins.json` is per-checkout, not shared — each teammate, agent, and CI run derives its own copy by
 running `init`, the same way each of them has their own `~/.claude/settings.json`. A copy that leaks
 into git via a missing `.gitignore` entry gives every clone a stale, silently-inherited config
 instead of one derived from that machine's actual repo state — which is exactly how this plugin's own
-repo ended up with a committed `.hivrr.json` before this phase existed. This phase exists to make
+repo ended up with a committed config file before this phase existed. This phase exists to make
 that failure mode structurally impossible rather than something a `.gitignore` review might catch.
 [`config.md`](config.md) (**Why repo-local, and why gitignored**) has the longer history.
+
+## Phase 6 — why the old ignore line is swapped, and when it is kept
+
+Before v2.0.0 the config file had another name, and a repo `init` set up then has a `.gitignore`
+line for that name. Step 1 replaces that exact line with `.agent-plugins.json` instead of appending
+a second line, so the file keeps one ignore line, under the name the skills read, and every other
+line keeps its bytes. When `.agent-plugins.json` is already listed, the old line is deleted instead.
+Only lines that are exactly the old name change: a variant such as a leading `/` is left alone, and
+Step 1's ignore check still adds the new line.
+
+The swap is skipped while the old file is still on disk. That happens only when Phase 3 kept it,
+because `.agent-plugins.json` could not be validated. Removing the line then would leave the kept
+file untracked and unignored, where one `git add .` commits it. A later run, once Phase 3 has
+removed the old file, swaps the line.
 
 ## Phase 6 — why an ignored file still goes to Step 2
 
@@ -38,10 +52,14 @@ forward (past commits still have it; that is expected and not this phase's job t
 **The trailing pathspec is required, not decoration**, for the same reason it always is in this
 plugin: a bare `git commit` commits the **whole index**, including anything staged before `init` ran
 by the user or an interrupted workflow, and `init` runs as the first bootstrap step of every command
-— so it routinely executes mid-workflow in a checkout with a populated index. Passing `.hivrr.json`
+— so it routinely executes mid-workflow in a checkout with a populated index. Naming a config file
 in the pathspec commits its *removal* (from Step 2) when that happened; git accepts a pathspec for a
-staged deletion the same way it does for a staged addition. If Step 2 found nothing tracked, the
-pathspec simply matches nothing extra and the commit carries `.gitignore` alone.
+staged deletion the same way it does for a staged addition.
+
+The commit names only the paths that changed: `.gitignore` when Step 1 changed it, and each config
+file Step 2 untracked. Never name a path that did not change. A pathspec naming an untracked file is
+not harmless: `git commit` fails with `error: pathspec '…' did not match any file(s) known to git`,
+and nothing is committed.
 
 ## Phase 6 — why the pathspec rule is restated in `init`, not linked
 

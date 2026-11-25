@@ -1,6 +1,6 @@
 # Enter a worktree
 
-Read this file only when `worktree.enabled` in `.hivrr.json` is true. Two skills send you here, at
+Read this file only when `worktree.enabled` in `.agent-plugins.json` is true. Two skills send you here, at
 the point where they are about to create their branch:
 
 - `work-issue` Phase 5, **Enter a worktree (conditional)**, with `{branch}` = `issue/{number}`.
@@ -18,7 +18,7 @@ Before entering, confirm the repo's `CLAUDE.md` authorizes it (see **Adopting wo
 [`config.md`](../../init/references/config.md)). If the config key is set but the authorization line is
 absent, warn once and continue **without** a worktree:
 
-`Worktree: enabled in .hivrr.json but not authorized in CLAUDE.md — continuing in the current checkout`
+`Worktree: enabled in .agent-plugins.json but not authorized in CLAUDE.md — continuing in the current checkout`
 
 ## Existing worktree, or a new one
 

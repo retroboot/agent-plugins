@@ -26,7 +26,7 @@ Complete the task you were given. Work until done - do not stop prematurely.
 
 Never work on a protected branch directly. Always use isolated branches.
 
-The protected set is `branches.protected` from `.hivrr.json`. When that is absent — which is the
+The protected set is `branches.protected` from `.agent-plugins.json`. When that is absent — which is the
 normal case for a repo that has never configured it — the set defaults to:
 
 ```

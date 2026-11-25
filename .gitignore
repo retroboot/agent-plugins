@@ -7,4 +7,4 @@ node_modules/
 
 # Per-checkout config scaffolded by the init skill — never shared via git, see
 # skills/init/references/config.md
-.hivrr.json
+.agent-plugins.json

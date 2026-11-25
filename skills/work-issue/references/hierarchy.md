@@ -1,6 +1,6 @@
 # Check for hierarchy
 
-Read this file only when `issues.hierarchy` is enabled in `.hivrr.json` (see
+Read this file only when `issues.hierarchy` is enabled in `.agent-plugins.json` (see
 [`config.md`](../../init/references/config.md); it is GitHub-only). `work-issue` Phase 3 sends you
 here after fetching the issues. When `issues.hierarchy` is disabled or absent, skip all of it.
 

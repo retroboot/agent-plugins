@@ -41,14 +41,14 @@ Examples:
 
 ## Step 2 — Create or Resume the Branch
 
-First resolve the **integration branch** — `branches.integration` from `.hivrr.json`, falling back to
+First resolve the **integration branch** — `branches.integration` from `.agent-plugins.json`, falling back to
 the repository default branch when the file or key is absent. Everything below compares against and
 forks from that branch, not from `main`. On a ladder repo the integration branch is `dev`, and
 assuming `main` there produces a wave summary listing commits that are already merged.
 
 Store it as `{integration}`.
 
-**Worktree (conditional).** Read `worktree` from `.hivrr.json`. When `worktree.enabled` is true
+**Worktree (conditional).** Read `worktree` from `.agent-plugins.json`. When `worktree.enabled` is true
 **and** the repo's `CLAUDE.md` authorizes it, run this wave inside a worktree named
 `wave/{min}-{max}-{count}` — the same name as the branch. When the key is absent or false, skip this
 paragraph entirely and use the branch logic below unchanged.

@@ -11,7 +11,7 @@ Ensure provider config, labels, repo config, and verify commands are in place be
 
 **Phase contract — read this before anything else.** The seven phases run **in order, every time**. A phase that finds its work already done reports and **continues to the next phase**; it does not end the skill. Only an unrecoverable error stops `init`.
 
-**The count in that sentence is load-bearing.** It is what tells you the run is not finished, so a wrong number truncates the skill silently — stopping after Phase 5 would skip Phase 6, which is what keeps `.hivrr.json` out of git. The seventh and tenth structural checks in `docs/verification.md` hold this count and `CLAUDE.md`'s against the `## Phase` headings; nothing checks the `README.md` row. If you add or remove a phase here, update this line, the `init` row in `README.md`, and the `init` bullet under **Shared setup skills** in `CLAUDE.md` in the same commit.
+**The count in that sentence is load-bearing.** It is what tells you the run is not finished, so a wrong number truncates the skill silently — stopping after Phase 5 would skip Phase 6, which is what keeps `.agent-plugins.json` out of git. The seventh and tenth structural checks in `docs/verification.md` hold this count and `CLAUDE.md`'s against the `## Phase` headings; nothing checks the `README.md` row. If you add or remove a phase here, update this line, the `init` row in `README.md`, and the `init` bullet under **Shared setup skills** in `CLAUDE.md` in the same commit.
 
 "Idempotent" here means each phase is cheap and safe to re-run, not that the skill exits early. Phase 4 in particular exists to catch repo drift and is worthless if an earlier phase short-circuits past it.
 
@@ -110,34 +110,99 @@ Emit: `INIT: labels bootstrapped for {OWNER}/{REPO}`
 
 ---
 
-## Phase 3 — Scaffold `.hivrr.json`
+## Phase 3 — Scaffold `.agent-plugins.json`
 
 Offer the repo a local config file so branch, board, and verify settings are derived once per
 checkout instead of living in per-user global settings or being re-guessed on every command. The
 file is **gitignored, never committed** — see Phase 6.
 
-**Step 1 — Load the config reference.** Read `$CLAUDE_SKILL_DIR/references/config.md`. It is the
-`config.md` the rest of this skill names: the schema, defaults and precedence every later phase reads.
+**Step 1 — Migrate an old config file**
 
-**Step 2 — Check for an existing file**
+Before v2.0.0 the config file was `.hivrr.json`. Every other skill reads `.agent-plugins.json`
+only, so this step carries an old file over before anything reads config: no earlier phase reads
+it, and every later phase reads the new name. It **asks no question, in any mode**, `--auto` or not.
+The table in **Migrating from `.hivrr.json`** in `$CLAUDE_SKILL_DIR/references/config.md` sums it
+up; this step is complete without it.
+
+**1a — Type probe.** Runs first, every time, and nothing moves before it passes. A path that exists
+as a directory, a symlink or anything else that is not a regular file stops the migration:
 
 ```bash
-test -f .hivrr.json && echo present || echo absent
+for p in .hivrr.json .agent-plugins.json; do
+  if test -L "$p" || { test -e "$p" && ! test -f "$p"; }; then echo "not-regular $p"; fi
+done
+```
+
+For the first `not-regular {path}` line, emit
+`INIT: migration stopped — type check failed: {path} is not a regular file` and **stop the skill**.
+Both paths stay as they were. No output means both are regular files or absent: continue to 1b.
+
+**1b — Which files are there.**
+
+```bash
+test -f .hivrr.json && echo old || echo no-old
+test -f .agent-plugins.json && echo new || echo no-new
+```
+
+Take the one case that matches:
+
+- **`no-old`** — nothing to migrate. Emit no migration line and continue to Step 2.
+- **`old` and `no-new`** — rename it. Do not validate or repair `.hivrr.json` first: a same-directory
+  rename keeps its bytes exactly, and a malformed file is renamed unchanged for Step 3 to stop on.
+
+  ```bash
+  mv -- .hivrr.json .agent-plugins.json
+  ```
+
+  On success, emit `INIT: upgraded .hivrr.json to .agent-plugins.json` and continue to Step 2. If
+  `mv` fails, emit
+  `INIT: migration stopped — rename .hivrr.json to .agent-plugins.json failed: {error}` and **stop
+  the skill**; both paths are as they were.
+- **`old` and `new`** — the new file wins, but only once it validates:
+
+  ```bash
+  jq empty .agent-plugins.json
+  ```
+
+  - Exit 0 → remove the old file, leaving `.agent-plugins.json` untouched:
+
+    ```bash
+    rm -- .hivrr.json
+    ```
+
+    On success, emit `INIT: removed .hivrr.json (.agent-plugins.json kept)` and continue to Step 2.
+    If `rm` fails, emit `INIT: migration stopped — remove .hivrr.json failed: {error}` and **stop the
+    skill**.
+  - Any other exit, a parse error or `jq` missing (127) → change nothing and emit no migration line.
+    **Never remove `.hivrr.json` while `.agent-plugins.json` is unvalidated** — the old file may be
+    the repo's only valid config. Continue to Step 2; Step 3 reports the new file as malformed (and
+    stops) or as present but unvalidated, and a later run removes the old file once the new one
+    validates.
+
+A second run on a migrated repo takes `no-old` and changes nothing.
+
+**Step 2 — Load the config reference.** Read `$CLAUDE_SKILL_DIR/references/config.md`. It is the
+`config.md` the rest of this skill names: the schema, defaults and precedence every later phase reads.
+
+**Step 3 — Check for an existing file**
+
+```bash
+test -f .agent-plugins.json && echo present || echo absent
 ```
 
 **If present:** validate it, then continue to Phase 4. **Never overwrite an existing file** — editing it is the user's job.
 
 ```bash
-jq empty .hivrr.json
+jq empty .agent-plugins.json
 ```
 
-- Parses → Emit `INIT: .hivrr.json ok` and continue to Phase 4.
-- Fails to parse → Emit `INIT: .hivrr.json is malformed — {jq error}` and **stop the skill**. Do not repair it silently. This is the one unrecoverable error in `init`: every later phase reads and writes this file, so continuing would compound the damage.
-- `jq: command not found` (exit 127) → the validator is missing, not the config. Emit `INIT: .hivrr.json present (unvalidated — jq not installed)` and continue to Phase 4.
+- Parses → Emit `INIT: .agent-plugins.json ok` and continue to Phase 4.
+- Fails to parse → Emit `INIT: .agent-plugins.json is malformed — {jq error}` and **stop the skill**. Do not repair it silently. This is the one unrecoverable error in `init` apart from a stopped migration: every later phase reads and writes this file, so continuing would compound the damage.
+- `jq: command not found` (exit 127) → the validator is missing, not the config. Emit `INIT: .agent-plugins.json present (unvalidated — jq not installed)` and continue to Phase 4.
 
-**If absent:** continue to Step 3.
+**If absent:** continue to Step 4.
 
-**Step 3 — Detect repo state**
+**Step 4 — Detect repo state**
 
 ```bash
 gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'
@@ -148,7 +213,7 @@ From the results, derive proposed values:
 
 - `provider` — the resolved `repoProvider`
 - `issueTracker` — the resolved `issueTracker`. Where it disagrees with the repo's own host, propose
-  the **repo's host** and say so in the Step 4 confirmation: here the disagreement is most likely a
+  the **repo's host** and say so in the Step 5 confirmation: here the disagreement is most likely a
   stale global setting, and writing `provider` without `issueTracker` makes the repo read its issues
   from another host (**`provider` and `issueTracker`** in `config.md`).
 - `branches.integration` — the default branch, unless a `dev` branch exists on the remote, in which case propose `dev`
@@ -157,19 +222,19 @@ From the results, derive proposed values:
 
 Omit `project` and `verify` entirely — Phase 4 fills in `verify` and Phase 5 fills in `project`, both against the file this step writes. An absent key is valid and falls through to its documented default.
 
-**Step 4 — Confirm and write**
+**Step 5 — Confirm and write**
 
 Show the proposed JSON and ask whether to write it. In `--auto` mode, write it without asking.
 
 Write the file with the Write tool, then validate:
 
 ```bash
-jq empty .hivrr.json
+jq empty .agent-plugins.json
 ```
 
 If `jq` reports a parse error, delete the file and report it rather than leaving a malformed config behind. If `jq` is not installed, keep the file and note that it went unvalidated.
 
-Emit: `INIT: .hivrr.json scaffolded (integration: {integration}, ladder: {ladder})`
+Emit: `INIT: .agent-plugins.json scaffolded (integration: {integration}, ladder: {ladder})`
 
 ---
 
@@ -181,7 +246,7 @@ Record how this repo runs its tests and its linter, so `work-issue` and `work-pr
 
 **Step 1 — Read what is already recorded**
 
-Read `verify.test`, `verify.lint`, and `verify.detectedFrom` from `.hivrr.json`. Any of them may be absent.
+Read `verify.test`, `verify.lint`, and `verify.detectedFrom` from `.agent-plugins.json`. Any of them may be absent.
 
 **If `detectedFrom` is exactly `["manual"]`, stop here.** That sentinel means a human recorded these
 commands deliberately and detection must not touch them. Emit `INIT: verify manual — not re-detected`
@@ -225,9 +290,9 @@ Otherwise, for each path in the recorded `verify.detectedFrom`, check whether it
 
 Confirm with the user on first detection, and again whenever re-detection changes a command. In `--auto` mode, write without asking but still report the change.
 
-Write `verify.test`, `verify.lint`, and `verify.detectedFrom` into `.hivrr.json`, preserving every other key. Validate with `jq empty` afterward.
+Write `verify.test`, `verify.lint`, and `verify.detectedFrom` into `.agent-plugins.json`, preserving every other key. Validate with `jq empty` afterward.
 
-If `.hivrr.json` does not exist, do not create one solely for this — report the detected commands so the user can adopt them, and let `work-issue` fall back to detection.
+If `.agent-plugins.json` does not exist, do not create one solely for this — report the detected commands so the user can adopt them, and let `work-issue` fall back to detection.
 
 Emit: `INIT: verify recorded (test: {test}, lint: {lint})`
 
@@ -238,7 +303,7 @@ Emit: `INIT: verify recorded (test: {test}, lint: {lint})`
 Resolve and cache the GitHub Projects v2 IDs that board operations need, so they are looked up once
 rather than on every call.
 
-**Skip this phase entirely** when `project` is absent from `.hivrr.json`, or when `project.owner` and
+**Skip this phase entirely** when `project` is absent from `.agent-plugins.json`, or when `project.owner` and
 `project.number` are not both set. A repo with no board is the normal case, not an error — emit
 nothing and move on.
 
@@ -258,9 +323,9 @@ Emit one of:
 
 ---
 
-## Phase 6 — Keep `.hivrr.json` Out of Git
+## Phase 6 — Keep `.agent-plugins.json` Out of Git
 
-`.hivrr.json` is per-checkout, not shared — each teammate, agent, and CI run derives its own copy by
+`.agent-plugins.json` is per-checkout, not shared — each teammate, agent, and CI run derives its own copy by
 running `init`. A copy that leaks into git gives every clone a stale, silently-inherited config; this
 phase makes that structurally impossible. The reasoning behind each step below is in
 [`references/git-hygiene.md`](references/git-hygiene.md), under the **Phase 6 — …** heading the
@@ -270,66 +335,105 @@ steps here are complete without it.
 This phase is gated on nothing but the file itself. It runs whether or not the repo has a project
 board, a verify command, or a worktree.
 
-**Step 1 — Check whether `.hivrr.json` is already ignored**
+Record, for Step 3, whether Step 1 changed `.gitignore` and which paths Step 2 untracked.
+
+**Step 1 — Swap the old ignore line, then check that `.agent-plugins.json` is ignored**
+
+First the swap. Before v2.0.0 the config file was `.hivrr.json`, and its `.gitignore` line needs
+the new name (**Phase 6 — why the old ignore line is swapped, and when it is kept**). Find the lines
+that are exactly the old name, and whether the old file is still on disk:
 
 ```bash
-git check-ignore -q .hivrr.json && echo ignored || echo not-ignored
+test -f .gitignore && grep -nxF '.hivrr.json' .gitignore
+test -f .gitignore && grep -cxF '.agent-plugins.json' .gitignore
+{ test -e .hivrr.json || test -L .hivrr.json; } && echo old-present || echo old-absent
+```
+
+Take the first case that applies:
+
+- **`old-present`** — Phase 3 kept `.hivrr.json`, because `.agent-plugins.json` could not be
+  validated. Change no line, so the kept file stays ignored. A later run swaps it.
+- **No `.hivrr.json` line** — nothing to swap.
+- **`.hivrr.json` lines and no `.agent-plugins.json` line** — use the Edit tool to change the first
+  `.hivrr.json` line to `.agent-plugins.json` and delete any other `.hivrr.json` line. Emit
+  `INIT: .gitignore line .hivrr.json replaced with .agent-plugins.json`.
+- **`.hivrr.json` lines and an `.agent-plugins.json` line** — use the Edit tool to delete every
+  `.hivrr.json` line. Emit `INIT: .gitignore line .hivrr.json removed (.agent-plugins.json already listed)`.
+
+Edit only those exact lines, with the Edit tool. Never rewrite `.gitignore`: comments, every other
+line and their order keep their bytes. A line that only resembles the old name, such as
+`/.hivrr.json`, is left alone.
+
+Then check that the new file is ignored:
+
+```bash
+git check-ignore -q .agent-plugins.json && echo ignored || echo not-ignored
 ```
 
 **If ignored:** continue to Step 2 anyway — an ignored file can still be tracked (**Phase 6 — why an
-ignored file still goes to Step 2**).
+ignored file still goes to Step 2**). A pattern such as `*.json` counts: append nothing.
 
 **If not ignored:** append it — append, never overwrite `.gitignore` (**Phase 6 — why append to
-`.gitignore`**) — and record that fact for Step 3's commit message:
+`.gitignore`**). This creates `.gitignore` when there is none:
 
 ```bash
-printf '%s\n' '.hivrr.json' >> .gitignore
+printf '%s\n' '.agent-plugins.json' >> .gitignore
 ```
 
-**Step 2 — Check whether `.hivrr.json` is tracked**
+**Step 2 — Check whether either config file is tracked**
 
 ```bash
-git ls-files --error-unmatch .hivrr.json >/dev/null 2>&1 && echo tracked || echo untracked
+git ls-files --error-unmatch .agent-plugins.json >/dev/null 2>&1 && echo "tracked .agent-plugins.json"
+git ls-files --error-unmatch .hivrr.json >/dev/null 2>&1 && echo "tracked .hivrr.json"
 ```
 
-**If tracked:** untrack it without touching the working-tree file. This stages a deletion from the
-index only; the file and its config stay on disk (**Phase 6 — what `git rm --cached` does**):
+Check `.hivrr.json` even when Phase 3 renamed it away: the index still holds it if it was ever
+committed.
+
+**For each tracked path:** untrack it without touching the working-tree file. This stages a deletion
+from the index only; any file on disk and its config stay (**Phase 6 — what `git rm --cached`
+does**):
 
 ```bash
-git rm --cached .hivrr.json
+git rm --cached -- {path}
 ```
 
-**If untracked:** nothing to do here.
+**If neither is tracked:** nothing to do here.
 
 **Skip Step 3 entirely** when neither Step 1 nor Step 2 changed anything — `.gitignore` already had
-the line and `.hivrr.json` was already untracked. Emit `INIT: .hivrr.json gitignored` and continue to
+the line and no config file was tracked. Emit `INIT: .agent-plugins.json gitignored` and continue to
 Phase 7.
 
 **Step 3 — Commit the change**
 
-Resolve the current branch and the protected set — `branches.protected` from `.hivrr.json` (read it
-before Step 2's `git rm --cached` if you need it, the working-tree file is unaffected either way),
-falling back to the documented default (`main`, `master`, `dev`, `develop`, `staging`, `release/*`):
+Resolve the current branch and the protected set — `branches.protected` from `.agent-plugins.json`
+(the working-tree file is unaffected by Step 2), falling back to the documented default (`main`,
+`master`, `dev`, `develop`, `staging`, `release/*`):
 
 ```bash
 git branch --show-current
 ```
 
-**On a branch that is not protected** — stage and commit exactly the two paths this phase can touch:
+Build `{changed paths}`: `.gitignore` when Step 1 changed it, plus each path Step 2 untracked.
+**Never list a path that did not change.** A pathspec naming an untracked file makes `git commit`
+fail with `pathspec … did not match any file(s) known to git` (**Phase 6 — the commit's trailing
+pathspec**).
+
+**On a branch that is not protected** — stage and commit exactly those paths:
 
 ```bash
-git add .gitignore
-git commit -m "chore(config): keep .hivrr.json out of git" -- .gitignore .hivrr.json
+git add .gitignore        # only when Step 1 changed it
+git commit -m "chore(config): keep .agent-plugins.json out of git" -- {changed paths}
 ```
 
 **The trailing pathspec is required, not decoration.** A bare `git commit` commits the **whole
 index**, including anything staged before `init` ran, and `init` routinely runs mid-workflow with a
-populated index. With the pathspec the commit carries `.gitignore`, plus `.hivrr.json`'s removal when
-Step 2 staged one, and nothing else (**Phase 6 — the commit's trailing pathspec**). Keep this rule
-inline rather than linking to `core`'s **Staging**: `init` also ships in `planner`, which has no
-`core` (**Phase 6 — why the pathspec rule is restated in `init`, not linked**).
+populated index. With the pathspec the commit carries `.gitignore` when it changed, plus each config
+file's removal that Step 2 staged, and nothing else (**Phase 6 — the commit's trailing pathspec**).
+Keep this rule inline rather than linking to `core`'s **Staging**: `init` also ships in `planner`,
+which has no `core` (**Phase 6 — why the pathspec rule is restated in `init`, not linked**).
 
-Then confirm the commit carries only `.gitignore` and, if Step 2 ran, `.hivrr.json`'s removal:
+Then confirm the commit carries exactly `{changed paths}`:
 
 ```bash
 git show --stat --oneline HEAD
@@ -340,7 +444,7 @@ If anything else is listed, report it and stop. Do not report a clean config com
 **On a protected branch** — do not commit. Stage what changed and report:
 
 ```bash
-git add .gitignore
+git add .gitignore        # only when Step 1 changed it; Step 2's untracking is already staged
 ```
 
 `core` forbids committing directly to a protected branch, so the decision is the user's: commit it
@@ -349,15 +453,15 @@ from a feature branch, or run the Step 3 commit deliberately.
 **Never push.** `init` is setup, not delivery, and a push from a setup phase is a surprise.
 
 Emit one of:
-- `INIT: .hivrr.json gitignored ({branch})` — `.gitignore` updated, and untracked if it was tracked
-- `INIT: .hivrr.json gitignored — {branch} is protected, commit deliberately`
-- `INIT: .hivrr.json gitignored` — already ignored and already untracked, nothing to do
+- `INIT: .agent-plugins.json gitignored ({branch})` — `.gitignore` updated, and untracked if it was tracked
+- `INIT: .agent-plugins.json gitignored — {branch} is protected, commit deliberately`
+- `INIT: .agent-plugins.json gitignored` — already ignored and already untracked, nothing to do
 
 ---
 
 ## Phase 7 — Report Orphan Worktrees
 
-**Skip when `worktree` is absent from `.hivrr.json`.** This is the phase's only gate: it does not
+**Skip when `worktree` is absent from `.agent-plugins.json`.** This is the phase's only gate: it does not
 depend on `project`, so it runs even when Phase 5 skipped (**Phase 7 — why it is not gated on
 `project`** in [`references/git-hygiene.md`](references/git-hygiene.md)).
 

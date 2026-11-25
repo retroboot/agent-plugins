@@ -3,7 +3,7 @@
 The full procedure behind `merge-pr` Phase 9 (**Clean Up Branches**). `SKILL.md` Phase 9 keeps every
 gate and says when to read each section here:
 
-- **Remove the head branch's worktree** — Step 1, only when `worktree` is present in `.hivrr.json`,
+- **Remove the head branch's worktree** — Step 1, only when `worktree` is present in `.agent-plugins.json`,
   the merge is not a promotion, and a worktree holds the head branch.
 - **Prune stale local branches** — Step 2, on every run.
 
@@ -20,7 +20,7 @@ must not be reported as a failed merge. Report what was left behind so it can be
 
 **Worktree cleanup runs before branch deletion — the order is enforced by git, not chosen.**
 
-Skip this sub-step entirely when `worktree` is absent from `.hivrr.json`, and when the merged PR is
+Skip this sub-step entirely when `worktree` is absent from `.agent-plugins.json`, and when the merged PR is
 a promotion (`is_promotion` true) — promotion branches are long-lived rungs and never have
 worktrees.
 
@@ -97,7 +97,7 @@ For each candidate, in order:
 straight into a delete. Protected → keep.
 
 **2 — Is it held by a worktree?** Skipped, along with the rest of Phase 9's worktree handling,
-when `worktree` is absent from `.hivrr.json`. A branch checked out in any worktree cannot be
+when `worktree` is absent from `.agent-plugins.json`. A branch checked out in any worktree cannot be
 deleted, and the worktree may belong to a live session that is still working:
 
 ```bash

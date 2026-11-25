@@ -160,7 +160,7 @@ For a pack slice on a Linear issue, `issue/{number}` in this phase and later is 
 
 ### Enter a worktree (conditional)
 
-Read `worktree` from `.hivrr.json`. **Skip this entire section** when `worktree.enabled` is absent
+Read `worktree` from `.agent-plugins.json`. **Skip this entire section** when `worktree.enabled` is absent
 or false — the session works in the current checkout exactly as before.
 
 When it is true, follow [`references/worktree.md`](references/worktree.md) now, before creating
@@ -172,7 +172,7 @@ one, and only on creation re-points it (to `origin/{branch}` if origin has it, e
 ### Create the branch
 
 Determine the **integration branch** — the branch feature work forks from. Read `branches.integration`
-from `.hivrr.json`; see [`config.md`](../init/references/config.md) for the read steps and per-key
+from `.agent-plugins.json`; see [`config.md`](../init/references/config.md) for the read steps and per-key
 precedence.
 
 When the file or the key is absent, fall back to the repository default branch,
@@ -208,7 +208,7 @@ Display: `Branch: issue/{number} ({new | resumed local | resumed from origin}, b
 
 ### Move the board card to In Progress
 
-Work has now started, and this skill is the only thing that knows it. Read `project` from `.hivrr.json` and set each issue's Status to In Progress.
+Work has now started, and this skill is the only thing that knows it. Read `project` from `.agent-plugins.json` and set each issue's Status to In Progress.
 
 **When `project` is absent, skip this silently.** See **Board operations** in [`config.md`](../init/references/config.md) for the commands and the shared rules.
 
@@ -339,7 +339,7 @@ Display: `Commit: {message}`
 Push the branch: `git push -u origin {branch_name}`
 
 Use the **Create PR** command from the loaded reference with:
-- **Base: `--base {integration}`, passed explicitly.** Resolve `{integration}` the same way Phase 5 does — `branches.integration` from `.hivrr.json`, falling back to the repo default branch. Omitting `--base` makes `gh` silently target the repository default branch, so on a ladder repo where the default is `main`, **every feature PR would aim at production.** Pass it even when the two happen to be the same value; a PR that targets the right branch by coincidence breaks the moment the default changes.
+- **Base: `--base {integration}`, passed explicitly.** Resolve `{integration}` the same way Phase 5 does — `branches.integration` from `.agent-plugins.json`, falling back to the repo default branch. Omitting `--base` makes `gh` silently target the repository default branch, so on a ladder repo where the default is `main`, **every feature PR would aim at production.** Pass it even when the two happen to be the same value; a PR that targets the right branch by coincidence breaks the moment the default changes.
 - Title: the issue title for a single issue, or a clear group summary for wave
 - Body: what was done, why, how to test it, and a `Closes #N` line for every issue in the group (use Linear identifiers like `ENG-123` if `ISSUE_TRACKER=linear`)
 - Link it to all relevant issues

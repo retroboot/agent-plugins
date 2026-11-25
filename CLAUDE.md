@@ -137,24 +137,30 @@ Full data platform — data science, engineering, analysis, AI engineering, Snow
 
 `init` and `session` are included by `dev` and `planner`, and every command loads them before its main skill.
 
-- **`init`** — seven ordered phases: provider config, repo labels, `.hivrr.json` scaffold, verify-command detection, project board ID resolution, keeping `.hivrr.json` out of git, and orphan-worktree reporting. The phases run **in order, every time**; a phase with nothing to do reports and continues rather than ending the skill. Keep the count and the list here matching the `## Phase` headings in `skills/init/SKILL.md` and the `init` row in `README.md`. A count that reads low tells an agent the run is over before it is — which is exactly what happened, when that skill said `five` against seven headings. **The seventh structural check holds `skills/init/SKILL.md`'s own count** against its own headings, and **the tenth holds the count in this sentence** against those same headings, so a low count can no longer ship from either file. Neither reads the *list*: comparing prose names against heading titles needs a normalization nobody would trust, so keep the list here matching `skills/init/SKILL.md` by hand. The `init` row in `README.md` enumerates the same phases and states no count deliberately — it has no bare number to drift, so do not add one for symmetry with this line.
+- **`init`** — seven ordered phases: provider config, repo labels, `.agent-plugins.json` scaffold, verify-command detection, project board ID resolution, keeping `.agent-plugins.json` out of git, and orphan-worktree reporting. The phases run **in order, every time**; a phase with nothing to do reports and continues rather than ending the skill. Keep the count and the list here matching the `## Phase` headings in `skills/init/SKILL.md` and the `init` row in `README.md`. A count that reads low tells an agent the run is over before it is — which is exactly what happened, when that skill said `five` against seven headings. **The seventh structural check holds `skills/init/SKILL.md`'s own count** against its own headings, and **the tenth holds the count in this sentence** against those same headings, so a low count can no longer ship from either file. Neither reads the *list*: comparing prose names against heading titles needs a normalization nobody would trust, so keep the list here matching `skills/init/SKILL.md` by hand. The `init` row in `README.md` enumerates the same phases and states no count deliberately — it has no bare number to drift, so do not add one for symmetry with this line.
 - **`session`** — reads config and loads the active provider reference for the session.
 
 ## Repo configuration
 
-Per-repo settings live in a `.hivrr.json` at the repository root — **gitignored, not committed**;
+Per-repo settings live in a `.agent-plugins.json` at the repository root — **gitignored, not committed**;
 `init` Phase 6 keeps it that way, adding the `.gitignore` line and untracking the file if it was ever
 committed. Every teammate, agent, and CI run resolves its own copy by running `init`, rather than
 inheriting one from git. The file is optional — a repo without one gets documented defaults, not
-errors. Precedence resolves **per key**: `.hivrr.json` → global `providerConfig` → hardcoded default.
+errors. Precedence resolves **per key**: `.agent-plugins.json` → global `providerConfig` → hardcoded default.
 `provider` and `issueTracker` resolve independently, so state both here rather than assuming one
 implies the other.
+
+The old config file, the name this file carried before v2.0.0, is migrated by `init` alone: Phase 3
+renames it to `.agent-plugins.json` (or removes it once `.agent-plugins.json` validates, when both
+exist), and Phase 6 swaps its `.gitignore` line. No other skill reads the old name, so do not add a
+fallback that does — a repo that has not run an `init`-loading skill yet resolves as if it had no
+config.
 
 Issue hierarchy (GitHub sub-issues) is opt-in via `issues.hierarchy` and is GitHub-only. When it is
 off, `planning` emits a flat issue set instead of a parent epic, and dependency ordering falls back to
 parsing `Depends on #N` from issue bodies (see `ship-issue`). See `skills/init/references/config.md`.
 
-**This repo does not enable it** — the `issues` key is absent from `.hivrr.json`, so the fallback
+**This repo does not enable it** — the `issues` key is absent from `.agent-plugins.json`, so the fallback
 above is the behavior here rather than a hypothetical. Like the absent project board and the
 unadopted worktrees below, that is a decision.
 
@@ -162,16 +168,16 @@ Full schema, defaults, board operations, and Projects v2 ID resolution: `skills/
 
 ### This repo's verify command can't be auto-detected — scaffold it by hand
 
-`.hivrr.json` being gitignored means `init` Phase 4 runs its generic detection on every fresh
+`.agent-plugins.json` being gitignored means `init` Phase 4 runs its generic detection on every fresh
 checkout, and this repo has no `package.json`/`Makefile`/`pytest.ini` at the root for it to match —
 verification lives in a Markdown fence instead, which Phase 4's tables have no row for. Left alone it
 writes `verify.test: null`, which silently disables verification. `docs/verification.md` documents
 the exact `verify.detectedFrom: ["manual"]` and `verify.test` value to set instead — read it when
-scaffolding `.hivrr.json` here.
+scaffolding `.agent-plugins.json` here.
 
 ### This repo has no project board — deliberately
 
-`.hivrr.json` has no `project` key, and that is a decision rather than an oversight. Do not add one,
+`.agent-plugins.json` has no `project` key, and that is a decision rather than an oversight. Do not add one,
 and do not treat `init` skipping project-board resolution or `merge-pr` skipping its board update as
 something to fix.
 
@@ -187,7 +193,7 @@ If a board is wanted later, `skills/init/references/config.md` has the full sequ
 
 Mutating workflows can run in a git worktree so concurrent sessions in one checkout cannot commit
 each other's changes. It is opt-in per repo and needs two things: `worktree.enabled` in
-`.hivrr.json`, and a line in the repo's own `CLAUDE.md` authorizing the harness `EnterWorktree`
+`.agent-plugins.json`, and a line in the repo's own `CLAUDE.md` authorizing the harness `EnterWorktree`
 tool. One without the other silently does nothing.
 
 Worktrees live under `.claude/worktrees/`, so an adopting repo needs `.claude/` in its `.gitignore`
@@ -206,13 +212,13 @@ or the authorization line — like the absent project board above, the absence i
 
 **This repo ships no shell scripts.** A script earns its place only when it is read-only or trivially reversible, non-interactive, single-purpose, and performs deterministic computation the model cannot reliably do in prose. Workflow logic goes in skills as explicit steps, where each command is visible and each real output is read.
 
-The structural checks are not a counter-example. They are a fenced block in `docs/verification.md` — read-only, non-interactive, single-purpose — and `.hivrr.json` `verify.test` extracts and runs that block rather than a `.sh` on disk. That is what makes the documented form and the runnable form the same thing; see **Verification** below.
+The structural checks are not a counter-example. They are a fenced block in `docs/verification.md` — read-only, non-interactive, single-purpose — and `.agent-plugins.json` `verify.test` extracts and runs that block rather than a `.sh` on disk. That is what makes the documented form and the runnable form the same thing; see **Verification** below.
 
 The full rule, and the reasoning behind it, is in `skills/core/SKILL.md`.
 
 ## Verification
 
-The product here is JSON and Markdown, so verification is structural. Fourteen checks: every JSON file parses, and the check reports `NO JSON FILES TRACKED` rather than passing when git tracks none; every registered skill is a directory holding a `SKILL.md`; every registered command is an existing `.md` file; `work-issue` and `work-pr` do not duplicate each other's verify procedure; the plugin descriptions in this file match `marketplace.json` verbatim; the skill and command lists beside those descriptions match it too; every skill's phase headings run `1..N` with any stated count matching; the count opening this sentence matches the number of checks in the verification block; `README.md`'s command usage block names exactly the commands `marketplace.json` registers; the `init` phase count in this file matches the phase headings in `skills/init/SKILL.md`; `README.md`'s Overview table names exactly the plugins `marketplace.json` registers; `review-pr` declares an `allowed-tools` list that grants it no unrestricted tool; and every `skills/` directory has a matching, non-dangling symlink under `.agents/skills/`, the shared discovery path Codex CLI and Antigravity both read explicit-invocation skills from; and every plan pack under `docs/plans/` has a `README.md` and opens each of its fences, at any indentation, with exactly three backticks tagged `bash`, `sh`, `mermaid` or `text`, so every fence has the one allowed form and names an allowed kind; what is inside a fence is checked by the `slice` and `cold-read` skills, not here. All of them live in the fenced block in `docs/verification.md`, and `.hivrr.json` `verify.test` **runs that block** rather than restating it — it extracts the fence and passes it to `bash` as an argument, with stdin closed so no check can swallow the ones after it, and exports the same text as `HIVRR_VERIFY_BLOCK` so the eighth check can count what ran instead of extracting it again. Editing a check there is the whole edit; there is no second form to keep in step, and losing the block fails loudly as `NO VERIFY BLOCK` rather than passing on nothing.
+The product here is JSON and Markdown, so verification is structural. Fourteen checks: every JSON file parses, and the check reports `NO JSON FILES TRACKED` rather than passing when git tracks none; every registered skill is a directory holding a `SKILL.md`; every registered command is an existing `.md` file; `work-issue` and `work-pr` do not duplicate each other's verify procedure; the plugin descriptions in this file match `marketplace.json` verbatim; the skill and command lists beside those descriptions match it too; every skill's phase headings run `1..N` with any stated count matching; the count opening this sentence matches the number of checks in the verification block; `README.md`'s command usage block names exactly the commands `marketplace.json` registers; the `init` phase count in this file matches the phase headings in `skills/init/SKILL.md`; `README.md`'s Overview table names exactly the plugins `marketplace.json` registers; `review-pr` declares an `allowed-tools` list that grants it no unrestricted tool; and every `skills/` directory has a matching, non-dangling symlink under `.agents/skills/`, the shared discovery path Codex CLI and Antigravity both read explicit-invocation skills from; and every plan pack under `docs/plans/` has a `README.md` and opens each of its fences, at any indentation, with exactly three backticks tagged `bash`, `sh`, `mermaid` or `text`, so every fence has the one allowed form and names an allowed kind; what is inside a fence is checked by the `slice` and `cold-read` skills, not here. All of them live in the fenced block in `docs/verification.md`, and `.agent-plugins.json` `verify.test` **runs that block** rather than restating it — it extracts the fence and passes it to `bash` as an argument, with stdin closed so no check can swallow the ones after it, and exports the same text as `HIVRR_VERIFY_BLOCK` so the eighth check can count what ran instead of extracting it again. Editing a check there is the whole edit; there is no second form to keep in step, and losing the block fails loudly as `NO VERIFY BLOCK` rather than passing on nothing.
 
 **That opening count is itself the eighth check**, so it can no longer drift silently — it is compared against the `# ` comments at column 0 **inside that fence**, which the loader exports as `HIVRR_VERIFY_BLOCK` after extracting it, so the count describes the block that actually ran rather than a second reading of `docs/verification.md`. Counting the whole file instead, as it first did when this lived in README, reported drift for any column-0 `# ` line of prose there. It is the only check count left in the repo; `README.md` carried two more, and those were reworded away rather than checked, because a bare number tells a reader nothing they can act on while this sentence has to *name* what it counts. Adding a check means extending this sentence, and the check will say so if you forget. **No count that names something in another file is left unguarded**: `README.md`'s two remaining ones — the plugin count and the `DESC` message-row count — were reworded away as well, and the only other such number here, `init`'s phase count above, is held by the tenth check. Counts of items in their own paragraph are a different thing and are deliberately left alone — *"Two things about the shape of this file are load-bearing"* above two bullets drifts only if you edit the list while looking at it. The test for a count you are adding is whether confirming it means opening another file.
 

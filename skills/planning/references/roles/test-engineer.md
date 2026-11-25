@@ -30,7 +30,7 @@ Editor).
 - **V1** Run, in `{tree}`, each Verify command that can run now, and record its exit status and
   output. Flag any command with no stated expected output, and any that cannot run yet without a
   "would fail because…" note. A command that needs git-ignored local config absent from the tree,
-  such as `.hivrr.json`, gets that note, not a failure. Evidence: the command, its exit status and
+  such as `.agent-plugins.json`, gets that note, not a failure. Evidence: the command, its exit status and
   its output, or the line that should carry the note. _Example: a criterion with no Verify command
   at all._
 - **V2** For each test that can skip (no hardware, no network, a missing tool), check that Verify

@@ -365,7 +365,7 @@ slice with its marker, then its `Depends on #N` lines; the issue numbers written
 epic, hierarchy, board and Linear behaviours (6.2); Status `published` and the pack PR from
 `plan/{slug}`; then `ship-pr` offered on that PR.
 
-**Integration branch.** `branches.integration` from `.hivrr.json`, then the repository default
+**Integration branch.** `branches.integration` from `.agent-plugins.json`, then the repository default
 branch, then `origin/HEAD`, then `main`.
 
 A tracker or board failure never loses pack files: the pack is on disk before Publish starts, and
