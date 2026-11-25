@@ -120,7 +120,8 @@ Read `{path}/README.md`.
   `(closed, not planned)`, or `not started`). This comes before the table, so a pack re-routed to XL
   past `routed` never reaches `slice`. At `routed`, when every child is `done` or `closed`, ask
   **Close the parent?** On yes, run **XL close** (`pack-format.md` §3): write the **Retro** rolled up
-  from the children's, set Status `done`, and display `Pack closed: {path} (Status: done)`. On no,
+  from the children's, set Status `done`, and display
+  `Pack closed: {path} (Status: done) — commit the README through a PR to keep it.` On no,
   or when any child is at another Status, stop. At `done`, the `done` row of the table applies.
   When the developer closes a child without planning it, write its closed-child mark (§3), then
   show **Child packs** again.
