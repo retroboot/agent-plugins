@@ -146,16 +146,16 @@ Full reference: [`skills/init/references/config.md`](skills/init/references/conf
 
 ## Setup
 
-Each plugin is distributed separately via the hivrr GitHub Packages registry. Add whichever you need to your Claude Code settings:
+The plugins ship from one Claude Code marketplace, `agent-plugins`, in the public repository
+[`retroboot/agent-plugins`](https://github.com/retroboot/agent-plugins). Add the marketplace once,
+then install whichever plugins you need as `{plugin}@agent-plugins`:
 
-```json
-{
-  "plugins": [
-    "hivrr/agent-plugin",
-    "hivrr/manager-plugin",
-    "hivrr/data-platform-plugin"
-  ]
-}
+```text
+/plugin marketplace add retroboot/agent-plugins
+/plugin install dev@agent-plugins
+/plugin install planner@agent-plugins
+/plugin install auditor@agent-plugins
+/plugin install data-platform@agent-plugins
 ```
 
 Or reference the local path during development:

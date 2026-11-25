@@ -1,5 +1,40 @@
 # Agent Plugins Release Notes
 
+## v2.0.0 (2026-11-25)
+
+### The repository moves to `retroboot/agent-plugins`, and the hivrr name is gone
+
+This is a breaking release: the marketplace name and the per-repo config file are both renamed.
+
+- **New home.** The repository moved from `hivrr/agent-plugins` to
+  [`retroboot/agent-plugins`](https://github.com/retroboot/agent-plugins), with its history, issues,
+  pull requests, labels, tags and releases, and is now public. GitHub redirects the old URL for now,
+  but update any clone with `git remote set-url origin https://github.com/retroboot/agent-plugins`.
+- **The marketplace is `agent-plugins`.** It was `hivrr-agent-plugins`, so every install ID changes:
+  `dev@agent-plugins`, `planner@agent-plugins`, `auditor@agent-plugins` and
+  `data-platform@agent-plugins`. The old marketplace receives no further updates. Switch once, in
+  Claude Code:
+  1. `/plugin uninstall {plugin}@hivrr-agent-plugins` for each plugin you have installed
+  2. `/plugin marketplace remove hivrr-agent-plugins`
+  3. `/plugin marketplace add retroboot/agent-plugins`
+  4. `/plugin install dev@agent-plugins`, and likewise `planner`, `auditor` and `data-platform` as
+     you use them
+- **The config file is `.agent-plugins.json` (#298).** `init` migrates the old `.hivrr.json`
+  automatically, with no question: Phase 3 renames it (or removes it once `.agent-plugins.json`
+  validates, when both exist), and Phase 6 swaps its `.gitignore` line. No other skill reads the old
+  name. In each repository, run an `init`-loading skill first (any `dev` workflow, or `planning`),
+  so the migration runs before `spec`, `slice`, `cold-read`, `brainstorm` or `audit`, which load only
+  `core` and would otherwise run on defaults. `init` Phase 6 also no longer names an untracked
+  config file in its commit pathspec, which made that commit fail.
+- **Internal markers renamed (#299).** The heredoc delimiters are now `AGENT_PLUGINS_BODY_7f3a` and
+  `AGENT_PLUGINS_COMMIT_7f3a`, and the verify loader exports `AGENT_PLUGINS_VERIFY_BLOCK`. A checkout
+  of this repository whose local `verify.test` predates this release fails check 8 until you replace
+  it with the bootstrap string in `docs/verification.md`.
+- **Titles and setup docs (#300).** The README, `CLAUDE.md`, `core` and `init` drop the Hivrr name.
+  The README Setup section now adds the marketplace, replacing the GitHub Packages instructions that
+  never matched how the plugins ship, and `.env.example` drops its `GITHUB_TOKEN` note.
+- **The unused Claude GitHub workflows are deleted (#297)**, along with the secret they used.
+
 ## v1.6.0 (2026-11-25)
 
 ### Planning team — role-based subagents for the planner
