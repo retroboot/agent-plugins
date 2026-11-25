@@ -131,7 +131,7 @@ for id in S-01.1.e1 S-01.1.e2 S-01.2 S-01.3.e1 S-01.3.e2 S-01.4.e1 S-02.1.e1 S-0
 # expected: no output (run after the dry runs are recorded)
 for id in S-01.1.e1 S-01.2 S-02.1.e1; do grep -F "| $id | pass" $g | grep -qF '(Agent tool, model:' || echo "not live $id"; done
 # expected: no output
-grep -cw blocked $g; grep 'Skill dir:' $g | grep -vF "Skill dir: $(pwd)/skills/"
+grep -c '^| \*\*Status\*\* | blocked |' $g; grep 'Skill dir:' $g | grep -vF "Skill dir: $(pwd)/skills/"
 # expected: 0, then no output
 ls docs/plans | grep -c zz-dryrun
 # expected: 0 (grep exits 1 on a zero count; read the output, not the status)
@@ -267,7 +267,7 @@ for id in S-01.4.e2 S-02.2.e1 S-02.2.e2 S-02.3.e1 S-02.3.e2 2.3 S-03.4.e1 S-03.4
 # expected: no output (run after the dry runs are recorded)
 for id in S-02.2.e1 S-02.3.e1 S-03.5.e1; do grep -F "| $id | pass" $g | grep -qF '(Agent tool, model:' || echo "not live $id"; done
 # expected: no output
-grep -cw blocked $g; grep 'Skill dir:' $g | grep -vF "Skill dir: $(pwd)/skills/"
+grep -c '^| \*\*Status\*\* | blocked |' $g; grep 'Skill dir:' $g | grep -vF "Skill dir: $(pwd)/skills/"
 # expected: 0, then no output
 ls docs/plans | grep -c zz-dryrun
 # expected: 0 (grep exits 1 on a zero count; read the output, not the status)
@@ -396,7 +396,7 @@ for id in S-01.2.e1 S-01.2.e2 S-03.1.e1 S-03.1.e2 S-03.2.e1 S-03.2.e2 S-03.3.e1 
 # expected: no output (run after the dry runs are recorded)
 for id in S-01.2.e1 S-03.1.e1 S-03.2.e1 S-04.1.e1; do grep -F "| $id | pass" $g | grep -qF '(Agent tool, model:' || echo "not live $id"; done
 # expected: no output
-grep -cw blocked $g; grep 'Skill dir:' $g | grep -vF "Skill dir: $(pwd)/skills/"
+grep -c '^| \*\*Status\*\* | blocked |' $g; grep 'Skill dir:' $g | grep -vF "Skill dir: $(pwd)/skills/"
 # expected: 0, then no output
 ls docs/plans | grep -c zz-dryrun
 # expected: 0 (grep exits 1 on a zero count; read the output, not the status)
@@ -505,7 +505,7 @@ for id in S-05.1.e1 S-05.1.e2 S-05.2.e1 S-05.2.e2 S-05.2.e3 4.2 S-03.5; do grep 
 # expected: no output (run after the dry runs are recorded)
 for id in S-05.1.e1 S-05.2.e2 S-05.2.e3; do grep -F "| $id | pass" $g | grep -qF '(Agent tool, model:' || echo "not live $id"; done
 # expected: no output
-grep -cw blocked $g; grep 'Skill dir:' $g | grep -vF "Skill dir: $(pwd)/skills/"
+grep -c '^| \*\*Status\*\* | blocked |' $g; grep 'Skill dir:' $g | grep -vF "Skill dir: $(pwd)/skills/"
 # expected: 0, then no output
 ls docs/plans | grep -c zz-dryrun
 # expected: 0 (grep exits 1 on a zero count; read the output, not the status)
@@ -622,7 +622,7 @@ for id in S-06.1.e1 S-06.1.e2 S-06.2.e1 S-06.2.e2 S-06.3.e1 S-06.3.e2 S-06.3.e3 
 # expected: no output (run after the dry runs are recorded)
 for id in S-06.1.e1 S-06.2.e1 S-06.3.e1; do grep -F "| $id | pass" $g | grep -qF '(Agent tool, model:' || echo "not live $id"; done
 # expected: no output
-grep -cw blocked $g; grep 'Skill dir:' $g | grep -vF "Skill dir: $(pwd)/skills/"
+grep -c '^| \*\*Status\*\* | blocked |' $g; grep 'Skill dir:' $g | grep -vF "Skill dir: $(pwd)/skills/"
 # expected: 0, then no output
 ls docs/plans | grep -c zz-dryrun
 # expected: 0 (grep exits 1 on a zero count; read the output, not the status)
