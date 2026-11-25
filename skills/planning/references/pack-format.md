@@ -27,11 +27,15 @@ docs/plans/<slug>/
   plan.md          slices
   progress/slice-NN.md   written by executors
   cold-read.md     written by cold-read
+  handoff.md       transient: work in flight between runs, only while an entry is pending
 ```
 
 - **Slug.** Kebab-case, derived from the topic, confirmed at Route. If it collides with an existing
   folder under `docs/plans/`, append `-2`. After Publish the slug is fixed.
 - **ADR numbers** are per pack, start at 001, and are never reused.
+- **`handoff.md`** holds **Gate pending** and **Spec pending** entries, written and removed by
+  `spec`, `slice` and `planning` as `gates.md` **Handoff** says. It is never in the Read order, and
+  Approve and Publish refuse while it exists.
 - **No code.** No file in a pack contains implementation code. See §6, Fences.
 
 ### Inventory sections

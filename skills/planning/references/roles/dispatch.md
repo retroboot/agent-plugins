@@ -203,5 +203,9 @@ A drafting role due with no subagent tool: the Facilitator drafts the file by th
 the checkpoint that shows the file says `Drafted by the Facilitator: not independent.` in place of
 the drafting line.
 
+In a gate (`../gates.md`), the Facilitator works through each of the gate's cards itself, in the
+same tree under the same guard, and the checkpoint says
+`Gate run by the Facilitator: not independent.`
+
 Cold readers are not covered by this: a reader
 needs a subagent, and `cold-read` Phase 3 stops without one.

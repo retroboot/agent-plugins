@@ -111,6 +111,9 @@ Read `{path}/README.md`.
 - **XL parent:** when the Size row starts with `XL` and Status is `routed` or later, show **Child
   packs** with each child's Status (from its README, or `not started`), then stop. This comes before
   the table, so a pack re-routed to XL past `routed` never reaches `slice`.
+- **Handoff note** (`references/gates.md`, **Handoff**), first: when `{path}/handoff.md` holds a
+  `## Spec pending: {Id}` entry, resume at Phase 4, passing its answer as `spec`'s request. A Gate
+  pending entry resumes by Status as usual; the phase skill re-runs that file's gate.
 - **Rework in progress** (`reroute.md`, **Pending lines**), before the table; the first match wins:
   a `Spec pending …` line resumes at Phase 4, passing its request; a `Revised by spec …` line at
   Phase 4; a `Revised by slice …` or `Re-slice pending …` line at Phase 5. Then run on as usual.
@@ -240,7 +243,7 @@ and its README is committed with the first child's pack PR (Phase 8).
 
 ## Phase 4 — Specify
 
-Load the `spec` skill with `docs/plans/{slug}` (with `: {request}` from a `Spec pending` line). It
+Load the `spec` skill with `docs/plans/{slug}` (with `: {request}` from a `Spec pending` line or `handoff.md` entry). It
 holds the acceptance, ADR and design checkpoints and sets `specified` on approval. Read its result:
 `SPEC COMPLETE` with the expected `pack_status` goes on, after removing any `Spec pending after …`
 line from **Open questions**; a stop is handled as above (S-02.3.e1: a rejected PRD checkpoint
@@ -304,7 +307,8 @@ the pack but leaves Status as it is.
 
 **Gate before Approve and Publish.** Phases 7 and 8, including on a resume, run only when
 `cold-read.md`'s closing **Result** says `Pass after …` and **Open questions** holds no
-`Cold read pending after …` line. Otherwise run this phase first.
+`Cold read pending after …` line. Otherwise run this phase first. While `{path}/handoff.md` exists,
+refuse each of them, naming every entry: `Refused: handoff.md holds {entry}; run planning {path} to finish it.`
 
 ---
 
