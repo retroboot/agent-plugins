@@ -66,7 +66,7 @@ from another plugin's files. This section only fetches and reads. It writes noth
 anywhere else.
 
 1. Resolve `{integration}` by the rule `work-issue` Phase 5 uses: `branches.integration` from
-   `.hivrr.json`, then the repository default branch
+   `.agent-plugins.json`, then the repository default branch
    (`gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'`), then the branch
    `origin/HEAD` points at, then `main`. Run `git fetch origin {integration}`, which updates
    remote-tracking refs only.

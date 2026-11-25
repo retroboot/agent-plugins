@@ -219,7 +219,7 @@ issue, not the child, so it cannot confirm which child was linked.
 
 ### Gating
 
-Every operation in this section is gated on `issues.hierarchy` in `.hivrr.json`. When it is
+Every operation in this section is gated on `issues.hierarchy` in `.agent-plugins.json`. When it is
 `false` or absent, these commands are **not run at all** and the calling skill continues silently.
 Every failure here warns and continues — hierarchy is a reporting surface, and the issue or PR is
 the deliverable.
@@ -272,7 +272,7 @@ gh pr create --repo {OWNER}/{REPO} --title "{T}" --body-file "{file}" --base {ba
 rm -f "{file}"
 ```
 
-`--base` is **required**, not optional. Without it `gh` silently targets the repository default branch — which on a ladder repo means aiming a feature PR at production. Resolve `{base}` from `branches.integration` in `.hivrr.json`, falling back to the repo default branch.
+`--base` is **required**, not optional. Without it `gh` silently targets the repository default branch — which on a ladder repo means aiming a feature PR at production. Resolve `{base}` from `branches.integration` in `.agent-plugins.json`, falling back to the repo default branch.
 
 **Edit a PR's title or body**
 ```

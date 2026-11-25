@@ -1,6 +1,6 @@
 # Move the board cards to Done
 
-`merge-pr` Phase 7 sends you here **only when `project` is present in `.hivrr.json`**, after its
+`merge-pr` Phase 7 sends you here **only when `project` is present in `.agent-plugins.json`**, after its
 closing loop (and the parent-closing step, when `issues.hierarchy` is on). When `project` is absent,
 skip this silently — board operations are no-ops then.
 

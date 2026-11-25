@@ -10,10 +10,10 @@ the precedence chain.
 
 ## Resolving the commands
 
-Read `verify.test` and `verify.lint` from `.hivrr.json` and run each command directly. See
+Read `verify.test` and `verify.lint` from `.agent-plugins.json` and run each command directly. See
 [`config.md`](config.md) for the read steps and per-key precedence.
 
-**If `verify` is absent from config** (or there is no `.hivrr.json`), detect the commands yourself
+**If `verify` is absent from config** (or there is no `.agent-plugins.json`), detect the commands yourself
 using **Detecting the commands** below, run them, and then offer to record what you found so the
 next run does not repeat the guesswork.
 
@@ -28,7 +28,7 @@ The detection tables `init` Phase 4 Step 2 runs, and the fallback above uses whe
 absent. Detection can only find what these tables know about; a repo whose verification is real but
 unconventional records it by hand with the `["manual"]` sentinel (see [`config.md`](config.md)).
 Recording what the tables find is `init` Phase 4 Step 4's job; a caller using the fallback only
-offers to record it, and never creates `.hivrr.json` for it.
+offers to record it, and never creates `.agent-plugins.json` for it.
 
 Look for a test command, in this order, and stop at the first match:
 

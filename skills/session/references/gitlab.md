@@ -116,7 +116,7 @@ glab mr create --repo {PROJECT} --title "{T}" --description "$(cat "{file}")" --
 rm -f "{file}"
 ```
 
-`--target-branch` is **required**, not optional — without it `glab` targets the project's default branch. Resolve `{base}` from `branches.integration` in `.hivrr.json`, falling back to the default branch.
+`--target-branch` is **required**, not optional — without it `glab` targets the project's default branch. Resolve `{base}` from `branches.integration` in `.agent-plugins.json`, falling back to the default branch.
 
 **Merge MR** (squash)
 ```

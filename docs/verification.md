@@ -3,7 +3,7 @@
 This repo ships no shell scripts — see the script policy in `skills/core/SKILL.md`. Its product is
 JSON and Markdown, so verification is structural.
 
-**This file is not documentation of `verify.test` — it *is* `verify.test`.** `.hivrr.json` extracts
+**This file is not documentation of `verify.test` — it *is* `verify.test`.** `.agent-plugins.json` extracts
 the fenced block below at run time and pipes it to `bash`. There is no second copy to keep in sync;
 editing a check here changes what runs, immediately.
 
@@ -223,7 +223,7 @@ A few mechanics worth knowing before editing this block:
   actually inspects (e.g. `skills/review-pr/SKILL.md`'s frontmatter, for check 12 above). A fix
   validated against constructed cases first needs zero review rounds to find what it missed; one
   written straight against the real file and reviewed after routinely needs at least one.
-- **This fence *is* `verify.test`.** `.hivrr.json` extracts it at run time and pipes it to `bash` —
+- **This fence *is* `verify.test`.** `.agent-plugins.json` extracts it at run time and pipes it to `bash` —
   there is no second copy to keep in sync. Editing a check here changes what runs, immediately.
 - **Run with stdin closed, always.** The loader passes the block as an argument and runs it with
   `</dev/null`. A check that reads stdin would otherwise swallow the rest of the block silently —
@@ -264,13 +264,13 @@ A few mechanics worth knowing before editing this block:
   usage block, and the `## Overview` table) even though this fence lives here — those are checks on
   README's own content, not on this file, so they stay pointed at README.md.
 
-## Bootstrapping `.hivrr.json` on a fresh checkout
+## Bootstrapping `.agent-plugins.json` on a fresh checkout
 
-**`.hivrr.json` is gitignored, not committed** (see `skills/init/references/config.md`), so a fresh
+**`.agent-plugins.json` is gitignored, not committed** (see `skills/init/references/config.md`), so a fresh
 checkout has none, and `init` Phase 4's generic detection tables have no row for "structural checks
 documented in a Markdown fence" — left undetected, Phase 4 would write `verify.test: null`, which
 means "checked, there is nothing" and makes `work-issue`/`work-pr` silently skip verification on a
-repo that has it. When scaffolding `.hivrr.json` here, set `verify.detectedFrom` to `["manual"]` and
+repo that has it. When scaffolding `.agent-plugins.json` here, set `verify.detectedFrom` to `["manual"]` and
 `verify.test` to exactly this:
 
 ```

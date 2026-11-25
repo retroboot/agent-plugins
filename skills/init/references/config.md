@@ -1,10 +1,10 @@
-# `.hivrr.json` — Repo-Local Configuration
+# `.agent-plugins.json` — Repo-Local Configuration
 
-`.hivrr.json` lives at the repository root and is **gitignored** — `init` Phase 6 keeps it out of
+`.agent-plugins.json` lives at the repository root and is **gitignored** — `init` Phase 6 keeps it out of
 git deliberately. It is per-checkout, not committed: every teammate, agent, and CI run derives its
 own copy by running `init`, rather than inheriting one that travels with the code.
 
-There is no loader script. This file is the contract: skills read `.hivrr.json` directly and apply the precedence rule below.
+There is no loader script. This file is the contract: skills read `.agent-plugins.json` directly and apply the precedence rule below.
 
 ---
 
@@ -15,7 +15,7 @@ Per-repo facts do not belong in a global config. Global `~/.claude/settings.json
 Global `providerConfig` survives for values that genuinely are user-shaped: `gitlabGroup`, `githubOrg`, `linearTeam`, `repoTarget`, `bootstrappedRepos`.
 
 **Repo-local does not mean committed.** An earlier version of this file argued the opposite — that
-`.hivrr.json` should travel with the code so every teammate, agent, and CI runner resolves the same
+`.agent-plugins.json` should travel with the code so every teammate, agent, and CI runner resolves the same
 values — and this plugin's own repo did exactly that. In practice a committed config is a copy of
 whatever was true on whichever machine last ran `init`, not a live fact about the repo; the branch
 ladder, verify commands, and board IDs it holds are all things `init` can re-derive on any machine in
@@ -39,7 +39,7 @@ in sync, not git.
     "protected": ["dev", "staging", "main"]
   },
   "project": {
-    "owner": "hivrr",
+    "owner": "your-org",
     "number": 1,
     "id": "PVT_xxx",
     "statusFieldId": "PVTSSF_xxx",
@@ -105,7 +105,7 @@ Two independent keys, because the two facts are independent: a repo hosted on on
 track its issues on another. Resolve them **separately** through the precedence chain — a repo
 that sets only `provider` still takes its tracker from global config.
 
-Setting one and not the other is the case that goes wrong quietly. A repo whose `.hivrr.json`
+Setting one and not the other is the case that goes wrong quietly. A repo whose `.agent-plugins.json`
 says `"provider": "github"` against a global config of `{"repoProvider": "gitlab",
 "issueTracker": "gitlab"}` resolves as a GitHub repo whose issues are read from GitLab —
 `session` loads `gitlab.md` and every issue command in it is aimed at the wrong host. Nothing
@@ -188,7 +188,7 @@ loses the session's context.
 
 A repo opts in with **both** of these:
 
-1. `worktree.enabled: true` in `.hivrr.json`, plus whatever `carry` and `setup` it needs.
+1. `worktree.enabled: true` in `.agent-plugins.json`, plus whatever `carry` and `setup` it needs.
 2. This line in the repo's own `CLAUDE.md`:
 
    > Mutating agent work (`/work-issue`, `/wave`) runs in a git worktree. Use `EnterWorktree` at
@@ -202,7 +202,7 @@ A repo opts in with **both** of these:
    concurrent-session signal, and it is what a regression to blanket staging would sweep into a
    commit wholesale. Ignore it and the question never arises.
 
-The `.hivrr.json` key carries the settings; the CLAUDE.md line is what authorizes the tool; the
+The `.agent-plugins.json` key carries the settings; the CLAUDE.md line is what authorizes the tool; the
 `.gitignore` entry is what keeps the worktree invisible to the staging check.
 
 Do not assume the third is already true. `.claude/` being gitignored is a convention, not a
@@ -270,10 +270,10 @@ trusting a check's silence.
 
 ## Precedence
 
-Resolved **per key**, not per file. A `.hivrr.json` that sets only `branches.integration` does not suppress `provider` from global config.
+Resolved **per key**, not per file. A `.agent-plugins.json` that sets only `branches.integration` does not suppress `provider` from global config.
 
 ```
-.hivrr.json  →  ~/.claude/settings.json providerConfig  →  hardcoded default
+.agent-plugins.json  →  ~/.claude/settings.json providerConfig  →  hardcoded default
 ```
 
 For each key a skill needs, take the first source that defines it. A key present but set to `null` counts as absent and falls through.
@@ -287,7 +287,7 @@ Skills that need config run this sequence once per session:
 **1 — Does the file exist?**
 
 ```bash
-test -f .hivrr.json && echo present || echo absent
+test -f .agent-plugins.json && echo present || echo absent
 ```
 
 Absent is normal. Skip to step 4 and resolve every key from the fallback chain.
@@ -295,14 +295,14 @@ Absent is normal. Skip to step 4 and resolve every key from the fallback chain.
 **2 — Validate it parses.**
 
 ```bash
-jq empty .hivrr.json
+jq empty .agent-plugins.json
 ```
 
 A non-zero exit here means malformed JSON — **except** for `command not found` (exit 127), which means `jq` is missing, not that the config is bad. Treat that case as "unvalidated but readable": note it once and continue to step 3. Do not report a valid config as malformed because the validator is absent.
 
 **3 — Read it.**
 
-Use the Read tool on `.hivrr.json`. Do not `cat` it — the Read tool keeps the content in context for later phases.
+Use the Read tool on `.agent-plugins.json`. Do not `cat` it — the Read tool keeps the content in context for later phases.
 
 **4 — Resolve each key** through the precedence chain above, using the defaults in the field table.
 
@@ -328,18 +328,50 @@ These are deliberately different, and conflating them is a bug:
 
 ## Scaffolding
 
-`init` Phase 3 offers to write a `.hivrr.json` derived from detected repo state. It **never overwrites an existing file** — if one is present, init reports it and moves on. Editing an existing config is the user's job.
+`init` Phase 3 offers to write a `.agent-plugins.json` derived from detected repo state. It **never overwrites an existing file** — if one is present, init reports it and moves on. Editing an existing config is the user's job.
 
-`init` Phase 6 ensures `.hivrr.json` is gitignored and untracked — adding the `.gitignore` line and
+`init` Phase 6 ensures `.agent-plugins.json` is gitignored and untracked — adding the `.gitignore` line and
 running `git rm --cached` if the file was ever committed — and commits *that* change, never
-`.hivrr.json`'s own content. On a protected branch it stages the `.gitignore` change and reports,
+`.agent-plugins.json`'s own content. On a protected branch it stages the `.gitignore` change and reports,
 because `core` forbids committing directly to protected branches and a setup phase is the wrong place
 to break that rule.
 
 This is what makes the "is gitignored" claim at the top of this document true rather than
-aspirational, and it is what fixes a repo — like this plugin's own — that committed `.hivrr.json`
+aspirational, and it is what fixes a repo — like this plugin's own — that committed `.agent-plugins.json`
 before this phase existed. Every teammate, agent, and CI run is expected to resolve its own copy by
 running `init`, not by reading one out of git.
+
+## Migrating from `.hivrr.json`
+
+Before v2.0.0 this file was named `.hivrr.json`. `init` is the only skill that knows the old name,
+and it migrates the file without asking, in any mode. Every other skill reads `.agent-plugins.json`
+only, and resolves a repo that still holds just `.hivrr.json` as if it had no config. So the
+migration has to happen before any reader runs, which it does: `init` is the first bootstrap step
+of every skill that loads it. A skill that loads only `core` (`spec`, `slice`, `cold-read`,
+`brainstorm`, `audit`) and runs first in an unmigrated repo uses defaults until an `init`-loading
+skill runs there.
+
+**Phase 3, Step 1** runs before the existence test:
+
+| On disk | What Step 1 does | Line |
+|---|---|---|
+| Either path present but not a regular file (a directory or a symlink) | Stops `init`; nothing is moved | `INIT: migration stopped — type check failed: {path} is not a regular file` |
+| No `.hivrr.json` | Nothing | none |
+| `.hivrr.json` only | `mv -- .hivrr.json .agent-plugins.json`. The bytes are unchanged, and the old file is not validated first | `INIT: upgraded .hivrr.json to .agent-plugins.json` |
+| Both, `.agent-plugins.json` validates | `rm -- .hivrr.json`; `.agent-plugins.json` is untouched | `INIT: removed .hivrr.json (.agent-plugins.json kept)` |
+| Both, `.agent-plugins.json` malformed or `jq` missing | Nothing. The old file may be the only valid config, so it is kept until a later run validates the new one | none |
+
+A failed `mv` or `rm` stops `init` with `INIT: migration stopped — {operation} failed: {error}`, and
+leaves both paths as they were. The existence test that follows reads `.agent-plugins.json` as
+before.
+
+**Phase 6, Step 1** replaces each `.gitignore` line that is exactly `.hivrr.json`: the first becomes
+`.agent-plugins.json`, unless that line is already present, in which case every old line is deleted.
+While `.hivrr.json` is still on disk (Phase 3 kept it), the old line stays so the kept file stays
+ignored. **Step 2** untracks either name if git still tracks it.
+
+Rolling back means `mv .agent-plugins.json .hivrr.json` and putting the old `.gitignore` line back, by
+hand, in each migrated repo.
 
 ---
 
@@ -347,7 +379,7 @@ running `init`, not by reading one out of git.
 
 Projects v2 field mutations are **GraphQL-only** — there is no `gh project` subcommand that edits a single-select field by name. Editing an item's Status requires four opaque IDs: the project ID, the item ID, the *field* ID, and the *option* ID for the value you want.
 
-Three of those are stable per repo, so resolve them **once** and cache them in `.hivrr.json.project`. Only the item ID is per-issue and must be looked up at call time. Re-resolving the cached IDs on every board operation would add two GraphQL round trips to every workflow step for values that never change.
+Three of those are stable per repo, so resolve them **once** and cache them in `.agent-plugins.json.project`. Only the item ID is per-issue and must be looked up at call time. Re-resolving the cached IDs on every board operation would add two GraphQL round trips to every workflow step for values that never change.
 
 ### Required token scopes
 
@@ -422,12 +454,12 @@ Find the node whose `name` is `Status`. Its `id` is `statusFieldId`. Match its o
 
 ### Step 3 — Cache the result
 
-Write `project.id` (from Step 1), `project.statusFieldId`, and the three `project.status.*` option IDs into `.hivrr.json`, preserving every other key. Validate with `jq empty`.
+Write `project.id` (from Step 1), `project.statusFieldId`, and the three `project.status.*` option IDs into `.agent-plugins.json`, preserving every other key. Validate with `jq empty`.
 
 Verify:
 
 ```bash
-jq '.project | {id, statusFieldId, status}' .hivrr.json
+jq '.project | {id, statusFieldId, status}' .agent-plugins.json
 ```
 
 ### Re-resolution
@@ -438,7 +470,7 @@ Re-resolve **only** when an ID is absent, or when explicitly asked to. Do not re
 
 | Condition | Behavior |
 |---|---|
-| `project` absent from `.hivrr.json` | **Not an error.** The repo has no board. Every board operation is a silent no-op. |
+| `project` absent from `.agent-plugins.json` | **Not an error.** The repo has no board. Every board operation is a silent no-op. |
 | Token missing `read:project` / `project` | Report the missing scope and the `gh auth refresh` command. Do not confuse this with "no project". |
 | Project number does not exist | Report it. The likely cause is a typo in `project.number` or an org/user mismatch. |
 | No field named `Status` | Report which fields do exist. Some boards rename it. |
@@ -457,7 +489,7 @@ The operations every board-aware skill performs, defined once. `planning`, `work
 
 A board is a reporting surface. Failing to move a card must never prevent an issue from being created, a branch from being made, or a PR from merging — the work is the point, and the card is a record of it. A skill that aborts on a board error converts a cosmetic outage into a blocked pipeline.
 
-Likewise, **`project` absent from `.hivrr.json` is a silent no-op**, not a warning. Most repos have no board; saying so on every invocation is noise.
+Likewise, **`project` absent from `.agent-plugins.json` is a silent no-op**, not a warning. Most repos have no board; saying so on every invocation is noise.
 
 ### Add an issue to the board
 

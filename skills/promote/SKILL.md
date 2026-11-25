@@ -36,7 +36,7 @@ Parse the input:
 - Nothing — default the source to `branches.integration`
 - An optional `--auto` flag to skip the confirmation checkpoint
 
-Read `branches.ladder` from `.hivrr.json`; see [`config.md`](../init/references/config.md) for the read steps and per-key precedence. When absent it defaults to `[default branch]`.
+Read `branches.ladder` from `.agent-plugins.json`; see [`config.md`](../init/references/config.md) for the read steps and per-key precedence. When absent it defaults to `[default branch]`.
 
 Find `{source}` in the ladder. The rung after it is `{target}`.
 
@@ -199,7 +199,7 @@ Phase 4 owns the checkpoint for this workflow. Its summary already shows the run
 pipelines often carry manual deploy jobs, so a GitLab promotion can stop at Phase 4 with
 `CI: {n} waiting on a manual job — {names}`. Report that stop as the promotion's `reason`. Then
 either play the job, or, if the job is a deploy-on-demand that the promotion does not need, list it
-in `.hivrr.json` `ci.optionalManualJobs` (see [`config.md`](../init/references/config.md)) and
+in `.agent-plugins.json` `ci.optionalManualJobs` (see [`config.md`](../init/references/config.md)) and
 re-run. Listed jobs are still named in the CI line.
 
 **Never pass `--strategy squash`** and never delete the source branch by hand. `{source}` is a live environment; the next promotion cycle starts from it.

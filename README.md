@@ -26,7 +26,7 @@ The plugin is split into focused packages:
 
 | Skill | Description |
 |-------|-------------|
-| `init` | One-time setup — provider config, repo labels, `.hivrr.json` scaffold, verify commands, project board IDs, keeping `.hivrr.json` out of git, orphan-worktree reporting |
+| `init` | One-time setup — provider config, repo labels, `.agent-plugins.json` scaffold, verify commands, project board IDs, keeping `.agent-plugins.json` out of git, orphan-worktree reporting |
 | `session` | Loads config and the active provider reference for the session |
 | `core` | Coding philosophy — quality gates, git safety, script policy, and task completion standards |
 | `work-issue` | Implement an issue end-to-end and open a PR/MR; an issue marked as a plan pack slice is executed under the pack's rules |
@@ -73,11 +73,16 @@ The plugin is split into focused packages:
 | `postgres` | PostgreSQL administration skills |
 | `postgres-query` | Safe PostgreSQL query execution and analysis |
 
-## Configuration — `.hivrr.json`
+## Configuration — `.agent-plugins.json`
 
-Per-repo settings live in a `.hivrr.json` at the repository root — **gitignored, not committed**.
+Per-repo settings live in a `.agent-plugins.json` at the repository root — **gitignored, not committed**.
 Every teammate, agent, and CI run derives its own copy by running `init`; nothing travels via git.
 **The file is entirely optional** — a repo without one gets documented defaults, not errors.
+
+**Upgrading from the old config file.** Before v2.0.0 this file had another name. `init` migrates it
+on the first run of any skill that loads `init`: Phase 3 renames it to `.agent-plugins.json` (when
+both exist, it removes the old one once `.agent-plugins.json` validates), and Phase 6 replaces its
+`.gitignore` line. No other skill reads the old name.
 
 ```json
 {
@@ -89,7 +94,7 @@ Every teammate, agent, and CI run derives its own copy by running `init`; nothin
     "protected": ["dev", "staging", "main", "release/*"]
   },
   "project": {
-    "owner": "hivrr",
+    "owner": "your-org",
     "number": 1,
     "id": "PVT_xxx",
     "statusFieldId": "PVTSSF_xxx",
@@ -125,7 +130,7 @@ Every teammate, agent, and CI run derives its own copy by running `init`; nothin
 | `verify` | Test and lint commands, plus the files that justified them | model detects and offers to record |
 | `verify.detectedFrom` | The files that justified each command — or `["manual"]`, which pins the block and stops `init` re-detecting it | model records what it matched |
 
-Precedence resolves **per key**, not per file: `.hivrr.json` → global `providerConfig` → hardcoded default. `provider` and `issueTracker` resolve independently, so a repo hosted on one provider can track its issues on another — and a repo that overrides only `provider` still takes its tracker from global config. Note that writing `branches.protected` *replaces* the default set rather than extending it — omit the key unless you need to add a name the default does not cover.
+Precedence resolves **per key**, not per file: `.agent-plugins.json` → global `providerConfig` → hardcoded default. `provider` and `issueTracker` resolve independently, so a repo hosted on one provider can track its issues on another — and a repo that overrides only `provider` still takes its tracker from global config. Note that writing `branches.protected` *replaces* the default set rather than extending it — omit the key unless you need to add a name the default does not cover.
 
 Set `verify.detectedFrom` to exactly `["manual"]` when a repo's verification is real but
 unconventional — structural checks defined in a `README`, a bespoke harness, anything `init`'s
@@ -167,9 +172,9 @@ Or reference the local path during development:
 
 This repo ships no shell scripts — its product is JSON and Markdown, so verification is structural
 rather than a test suite. The checks themselves, what each one catches, and the mechanics of how
-`.hivrr.json` `verify.test` runs them live in [`docs/verification.md`](docs/verification.md).
+`.agent-plugins.json` `verify.test` runs them live in [`docs/verification.md`](docs/verification.md).
 
-Run them all: `jq -r '.verify.test' .hivrr.json | bash`
+Run them all: `jq -r '.verify.test' .agent-plugins.json | bash`
 
 ## License
 

@@ -131,7 +131,7 @@ Display `Hierarchy: {n}/{total} children attached to #{epic}`, or nothing when n
 
 ### Board
 
-Read `project` from `.hivrr.json`. **When `project` is absent, skip this silently** — most repos
+Read `project` from `.agent-plugins.json`. **When `project` is absent, skip this silently** — most repos
 have no board. For each created issue, **including the epic**, which must reach the board beside its
 children or the rollup that motivates it has nothing to display:
 

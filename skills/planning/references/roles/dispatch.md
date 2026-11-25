@@ -63,7 +63,7 @@ reported. Write "None." under the heading when there are no findings.
 
 A skill that dispatches roles resolves `{base}` once per run, before its first dispatch, as
 `cold-read` Phase 1 does (`cold-read` keeps its own): resolve `{integration}` (`branches.integration`
-from `.hivrr.json`, then the repository default branch, then `origin/HEAD`, then `main`) and run
+from `.agent-plugins.json`, then the repository default branch, then `origin/HEAD`, then `main`) and run
 `git fetch origin {integration}`. `{base}` is `origin/{integration}`. If the fetch fails but
 `git rev-parse --verify -q origin/{integration}` finds the ref, keep it, with the line
 `Tree from origin/{integration}, not refreshed: fetch failed, may be stale.` When the ref is missing

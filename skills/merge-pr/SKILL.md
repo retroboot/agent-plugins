@@ -49,7 +49,7 @@ Display: `Input: PR/MR #{pr_number} | auto: {auto_mode}`
 
 Deleting a branch is not cleanup when the branch is long-lived — it destroys an environment. A `dev → staging` promotion merged with `--delete-branch` deletes `dev` both locally and on the remote. Before deleting a head branch, check all three rules. **If any rule trips, do not delete.**
 
-**Rule 1 — Protected names.** Never delete a head branch in the protected set. Read `branches.protected` from `.hivrr.json`; see [`config.md`](../init/references/config.md) for the read steps and per-key precedence. When the file or the key is absent, the set defaults to `main, master, dev, develop, staging, release/*`. Entries may use a trailing `*` wildcard — `release/*` matches any branch whose name starts with `release/`.
+**Rule 1 — Protected names.** Never delete a head branch in the protected set. Read `branches.protected` from `.agent-plugins.json`; see [`config.md`](../init/references/config.md) for the read steps and per-key precedence. When the file or the key is absent, the set defaults to `main, master, dev, develop, staging, release/*`. Entries may use a trailing `*` wildcard — `release/*` matches any branch whose name starts with `release/`.
 
 **Rule 2 — The base branch.** Never delete a branch equal to the PR's base branch (`baseRefName` / `target_branch`).
 
@@ -106,7 +106,7 @@ Display: `PR/MR #{pr_number}: "{pr_title}" | state: {pr_state} | {head_branch} �
 
 Under a dev/staging/main ladder the right merge behavior depends on which rungs are involved. One predicate drives strategy, deletion, and issue-closing — no new flags are needed to detect it.
 
-Read `branches.ladder` from `.hivrr.json`, defaulting to `[default branch]` when absent.
+Read `branches.ladder` from `.agent-plugins.json`, defaulting to `[default branch]` when absent.
 
 **The promotion predicate: `head_branch` and `base_branch` are BOTH in `branches.ladder`.**
 
@@ -168,7 +168,7 @@ The exclusion is by name, so it cannot clear GitLab's `(pipeline)` row: a pipeli
 because a `claude-review` job did still stops, as it did before job-level checks. Giving that job
 `allow_failure: true` in the project's CI config is the fix.
 
-**Optional manual jobs pass, out loud.** A `manual` job whose name is listed in `.hivrr.json`
+**Optional manual jobs pass, out loud.** A `manual` job whose name is listed in `.agent-plugins.json`
 `ci.optionalManualJobs` does not block — see [`config.md`](../init/references/config.md). Name it in
 the clear line below so the skipped job is never silent. The list matches job names only; it never
 clears a `(pipeline)` row, because a pipeline whose own status is `manual` is blocked, and its later
@@ -309,7 +309,7 @@ Display: `Parents closed: {list}` or nothing when none qualified.
 
 ### Move the board cards to Done
 
-**Only when `project` is present in `.hivrr.json`** — skip silently when it is absent. The phase-level skip above already covers promotions. Read and follow `$CLAUDE_SKILL_DIR/references/board.md` for each issue in `linked_issues` and each closed parent. Its gate: an issue not on the board is warned about and skipped, never added at merge time. Warn and continue on any failure — a board error must not make a completed merge look failed.
+**Only when `project` is present in `.agent-plugins.json`** — skip silently when it is absent. The phase-level skip above already covers promotions. Read and follow `$CLAUDE_SKILL_DIR/references/board.md` for each issue in `linked_issues` and each closed parent. Its gate: an issue not on the board is warned about and skipped, never added at merge time. Warn and continue on any failure — a board error must not make a completed merge look failed.
 
 Display: `Board: {n} issue(s) → Done`, or nothing when unconfigured
 
@@ -334,7 +334,7 @@ The full commands and reasons for this phase are in `$CLAUDE_SKILL_DIR/reference
 
 **Step 1 — This PR's head branch.** Skip entirely if a deletion rule tripped. If Phase 6 was skipped (`already_merged`), evaluate the Branch Deletion Safety rules against `{head_branch}` here first (`remote_branch_deleted` is false, as no merge command ran): when one trips, keep the local and the remote branch and report which rule tripped. Record `branch_deleted` — `{head_branch}` once deleted, or `none` when a rule tripped.
 
-**Worktree first — only when `worktree` is present in `.hivrr.json` and `is_promotion` is false.** Run `git worktree list --porcelain`. When an entry holds `{head_branch}`, **read and follow cleanup.md § Remove the head branch's worktree before deleting anything** — git refuses to delete a branch a worktree holds. Its one stop: if `git worktree remove` refuses because of modified or untracked files, **stop and ask**, and never pass `--force` without an explicit answer.
+**Worktree first — only when `worktree` is present in `.agent-plugins.json` and `is_promotion` is false.** Run `git worktree list --porcelain`. When an entry holds `{head_branch}`, **read and follow cleanup.md § Remove the head branch's worktree before deleting anything** — git refuses to delete a branch a worktree holds. Its one stop: if `git worktree remove` refuses because of modified or untracked files, **stop and ask**, and never pass `--force` without an explicit answer.
 
 Then delete the branch:
 
