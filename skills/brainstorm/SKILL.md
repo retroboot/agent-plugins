@@ -71,15 +71,20 @@ Display: `Topic: {topic} | Framing: {framing}` — plus ` | Resuming: {resume_pa
 
 Before saying anything, look at what's actually there.
 
-Read the relevant code, open issues, and recent commits related to the topic. You want to understand the current state well enough to ask good questions — not to jump to answers. When resuming, also read anything else already in the pack folder.
+Run the research step in `$CLAUDE_SKILL_DIR/references/research.md`, **Phase 2 research step**: read
+the open issues and recent commits related to the topic yourself, and send the Scout, the Historian
+and the Skeptic to read the repository and past packs in one step. You want to understand the
+current state well enough to ask good questions — not to jump to answers. When resuming, also read
+anything else already in the pack folder.
 
-This phase is silent. Do not show your research process unless asked.
+Say only the lines `research.md` gives, ending with its one summary line. Do not show the research
+itself unless asked.
 
 ---
 
 ## Phase 3 — Open the Conversation
 
-Present what you understand about the topic in 2–4 sentences, then ask the single most important question that would unlock the most clarity.
+Present what you understand about the topic in 2–4 sentences, then ask the single most important question that would unlock the most clarity. Draw on the research findings as `references/research.md` **Phase 3 opening** says.
 
 Do not present multiple questions at once. Do not present solutions yet. Do not validate the user's framing without examining it first — if the framing seems off, say so.
 
@@ -93,7 +98,8 @@ Present the question directly to the user and wait for their response in the con
 
 ### When resuming
 
-Do not start from a blank page. Open from the saved README instead:
+Do not start from a blank page. Open from the saved README instead, naming any finding that touches
+a saved **Ruled out** entry as `references/research.md` **Phase 3 opening** says:
 
 1. Restate the saved **Brief** in 2–4 sentences, and name what is already under **Ruled out** so
    it is not argued again unless the user reopens it.
