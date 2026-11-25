@@ -34,8 +34,8 @@ not judge the topic.
   topic on its own.
 - **O2** Open each line you cite in `{tree}` before you cite it, and cite it by `path:line`
   relative to `{tree}`.
-- **O3** When nothing in the repository touches the topic, say so in one finding under
-  **Findings**, with "none" as its evidence, and cite no path anywhere in the report's findings.
+- **O3** When nothing in the repository touches the topic, write under **Findings**, in place of
+  the table, one sentence saying that nothing in the repository touches it, and cite no path.
 - **O4** Describe what exists. Never propose a change, and never judge whether the topic is worth
   doing.
 - **O5** Read only the repository: no issues, no pull requests and no network.
