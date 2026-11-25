@@ -115,10 +115,10 @@ them.
 pending, and it is never the place for an answer, a fix or a deferral, which go into their files.
 
 - **Gate pending: {file}**, for `context.md`, `prd.md` (`README.md` at size S with no prd),
-  `design.md` and `plan.md` alike. Write it in the step that writes the stage's file, and update it as the gate
-  runs: the drafting line, every trust and fallback line (**Base**, Facilitator and `not reviewed`
-  lines), each held item as `Id | Question | Options | Blocking`, and `Fix not re-checked` from the
-  first fix until the re-check's guard has run.
+  `design.md` and `plan.md` alike. Write it in the step that writes the stage's file, and update it
+  as the gate runs: the drafting line, every trust and fallback line (**Base**, Facilitator and `not
+  reviewed` lines), each held item as `Id | Question | Options | Blocking`, and `Fix not re-checked`
+  from the first fix until the re-check's guard has run.
 - **The checkpoint that shows the file removes its entry**, after the answers are written and the
   deferrals are Open questions lines. Delete `handoff.md` when its last entry goes. A stop at the
   checkpoint leaves the entry.

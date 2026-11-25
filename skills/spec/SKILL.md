@@ -306,7 +306,9 @@ saying what it would hold, and write it only on a yes. Write it from `templates/
 each section exactly when its `pack-format.md` §2 trigger applies. **Before writing or extending
 it, read `$CLAUDE_SKILL_DIR/references/design.md`, design.md sections:** which sections to include,
 and what State machines, Test strategy, Pre-mortem, a Rewrite cutover and Migration or Rewrite
-rollback hold.
+rollback hold. The Architect drafts it, as Phase 3 says for the Analyst: `roles/architect.md`,
+`{file}` `design.md`, `{skill}` this phase and that reference, with a **Gate pending** entry and no
+gate (`gates.md`); the Facilitator then adds the modifier sections below, and any `ux.md`.
 
 ### Modifier sections
 
@@ -340,10 +342,11 @@ Fix anything that fails before showing it.
 
 ## Phase 8 — Design Checkpoint
 
-Show `design.md`, `ux.md`, `inventory.md`, the README modifier sections and, at size S, the rest of
-the Slice — whichever were written. Also show each prd criterion Phase 6 added, with its story,
-since the acceptance checkpoint never saw it. In a re-route, show each revised section and its Open
-questions line.
+Show `design.md` with its drafting line, `ux.md`, `inventory.md`, the README modifier sections and,
+at size S, the rest of the Slice — whichever were written. Also show each prd criterion Phase 6
+added, with its story, since the acceptance checkpoint never saw it. In a re-route, show each
+revised section and its Open questions line. Then ask the Architect's held open points as one batch
+(`gates.md` **Checkpoint batch**); on approve, remove the design.md Gate pending entry.
 
 Ask: **approve**, **change** or **stop**.
 
