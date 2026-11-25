@@ -161,10 +161,10 @@ examples. Go to Phase 4.
 
 ### The Analyst
 
-The prd, or at size S the README Slice's Outcome and Acceptance, is drafted by the Analyst, as
-`dispatch.md` says for the Scout in Phase 2 (resolving `{base}` if Phase 2 did not):
-`roles/analyst.md`, `{file}` `prd.md` (at size S `README.md`, holding only those two headings),
-`{skill}` this file's Phase 3. Whoever drafts it follows the rules below.
+The prd, when the route has one, and at size S the README Slice's Outcome and Acceptance, each its
+own dispatch, are drafted by the Analyst, as `dispatch.md` says for the Scout in Phase 2 (resolving
+`{base}` if Phase 2 did not): `roles/analyst.md`, `{file}` `prd.md` or `README.md` (holding only
+those two headings), `{skill}` this file's Phase 3. Whoever drafts them follows the rules below.
 
 ### prd.md
 
@@ -208,8 +208,9 @@ In this phase, write **Outcome** and **Acceptance**:
 
 The rest of the Slice is written in Phase 7.
 
-Then run the **acceptance gate**, the Fact-checker and the Trust reviewer in one step, as `gates.md`
-says, with its **Gate pending** entry for the drafted file, and write its **Probe results**.
+Then run the **acceptance gate**, the Fact-checker and the Trust reviewer in one step, as
+`gates.md` says, with its **Gate pending** entry (`prd.md`, else `README.md`), and write its
+**Probe results**.
 
 ---
 

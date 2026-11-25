@@ -96,13 +96,17 @@ Skill dir, per dry run:
 - **F7's evidence has its own section, `## Probes`**, as the Trust reviewer's Questionnaire is a
   third section. `dispatch.md` **Completeness check** already counts a section a card's Output adds.
 - **The size S acceptance gate** was not run on the size S copy; its row asks only for the draft.
+- **Size S with a prd (PR #278 review).** A Feature, Refactor or Greenfield at size S has both a
+  prd and the README Slice. `spec`, `analyst.md`, `gates.md` and `planning` now say the Analyst drafts
+  each, one dispatch per file, and the Gate pending entry names `prd.md` whenever there is one. No
+  dry run covers this case; the size S copy was a Change, which has no prd.
 - **Cheap non-blocking findings** of the gate (GF5 to GF8) were fixed. GT8 (Route and Security NFR)
   was listed, not asked, and its question fell with ADR-001.
 
 ## Discoveries
 
-- **For Slice 4: `spec` has 5 lines left.** `spec` is 394 lines; the Architect's dispatch must fit in
-  5, or text moves to `gates.md` or `dispatch.md`. `planning` is 386.
+- **For Slice 4: `spec` has 4 lines left.** `spec` is 395 lines; the Architect's dispatch must fit in
+  4, or text moves to `gates.md` or `dispatch.md`. `planning` is 386.
 - **For the retro: `G` Ids are reused after a resume.** As in Slice 2, the first acceptance pass
   listed a non-blocking GT6, which was never held, and the resumed pass gave GT6 to a new blocking
   item.

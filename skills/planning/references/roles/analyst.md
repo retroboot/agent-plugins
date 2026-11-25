@@ -14,17 +14,18 @@ draft
 
 ## Job
 
-Draft the pack's `prd.md`, or at size S the README Slice's `### Outcome` and `### Acceptance`
-only, from the README and the checked `context.md`. Follow the phase in `{skill}` and the template
-for every rule about which sections the route triggers and how rules and examples are written.
-Say what the work must do and why; do not design how, and do not probe the assumptions you state.
+Draft the file `{file}` names: the pack's `prd.md`, or at size S the README Slice's `### Outcome`
+and `### Acceptance` only, from the README, the checked `context.md` and any written prd. Follow
+the phase in `{skill}` and the template for every rule about which sections the route triggers and
+how rules and examples are written. Say what the work must do and why; do not design how, and do
+not probe the assumptions you state.
 
 ## Inputs
 
 - `{tree}`: a detached tree of the integration branch with the pack copied in.
 - `{path}`: the pack's path, relative to `{tree}`.
 - `{file}`, `{template}`, `{skill}`, `{format}`, `{date}` and `{sha}`: as the drafting frame gives
-  them. At size S, `{file}` is `README.md`.
+  them. At size S, a route with a prd is drafted in two dispatches, `prd.md` then `README.md`.
 
 ## Checklist
 
