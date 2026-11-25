@@ -89,15 +89,15 @@ literal path `mktemp` printed in each later call instead of `$file`.
 
 ```bash
 file=$(mktemp)
-cat > "$file" <<'HIVRR_COMMIT_7f3a'
+cat > "$file" <<'AGENT_PLUGINS_COMMIT_7f3a'
 …message, verbatim…
-HIVRR_COMMIT_7f3a
+AGENT_PLUGINS_COMMIT_7f3a
 git commit -F "$file"    # one known path: git commit -F "$file" -- {path}
 rm -f "$file"
 ```
 
-The delimiter is `HIVRR_COMMIT_7f3a`, not `EOF`, for the reason the session references give for
-`HIVRR_BODY_7f3a`: a line equal to the delimiter ends the heredoc early and runs the rest as shell.
+The delimiter is `AGENT_PLUGINS_COMMIT_7f3a`, not `EOF`, for the reason the session references give for
+`AGENT_PLUGINS_BODY_7f3a`: a line equal to the delimiter ends the heredoc early and runs the rest as shell.
 If the message contains such a line, choose another. A message that is a fixed literal with no
 backtick, `$` or `"` — `init`'s `.gitignore` commit is one — is safe inline and may keep `-m`.
 
