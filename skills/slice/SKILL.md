@@ -49,6 +49,9 @@ The input is a pack path, `docs/plans/<slug>`. Read `{path}/README.md`.
 - **No README there:** say `No pack at {path}` and go to Phase 7.
 - Read the header **Status**, **Type**, **Size** and **Modifiers**, and the **Route**, **Brief** and
   **Open questions** sections. List every other file in the folder.
+- **`handoff.md`**, if present (`$CLAUDE_SKILL_DIR/../planning/references/gates.md` **Handoff**): a
+  **Gate pending: plan.md** entry skips the Planner and re-runs only the slice gate (Phase 4); a
+  **Spec pending** entry says `Spec change pending: next: planning {path}.` and goes to Phase 7.
 
 Read `pack-format.md` §2 (routing matrix, size table), §4 (slice contract) and §6 (fences).
 
@@ -76,19 +79,9 @@ Then, whatever the Status, by route:
 
 ### Re-slice
 
-`plan.md` was approved before, and the plan or the route changed since (for example a re-route, or
-a cold-read finding). Work through every phase as in Slice, against the `plan.md` already there:
-
-- Never delete it or rewrite it wholesale. Revise it slice by slice, and the traceability table and
-  graph with them. Issues are not published yet, so slices may be renumbered.
-- For each revised slice, add one line to the README **Open questions**:
-  `Revised by slice on {date}: plan.md — Slice {N}, {reason}. Awaiting approval at the next checkpoint.`
-  On approval at Phase 5, remove those lines; write "None." if the list is then empty. A stop
-  leaves them in place.
-- Status is not changed by this run (Phase 6).
-
-Slice at `specified` follows the same revision rules when `plan.md` already exists (an earlier
-stopped run), and still sets Status on approval.
+`plan.md` was approved before, and the plan or the route changed since. Before Phase 2, read
+`$CLAUDE_SKILL_DIR/references/reslice.md`: its revision rules (also for a Slice whose `plan.md`
+exists) and the Planner's `{current}`.
 
 ### Read the specification
 
@@ -106,13 +99,20 @@ grep -oE '\*\*S-[0-9]+\.[0-9]+\*\*' docs/plans/{slug}/prd.md | tr -d '*' | sort 
 **No criteria:** when `prd.md` exists but the command prints nothing, say
 `Format gap: prd.md states no bold S-NN.k criteria; nothing was written.` and go to Phase 7.
 
+Resolve `{base}`, `{date}` and `{sha}` as
+`$CLAUDE_SKILL_DIR/../planning/references/roles/dispatch.md` **Base** says, once for the run, before
+the first dispatch.
+
 Display: `Pack: {path} | Status: {status} | Route: {type}, {size}, {modifiers} | Mode: {mode} | Criteria: {count}`.
 
 ---
 
 ## Phase 2 — Draft the Slices
 
-Draft in the conversation first; nothing is written until Phase 4.
+The Planner drafts the whole `plan.md`, as `dispatch.md` says: `roles/planner.md` by **Drafting
+frame**, `{file}` `plan.md`, `{skill}` this file's Phases 2 to 4 (in a Re-slice, with `{current}`),
+checked by **Draft completeness check** (with no subagent tool, **No subagent tool**). The accepted
+draft is counted (**Count**) and written in Phase 4. Whoever drafts it follows the rules below.
 
 ### Vertical, one PR each
 
@@ -187,8 +187,9 @@ The slice contract, `pack-format.md` §4, with the eight headings in order:
 
 ### Count
 
-**More than 12 slices is a hard stop.** Do not write `plan.md`, or any change to an existing one.
-Say `XL: split into child packs — the draft has {n} slices, over the 12 a pack holds. Re-route to XL with planning.`
+**More than 12 slices is a hard stop**, counting the draft's `## Slice N` headings. Do not write
+`plan.md`, or any change to an existing one. Say
+`XL: split into child packs — the draft has {n} slices, over the 12 a pack holds. Re-route to XL with planning.`
 and go to Phase 7 (S-09.4).
 
 When the count is outside the Size row's range (M is 2–6, L is 7–12), keep it for the Phase 5
@@ -213,7 +214,8 @@ independent slices independent rather than chaining them for tidiness.
 
 ## Phase 4 — Write plan.md and Self-check
 
-Write `docs/plans/{slug}/plan.md` from `templates/plan.md`:
+Write the accepted draft to `docs/plans/{slug}/plan.md`, laid out as `templates/plan.md` is, with
+its **Gate pending** entry in `handoff.md`:
 
 1. **Dependency graph** (Phase 3), or delete the section.
 2. **Traceability:** a table of criterion → slices. A row may group IDs that share the same slices,
@@ -317,6 +319,12 @@ Without a Story map, no header has `Map:`.
 - **Inventory:** no `pending` is left in a Migration's Slice column.
 - No section is empty, no `_Guidance:` line is left, and `plan.md` and `progress/` are in Read order.
 
+### Slice gate
+
+When the Self-check passes, run the **slice gate**, the Test engineer and the Editor in one step, as
+`$CLAUDE_SKILL_DIR/../planning/references/gates.md` says. Its fixes edit only `plan.md`; this
+Self-check re-runs on the fixed file before the re-check; nothing it holds is asked until Phase 5.
+
 ---
 
 ## Phase 5 — Checkpoint
@@ -331,19 +339,24 @@ Show the developer, in this order:
   slice, or stop so `planning` **Revise spec** can drop or move it;
 - each Story map step no slice touches;
 - a **size mismatch**: `Size {size} expects {range} slices; the draft has {n}.`;
-- in a Re-slice, each revised slice and its Open questions line.
+- in a Re-slice, each revised slice and its Open questions line;
+- the drafting line and the slice gate's lines, then its held items as one batch (`gates.md`
+  **Checkpoint batch**); an answer that needs a spec file changed stops as `gates.md` **Answer**
+  says.
 
 Then ask: **approve**, **change** or **stop**. Approve is offered only when there is no gap, no
-untouched map step and no size mismatch. Otherwise offer **change**, or **stop** to take it to a
-`planning` step: **Re-route** for the size, or **Revise spec** for a gap, an untouched map step or
-a mismatch the prd explains.
+untouched map step, no size mismatch, and no blocking item unanswered or deferred. Otherwise offer
+**change**, or **stop** to take it to a `planning` step: **Re-route** for the size, or **Revise
+spec** for a gap, an untouched map step or a mismatch the prd explains.
 
-- **Approve:** for a Re-slice, remove the revision lines from Open questions. Go to Phase 6.
+- **Approve:** for a Re-slice, remove the revision lines from Open questions. Remove the plan.md
+  Gate pending entry (`gates.md` **Handoff**). Go to Phase 6.
 - **Change:** revise `plan.md` in place, re-run the Phase 4 self-check, and show this checkpoint
   again.
 - **Stop:** go to Phase 7. Status is unchanged; `plan.md` stays on disk. When a gap, untouched map
   step or size mismatch was shown, first say
   `Stopped: {gap | untouched map step | size mismatch} — next: planning {path} revise spec{, or planning {path} re-route for a size mismatch}.`
+  With a deferred blocking item, say `Stopped: {Id} unanswered — next: planning {path} revise spec.`
 
 ---
 
