@@ -104,7 +104,9 @@ on ground already covered dispatches nothing.
 2. Run steps 3 to 7 of the **Phase 2 research step** with only those roles: one tree, one message,
    the guard, the completeness check and its retry, removing every tree, and a summary line naming
    only the roles dispatched. `{topic}` is your one- or two-sentence statement of the new ground.
-   Keep the run's `{base}`, `{date}` and `{sha}`, and do not read issues or commits again.
+   Keep the run's `{base}`, `{date}` and `{sha}`, and do not read issues or commits again. Where
+   step 3 or 5 goes to Phase 3, stay in Phase 4 with no new findings; the no-tree line then ends
+   `going on without research.` in place of `opening without research.`
 3. Take the findings into the same ledger, each role's Ids continuing from its last in the run.
 4. Your next reply waits for every report or missing line of the step, then draws on the findings
    it needs, ending with one question as Phase 4 does. No role speaks to the developer.
