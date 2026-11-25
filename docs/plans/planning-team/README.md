@@ -75,7 +75,7 @@ order.
 | 1 | `docs/plans/planning-team-review` | The role card format and dispatch/triage mechanism. The review panel before the cold read: Fact-checker, Test engineer, Editor and Trust reviewer, each on a narrow checklist, in parallel. Each fix re-checked only by the role it affects. A parallel round-1 cold read covering every slice. Tracing each miss back to a role. The `Pass after N rounds` record fix | none |
 | 2 | `docs/plans/planning-team-spec` | Staffing `spec` and `slice` with role gates: a Scout writes `context.md` and the Fact-checker gates it; the Analyst, Architect and Planner draft; assumption probes are run before design; the Trust reviewer's batch goes out at the acceptance checkpoint; the Test engineer and Editor check the draft before the slice checkpoint | 1 |
 | 3 | `docs/plans/planning-team-discovery` | Staffing `brainstorm` with parallel research: a Scout, a Historian (past packs, retros and cold-read records) and a Skeptic. The Facilitator brings their findings into the conversation | 1 |
-| 4 | `docs/plans/planning-team-facilitator` | `planning` as the Facilitator: the roster by route (S, M, L), batching decisions once per stage across the whole flow, and the subagent-free fallback in one place | 1, 2, 3 |
+| 4 | `docs/plans/planning-team-facilitator` (closed, not planned) | `planning` as the Facilitator: the roster by route (S, M, L), batching decisions once per stage across the whole flow, and the subagent-free fallback in one place. Closed on 2026-11-24 as already delivered by children 1–3 | 1, 2, 3 |
 
 ## Route
 
@@ -132,6 +132,14 @@ folder and the repository.
 - **Tracking the children.** After each child pack's last slice merges, run `planning
   docs/plans/planning-team` to see every child's Status, then start the next child in order with
   `planning "<that child's Covers text>"`, linking this README from its Brief.
+- **Child 4 closed, not planned (2026-11-24).** The developer closed it after a `brainstorm`
+  research step found its scope already shipped. The fallback lives in one place:
+  `skills/planning/references/roles/dispatch.md` **No subagent tool**, with one paragraph each for
+  the panel, drafting, gates and research. Decisions are batched once per checkpoint by
+  `skills/planning/references/gates.md` **Checkpoint batch** and `cold-read`'s Developer batch. The
+  roster scales with the route under `planning-team-spec` ADR-003: a role runs only when its stage
+  writes its file. Every session that runs a phase skill is already the Facilitator. No
+  `docs/plans/planning-team-facilitator` folder exists.
 - **Settled by child pack 1:** role cards live in `skills/planning/references/roles/<role>.md`,
   shared by every skill (`planning-team-review` ADR-001). The roster was tested against the 95
   blockers from the 35 hyalos rounds: only 8 needed a cold reader (`planning-team-review/prd.md`,
