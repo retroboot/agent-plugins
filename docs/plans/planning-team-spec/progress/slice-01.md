@@ -53,7 +53,7 @@ checkout's skill (see Decisions). Each drafting dispatch ran in a new tree, buil
 | 1.3 | pass — Verify: `=== BEGIN {file} ===` occurs only in `dispatch.md`, once |
 | 1.4 | pass — Verify: `dispatch.md` **Base** holds the `{base}` step, with its fallback line once; `{base}` and `dispatch.md` occur in `spec` Phase 2, before the Scout's dispatch |
 | 1.5 | pass — **greenfield** copy, run through `spec` Phase 5. Drafted by the Scout, Sonnet (Agent tool, model: sonnet, Explore). The draft cited each stack choice to the Brief (`README.md:19`, `:19-20`) or the Ruled out options (`README.md:24`, `:25`). In Phase 5, ADR-001 (Python 3.12, standard library only) and ADR-002 (standalone port, from the DS1 answer) were written. Each stack citation in `context.md` gained `ADR-001`, and the DS1 line gained `ADR-002` |
-| prd Assumptions row 1 | held — whole-file reports came back intact. **fresh**: 131 lines, 15,280 characters, end marker back. **greenfield**: 117 lines, end marker back. The **guard** and **short** reports also had both markers. Each draft's own `bash` fence passed through between the markers intact |
+| prd Assumptions row 1 | held — whole-file reports came back intact. **fresh**: 131 lines, 15,280 characters, end marker back. **greenfield**: 117 lines, end marker back. The **guard** and **short** reports also had both markers. The two drafts that held a `bash` fence (**fresh**, **short** dispatch 1) carried it through between the markers intact |
 
 Skill dir, per dry run:
 
@@ -90,8 +90,9 @@ Skill dir, per dry run:
 - **For Slice 2, the context gate.** Every Scout draft raised, as a blocking open point (S4),
   that `init` already prints `null` at `skills/init/SKILL.md:232`. That is the kind of item the
   context gate's held list and the acceptance batch must carry.
-- **For Slice 2, a Scout check that writes.** Two Scouts reported running the structural check
-  block in their tree, and two reported that the permission system denied it. Every guard held.
+- **For Slice 2, a Scout check that writes.** Two Scouts (**greenfield**, **guard**) reported
+  running the structural check block in their tree; the **fresh** Scout reported that the
+  permission system denied it, and the two **short** Scouts did not run it. Every guard held.
   F7's "not run: changes state" rule should be paired with the same wording for drafters if
   this recurs.
 - **For Slice 3.** The marker lines carried `bash` fences inside drafts intact, so the Analyst's
