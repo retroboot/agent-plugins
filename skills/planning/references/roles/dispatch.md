@@ -71,9 +71,10 @@ and `{sha}` (`git rev-parse --short {base}`), once for the run.
 
 ## Drafting frame
 
-A drafter is dispatched only for a file the run writes new. In a Re-route or Revise spec, a file
-that already exists is revised in place by the Facilitator, as `spec/references/reroute.md` says,
-and gets no drafting line.
+A drafter is dispatched only for a file the run writes new (at size S, for the README Slice's
+Outcome and Acceptance when they are not yet written). In a Re-route or Revise spec, a file or
+section that already exists is revised in place by the Facilitator, as `spec/references/reroute.md`
+says, and gets no drafting line.
 
 One prompt per drafting role, exactly this, with `{tree}`, `{path}`, `{name}`, `{letter}` and
 `{card}` filled in as for **Prompt frame**, and `{file}` (the file to draft, relative to the pack),
