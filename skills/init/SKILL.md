@@ -1,6 +1,6 @@
 ---
 name: init
-description: One-time setup — validates ~/.claude/settings.json, bootstraps repo labels, and offers to scaffold a repo-local .hivrr.json. Idempotent.
+description: One-time setup — validates ~/.claude/settings.json, bootstraps repo labels, and offers to scaffold a repo-local .agent-plugins.json, migrating an old config file. Idempotent.
 license: MIT
 compatibility: opencode
 ---

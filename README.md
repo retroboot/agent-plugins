@@ -1,6 +1,6 @@
-# hivrr-agent-plugin
+# agent-plugins
 
-Claude Code skills and slash commands for the hivrr workflow. Distributed as a Claude plugin and loaded into agent sessions to give them first-class access to hivrr's automation capabilities.
+Claude Code skills for implementation, code review, planning, auditing and data-platform work. Distributed as Claude Code plugins and loaded into agent sessions, which invoke each skill by name.
 
 ## Overview
 
