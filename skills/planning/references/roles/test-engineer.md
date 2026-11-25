@@ -8,6 +8,10 @@ V
 
 sonnet
 
+## Kind
+
+review
+
 ## Job
 
 Check that every criterion can be proven and that every Verify command proves what it claims: it

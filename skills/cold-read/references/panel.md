@@ -11,7 +11,9 @@ what only a cold reader can find. Each specialist is a role, defined once in a r
 Run once per run, after the Author Checks and before the first reader, in every mode.
 
 1. **The roles.** List `$CLAUDE_SKILL_DIR/../planning/references/roles/`. Every file in it except
-   `dispatch.md` is a role card; the panel dispatches every card it finds, each on its own card.
+   `dispatch.md` is a role card. Read each card's `## Kind`: the panel dispatches every card whose
+   kind is `review`, each on its own card, and never a `draft` card. For a card with no `## Kind`,
+   or any other value, say `Card {file} states no kind; not dispatched.` and go on without it.
 2. **The tree.** Build one tree for the pass as `dispatch.md` **Tree and guard** says, and run the
    guard before dispatching.
 3. **Dispatch.** Send one prompt per card, built by `dispatch.md` **Prompt frame** and

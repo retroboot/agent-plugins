@@ -123,9 +123,13 @@ each with its exact `path:line`. This list replaces the old "Allowed APIs" list:
 an executor from inventing an API that does not exist.
 
 When `context.md` is required, or is optional and the developer accepts it (a Spike proposes it
-here, with the evidence it would record), write it from `templates/context.md`:
+here, with the evidence it would record), the Scout drafts it, as
+`$CLAUDE_SKILL_DIR/../planning/references/roles/dispatch.md` says: resolve `{base}` (**Base**),
+dispatch `roles/scout.md` by **Drafting frame**, with `{skill}` this file's Phase 2, and check and
+write its draft by **Draft completeness check** (with no subagent tool, **No subagent tool**).
+Otherwise no Scout is dispatched. Whoever drafts it follows these rules and `templates/context.md`:
 
-- The opening line gives today's date (`date +%F`) and `git rev-parse --short HEAD`.
+- The opening line gives `{date}` and `{sha}`, the short commit of `{base}`.
 - **Every API, pattern and convention it names carries a `path:line` citation** that you opened
   and read in this run. A claim you cannot cite is either cited or removed; never write one
   unsupported.
@@ -135,7 +139,7 @@ here, with the evidence it would record), write it from `templates/context.md`:
 - §5, Glossary, holds every domain term the pack will use, with one meaning each.
 - **Greenfield:** there is no code yet, so context records the chosen stack and conventions, as a
   seed for the new `CLAUDE.md`. Cite each choice to its source: a file in the repo if one exists,
-  otherwise the ADR (Phase 5) that chose it.
+  otherwise the Brief or the **Ruled out** option that chose it; Phase 5 adds the ADR citation.
 
 Before moving on, re-read `context.md`: every named API, pattern and convention has its citation.
 
@@ -198,7 +202,8 @@ The rest of the Slice is written in Phase 7.
 
 Show the developer, in this order:
 
-- `context.md` (if written): a short summary and its citation count;
+- `context.md` (if written): a short summary and its citation count, its drafting line and any
+  `{base}` fallback line, its settled open points, and each held one with its Id (Phase 2);
 - the prd, or at size S the Slice's Outcome and Acceptance, or for a Spike the Question;
 - any rule left without an edge or failure row, with the question of why none applies;
 - in a re-route, each revised section and its Open questions line.
@@ -229,6 +234,8 @@ stated in the Brief or at Phase 4, and choices you made while writing the prd an
 - Status `accepted` for a decision the developer stated outright; `proposed` for one you made.
 - **Proposed by** `developer` for an `accepted` one; `author (spec)` for a `proposed` one.
 - Options: at least two, every rejected one with its reason.
+- **Greenfield:** for each stack choice an ADR records, add the ADR's citation beside that choice's
+  Brief or Ruled out citation in `context.md`.
 - **Lifecycle** (`pack-format.md` §1). Only a `proposed` ADR is revised in place. An accepted ADR
   is never edited: when a decision it records changes, write a new ADR whose Context names it.
   Once the new ADR is accepted — at once when the developer stated it, otherwise at the checkpoint's

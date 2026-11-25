@@ -8,6 +8,10 @@ E
 
 sonnet
 
+## Kind
+
+review
+
 ## Job
 
 Check that the pack says each thing once, or says it the same way everywhere: every rule, limit,
