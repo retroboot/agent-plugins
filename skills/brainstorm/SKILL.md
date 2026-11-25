@@ -121,6 +121,10 @@ Challenge assumptions when you spot them: "You said X — what if the opposite w
 
 Do not agree with everything. If a proposed direction contradicts an established pattern or a prior decision, say so directly and explain why.
 
+When a reply would turn to ground the research did not cover, or the user asks for research, run
+`references/research.md` **Phase 4 research** first. A Skeptic case against building is a challenge,
+under that file's **Challenge rule**.
+
 Stay in thinking mode. If the user starts heading toward implementation details, redirect: "We can get into that — but first, are we confident this is the right approach?"
 
 ### Keep track as you go

@@ -1,6 +1,6 @@
 # Research
 
-Read this from `SKILL.md` Phase 2, and again at Phase 3. The main session is the **Facilitator**
+Read this from `SKILL.md` Phase 2, and again at Phases 3 and 4. The main session is the **Facilitator**
 (`$CLAUDE_SKILL_DIR/../planning/references/roles/dispatch.md`, the dispatch contract). It sends three
 research roles to read the repository before it says anything, then brings what they found into the
 conversation itself. The roles never talk to the developer. Read `dispatch.md` in full before the
@@ -91,3 +91,30 @@ the saved **Ruled out** holds is named as touching that entry, for example
 `The Skeptic's RK2 touches the ruled-out option "{option}".`, and is not argued unless the developer
 reopens it. A README whose **Ruled out** is "None." has nothing to touch, so findings are brought in
 as for a new brainstorm.
+
+## Phase 4 research
+
+Start a research step whenever a Phase 4 reply would turn to ground that no earlier step's
+**Sources read** covered, or the developer asks for research. You decide: do not wait for the
+developer to notice new ground, and a run holds as many steps as the conversation needs. A reply
+on ground already covered dispatches nothing.
+
+1. Say `Researching {ground}: {roles}.`, with `{ground}` the new ground in a few words and `{roles}`
+   the roles it needs: any of the Scout, the Historian and the Skeptic.
+2. Run steps 3 to 7 of the **Phase 2 research step** with only those roles: one tree, one message,
+   the guard, the completeness check and its retry, removing every tree, and a summary line naming
+   only the roles dispatched. `{topic}` is your one- or two-sentence statement of the new ground.
+   Keep the run's `{base}`, `{date}` and `{sha}`, and do not read issues or commits again. Where
+   step 3 or 5 goes to Phase 3, stay in Phase 4 with no new findings; the no-tree line then ends
+   `going on without research.` in place of `opening without research.`
+3. Take the findings into the same ledger, each role's Ids continuing from its last in the run.
+4. Your next reply waits for every report or missing line of the step, then draws on the findings
+   it needs, ending with one question as Phase 4 does. No role speaks to the developer.
+
+### Challenge rule
+
+A Skeptic finding under **Should not be built** is a challenge, never a decision. Put it to the
+developer as your own, as Phase 4 asks you to challenge assumptions, at the opening or in any
+reply. An option enters **Ruled out** only when the developer drops it, with the developer's reason.
+When the developer keeps the option, it stays out of **Ruled out**, and the finding may go under
+**Key insights** or **Open questions**.
