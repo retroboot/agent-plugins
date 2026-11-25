@@ -108,6 +108,11 @@ Read `{path}/README.md`.
 
 - **No README there** (S-02.2.e4): say `No pack at {path}`, and offer to start a new one. On yes,
   ask for the topic and go to Phase 2 with `{slug}` proposed as the slug. On no, stop.
+- **Handoff note** (`references/gates.md`, **Handoff**), before everything below: when
+  `{path}/handoff.md` holds a `## Spec pending: {Id}` entry, resume at Phase 4, passing its answer
+  as `spec`'s request. A `## Gate pending: {file}` entry resumes at the phase that owns its file,
+  whatever the Status: Phase 4 for `context.md`, `prd.md` or `design.md`, Phase 5 for `plan.md`. The
+  phase skill re-runs that file's gate, its checkpoint removes the entry, and Status is unchanged.
 - **XL parent:** when the Size row starts with `XL` and Status is `routed` or later, show **Child
   packs** with each child's Status (from its README, or `not started`), then stop. This comes before
   the table, so a pack re-routed to XL past `routed` never reaches `slice`.
@@ -240,8 +245,9 @@ and its README is committed with the first child's pack PR (Phase 8).
 
 ## Phase 4 — Specify
 
-Load the `spec` skill with `docs/plans/{slug}` (with `: {request}` from a `Spec pending` line). It
-holds the acceptance, ADR and design checkpoints and sets `specified` on approval. Read its result:
+Load the `spec` skill with `docs/plans/{slug}` (with `: {request}` from a `Spec pending` line or
+`handoff.md` entry). It holds the acceptance, ADR and design checkpoints and sets `specified` on
+approval. Read its result:
 `SPEC COMPLETE` with the expected `pack_status` goes on, after removing any `Spec pending after …`
 line from **Open questions**; a stop is handled as above (S-02.3.e1: a rejected PRD checkpoint
 leaves `prd.md` on disk and Status `routed`).
@@ -304,7 +310,9 @@ the pack but leaves Status as it is.
 
 **Gate before Approve and Publish.** Phases 7 and 8, including on a resume, run only when
 `cold-read.md`'s closing **Result** says `Pass after …` and **Open questions** holds no
-`Cold read pending after …` line. Otherwise run this phase first.
+`Cold read pending after …` line. Otherwise run this phase first. While `{path}/handoff.md` exists,
+refuse each of them, naming every entry:
+`Refused: handoff.md holds {entry}; run planning {path} to finish it.`
 
 ---
 

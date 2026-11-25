@@ -50,6 +50,9 @@ rest is the request. Read `{path}/README.md`.
 - Read the header **Status**, **Type**, **Size** and **Modifiers**, and the **Route**, **Brief**,
   **Ruled out**, **Key insights**, **Question** and **Open questions** sections. List every other
   file already in the folder.
+- **`handoff.md`**, if present (`$CLAUDE_SKILL_DIR/../planning/references/gates.md` **Handoff**): a
+  **Gate pending** entry skips its file's drafter and re-runs only its gate; a **Spec pending** entry
+  is removed when the checkpoint that shows its revised file approves.
 
 Read `pack-format.md` §2 (routing matrix, size, modifiers, content sections, re-routing) and §3
 (README contract and Status).
@@ -142,6 +145,8 @@ Otherwise no Scout is dispatched. Whoever drafts it follows these rules and `tem
   otherwise the Brief or the **Ruled out** option that chose it; Phase 5 adds the ADR citation.
 
 Before moving on, re-read `context.md`: every named API, pattern and convention has its citation.
+Then run the **context gate**, the Fact-checker, as `$CLAUDE_SKILL_DIR/../planning/references/gates.md`
+says, with its **Gate pending** entry in `handoff.md`. Nothing it holds is asked before Phase 4.
 
 ---
 
@@ -206,9 +211,11 @@ Show the developer, in this order:
   `{base}` fallback line, its settled open points, and each held one with its Id (Phase 2);
 - the prd, or at size S the Slice's Outcome and Acceptance, or for a Spike the Question;
 - any rule left without an edge or failure row, with the question of why none applies;
-- in a re-route, each revised section and its Open questions line.
+- in a re-route, each revised section and its Open questions line;
+- each gate's Display lines, then every held item as one batch (`gates.md` **Checkpoint batch**).
 
-Then ask: **approve**, **change** or **stop**.
+Then ask: **approve**, **change** or **stop**. On approve, write the answers and the deferral lines,
+and remove this checkpoint's Gate pending entries (`gates.md` **Handoff**).
 
 - **Approve:** for a re-route, remove the approved files' revision lines from Open questions. Spike
   question: go to Phase 9. Otherwise go to Phase 5.
