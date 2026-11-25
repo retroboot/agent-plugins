@@ -22,7 +22,8 @@ names a topic, for every resume, and, with no input, only after the developer an
 question. Before a topic exists, dispatch nothing.
 
 1. **Base.** Resolve `{base}`, `{date}` and `{sha}` once for the run, before the first dispatch, as
-   `dispatch.md` **Base** says. Hold any fallback line it gives for the summary line.
+   `dispatch.md` **Base** says. Hold any fallback line it gives, and show it with whichever line
+   ends the step: the summary line, the void line or the no-tree line.
 2. **Issues and commits.** Read the open issues related to the topic with the **List** issues
    command of the loaded provider reference. When no provider reference is loaded, load the
    `session` skill first. When the host fails, or no reference can be loaded, say
@@ -47,14 +48,14 @@ question. Before a topic exists, dispatch nothing.
    `dispatch.md` **Research completeness check**, and dispatch an incomplete one once more in a new
    tree that takes its own guard baseline. A second incomplete report gives that check's missing
    line, and the step goes on without that role.
-6. **Remove the tree** after the guard. If `git worktree remove --force` fails, say
+6. **Remove every tree** the step built, its retry trees included, after the guard. For each one
+   that `git worktree remove --force` fails on, say
    `Research tree {tree} was not removed; the next cold-read run will list it.` and go on.
 7. **Summary line.** Say one line for the step:
    `Research: Scout {model} — {f} findings, Historian {model} — {f} findings, Skeptic {model} — {f} findings`.
    `{model}` is the alias dispatched, or `default model`. `{f}` counts the findings of a complete
-   report. Leave a missing role out of the line; its missing line stands on its own. Show any
-   **Base** fallback line with it. Say nothing else about the research process unless the developer
-   asks.
+   report. Leave a missing role out of the line; its missing line stands on its own. Say nothing
+   else about the research process unless the developer asks.
 
 When **Base** fell back to `HEAD`, the tree may hold unmerged commits, and only merged work counts as
 history. Beside any Historian finding you bring in, say `(from HEAD, may include unmerged work)`.
@@ -82,8 +83,8 @@ Give the 2–4 sentences of understanding Phase 3 asks for, drawing on the findi
 ask the single question. Bring in only what the opening needs; hold the rest for Phase 4. However
 many findings there are, ask one question.
 
-When no complete report came back (a void step, no tree, or every role missing), open as Phase 3
-does today, after the lines step 3, 5 or 7 gave.
+When no complete report came back (a void step, no tree, or every role missing), open with no
+findings, as Phase 3 says, after the lines step 3, 5 or 7 gave.
 
 **When resuming,** open from the saved README as Phase 3 says. A finding that argues for an option
 the saved **Ruled out** holds is named as touching that entry, for example
