@@ -137,7 +137,7 @@ the same rules-and-examples form.
 | Rules and examples | prd (README at size S) | whenever there are stories, a preservation contract, or Bug regression criteria | Per story: rules, each with an examples table whose columns make given, when and then explicit (a When shared by every row may sit in the column header). IDs `S-NN.k.eN`; at least 2 rows per rule, at least 1 edge or failure |
 | Failure modes | prd | whenever there are stories; Bug | Failure, trigger, expected behaviour, what the user sees, criterion |
 | Non-functional requirements | prd | always with a prd | One row per quality: performance, reliability, security, privacy, accessibility, observability, compatibility/portability, maintainability. Each is a measurable target or `none` |
-| Assumptions | prd | always with a prd | Assumption, how to validate, what changes if false |
+| Assumptions | prd | always with a prd | Assumption, how to validate, what changes if false, and its probe result |
 | Domain model | design | the work adds or changes persisted entities or core types | Mermaid `erDiagram`, with names matching the glossary |
 | State machines | design | any entity with a lifecycle is touched | Mermaid `stateDiagram-v2` per entity, plus a list of illegal transitions |
 | Flows | design | two or more components interact | Mermaid `sequenceDiagram` of each main flow |

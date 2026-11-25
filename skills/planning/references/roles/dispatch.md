@@ -120,8 +120,9 @@ there are none.
 ```
 
 The marker lines are not a fence, so the file's own `bash` and `mermaid` fences pass through
-intact. At size S the Analyst's markers name `README.md`, and its draft holds only the Slice's
-`### Outcome` and `### Acceptance`, which the Facilitator puts in place of those two headings.
+intact. When the Analyst drafts the size S Slice, its markers name `README.md`, and its draft holds
+only the Slice's `### Outcome` and `### Acceptance`, which the Facilitator puts in place of those
+two headings.
 
 ## Draft completeness check
 

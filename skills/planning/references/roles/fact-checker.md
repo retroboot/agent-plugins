@@ -47,12 +47,18 @@ engineer).
 - **F6** Re-count every number the pack states about the repository: tests, files, lines, records,
   answers. Evidence: the counting command and its output. _Example: a stated count of agreeing
   results that held only because the set was empty._
+- **F7** For every row of the prd's Assumptions table, run the read-only check that settles it:
+  `held` or `false`, with evidence. A check that writes, installs or uses the network is not run:
+  `not run: changes state`. One that needs something not built yet is not run, naming it: `not run:
+  needs {what}`. With no Assumptions table, n/a. Evidence: the command and its output, or the quoted
+  lines with `path:line`. _Example: "the tool accepts `model: opus`", settled by a progress line._
 
 ## Output
 
-The two sections the prompt gives: **Checklist run**, one row per item F1 to F6, and **Findings**,
+The two sections the prompt gives: **Checklist run**, one row per item F1 to F7, and **Findings**,
 with Ids `PF1`, `PF2` …. Every finding cites the checklist item it came from and quotes its
-evidence.
+evidence. A `false` probe is also a finding. Then **Probes**, as a third section: a table
+`Assumption | Result | Evidence`, one row per Assumptions row, or `No Assumptions table.`
 
 ## Blocking test
 
