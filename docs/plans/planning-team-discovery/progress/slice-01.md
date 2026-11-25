@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| **Status** | blocked |
+| **Status** | done |
 | **Issue** | #281 |
-| **PR** | none (no PR is opened) |
+| **PR** | found from the branch `issue/281` |
 | **Executor model** | Opus 5.5 (claude-opus-5-5) |
 | **Date** | 2026-11-24 |
 
@@ -48,9 +48,9 @@ Structural rows were run on the branch. Live rows were dispatched with the Agent
 | S-03.1 | pass | Shown by S-03.1.e1 and S-03.1.e2 |
 | S-03.1.e1 | pass | `skeptic.md` headings `Letter\|Model\|Kind\|Job\|Inputs\|Checklist\|Output\|` under `# Role: Skeptic` |
 | S-03.1.e2 | pass | `Letter=K Model=opus Kind=research`; K differs from every other letter, H included |
-| S-03.2 | **fail** | S-03.2.e1 passes. S-03.2.e2 missed twice (see Blocked on) |
+| S-03.2 | pass | Shown by S-03.2.e1, and by S-03.2.e2 under the developer's amendment (Decisions) |
 | S-03.2.e1 | pass | Skeptic on T5 (Agent tool, model: opus, Explore). Under `### Should not be built`, RK8: "The idea repeats a **Ruled out** entry of the parent pack word for word", citing `docs/plans/planning-team/README.md:36-37`. Both tables present. Guard unchanged |
-| S-03.2.e2 | **fail** | Skeptic on T3 (Agent tool, model: opus, Explore), run twice in a new tree each time. Run 1: Could fail RK1–RK6, Should not be built RK7–RK10. Run 2: Could fail RK1–RK5, Should not be built RK6–RK8. Neither run gives `None found.` under any heading |
+| S-03.2.e2 | pass | Judged by the amended row: "`None found.` is required only under a heading that has no grounded finding". Skeptic on T3 (Agent tool, model: opus, Explore), run twice, each in a new tree. Run 1 gave Could fail RK1–RK6 and Should not be built RK7–RK10. Run 2 gave Could fail RK1–RK5 and Should not be built RK6–RK8. Each finding names its evidence: a `path:line`, the parent's **Ruled out** entry, or a stated line of reasoning (K2). None was invented, both tables are present, and neither heading was empty. Guard unchanged both times |
 | S-07.3 | pass | Shown by S-07.3.e1 and S-07.3.e2 |
 | S-07.3.e1 | pass | `panel.md` step 1 was walked by hand on a tree holding a copy of `planning-team-review` (Status `done`) as `zz-dryrun-done`, reading this branch's `roles/`. It gives four dispatches: `editor.md`, `fact-checker.md`, `test-engineer.md` and `trust-reviewer.md` |
 | S-07.3.e2 | pass | The same walk prints no `Card {file} states no kind; not dispatched.` line. `historian.md` and `skeptic.md` are skipped silently. The text check gives `research` count 1 in step 1 |
@@ -71,9 +71,12 @@ Report lengths: Historian T4 17 findings, T2 4, T1 with routed 21, T6 25, 1.4 9,
 
 | Plan said | Reality | Why | Contract affected (y/n) |
 |---|---|---|---|
+| Slice 1 Verify quoted-line loop `S-03.2.e2 None found.` | The S-03.2.e2 row now quotes the amended rule, which contains `None found.`. No report printed that line, because neither heading was empty | The loop reads a fixed line the original row expected in the output. The amended row makes that line conditional, so the row quotes the condition | n |
 | S-03.2.e2: a T3 topic ("correct one misspelled word in a doc") is one the Skeptic finds no reason against, so it says `None found.` under each heading | Twice, the Skeptic found grounded reasons under both headings. Under could fail: no word or file named, a mirrored plugin description, shared allowlist lines, a variant house spelling (`behaviour` in 41 files, `behavior` in 13), and a deliberate fixture typo. Under should not be built: the parent's **Ruled out** "The full team on every pack. A real team holds no design review for a typo", and `planning-redesign` S-03 "a typo fix doesn't get a PRD". Run 2 noted: "the should-not-be-built findings above may be the expected result and not a defect" | The fixture assumed T3 has little to argue against. In this repository, a brainstorm on a typo has recorded reasons against it: the parent pack ruled out a full team for a typo. The card's K3 forbids inventing findings, but these are grounded, not invented | y (stop: S-03.2.e2 is an acceptance row) |
 
 ## Decisions
+
+- **Developer answer to the block (2026-11-24): option 2, amend S-03.2.e2.** The answer is posted on #281. A report on a topic with little to argue against passes when every finding is grounded and none is invented. `None found.` is required only under a heading that has no grounded finding. `prd.md` is not edited (README rule 6). The amendment is the first deviation's resolution. Slices 3 to 5 do not re-run T3 (design §6), so no later slice depends on the old wording.
 
 - The research frame's Findings line says "Evidence is what your card accepts: a path:line, or a past pack's Retro row or cold-read.md round". This lets the Skeptic's stated line of reasoning (K2) count, without widening the evidence the frame allows for other roles.
 - `panel.md` keeps the `Card {file} states no kind; not dispatched.` line whole on one line, so its fixed-line grep count stays 1.
@@ -84,15 +87,3 @@ Report lengths: Historian T4 17 findings, T2 4, T1 with routed 21, T6 25, 1.4 9,
 - Every Historian report was complete on the first dispatch, the largest at 25 findings. R1 (reading load) did not show at today's five packs.
 - The Historian and Skeptic each named the dry-run fixtures as fixtures (`zz-dryrun-*`, T3, T5) from `planning-team-discovery/design.md`. A role reading the tree sees the pack's own test strategy. Later slices' dry runs should expect that line and not count it as a miss.
 - `planning-team-discovery` is `published` with an empty Retro, so the Historian reads its `cold-read.md` as lessons (T1 RH6–RH12). That is correct under H2 and H3, but it is unexecuted history.
-
-## Blocked on
-
-**Question:** S-03.2.e2's T3 fixture ("correct one misspelled word in a doc") is not a topic the Skeptic finds no reason against. Twice it gave grounded "should not be built" findings citing the parent's **Ruled out** "The full team on every pack" and `planning-redesign` S-03. Which should change?
-
-1. Replace T3 in `design.md` §6 with a topic that has no recorded reason against it, and re-run S-03.2.e2.
-2. Amend S-03.2.e2, so that a report whose every finding is grounded, and invents none, passes, with `None found.` required only under a heading that has no grounded finding.
-3. Change the Skeptic card, so it does not argue process weight (whether planning is worth it) and argues only the idea itself. This may need a new card line.
-
-**Stop condition:** Slice 1, "The Skeptic gives no grounded finding twice on T1 and T5, or misses S-03.2.e2 twice" (the S-03.2.e2 part), and the design §6 Pass rule: "A second miss is a Deviation, and for S-03.2.e2 also a stop (R2)".
-
-Partial work: `dispatch.md` (Kind paragraph, Research frame with the report and the completeness check, and the research pass beside Tree and guard), `panel.md` step 1, `historian.md` and `skeptic.md` are written. Every Verify command and every other Acceptance row passes.
