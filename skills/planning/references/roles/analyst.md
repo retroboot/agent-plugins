@@ -43,5 +43,5 @@ What the prd needs beyond the phase's own rules:
 ## Output
 
 The two sections the drafting frame gives: **Draft**, holding the whole `prd.md` between its
-marker lines (at size S, the two README headings and their text, with markers naming `README.md`),
-and **Open points**, with Ids `DN1`, `DN2` ….
+marker lines (when `{file}` is `README.md`, the two README headings and their text), and **Open
+points**, with Ids `DN1`, `DN2` ….
