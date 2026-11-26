@@ -63,13 +63,15 @@ and nothing is committed.
 
 ## Phase 6 — why the pathspec rule is restated in `init`, not linked
 
-`core` states it once, under **Staging**, and `work-issue` and `work-pr` link to it. `init` cannot:
-it ships in **both** `dev` and `planner`, and only `dev` ships `core` — a plugin install carries just
-the skills its `marketplace.json` entry names, so `../core/SKILL.md` resolves to nothing in one
-install out of two. Reordering the bootstrap so `core` loads before `init` would not change that; the
-constraint is packaging, not load order. Keep the copy inline in `SKILL.md`, and keep it
-phase-agnostic — the phase numbers in the other two skills are hand-maintained and nothing verifies a
-prose reference to them.
+`core` states it once, under **Staging**, and `work-issue` and `work-pr` link to it. `init` does not:
+it is the first bootstrap step of every skill that loads it, so it runs before that skill's own
+`core` step, and the rule its Phase 6 commit depends on has to be in `init`'s own file at that point.
+(A composed run, such as `ship-issue` loading `work-issue`, may already have loaded `core` once; the
+first `init` of any run cannot rely on that.) A relative link
+such as `../core/SKILL.md` also resolves only within one plugin's install, so a rule `init` needs is
+safest kept where `init` is. Keep the copy inline in `SKILL.md`, and keep it phase-agnostic — the
+phase numbers in the other two skills are hand-maintained and nothing verifies a prose reference to
+them.
 
 ---
 

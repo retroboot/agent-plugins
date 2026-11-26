@@ -430,8 +430,9 @@ git commit -m "chore(config): keep .agent-plugins.json out of git" -- {changed p
 index**, including anything staged before `init` ran, and `init` routinely runs mid-workflow with a
 populated index. With the pathspec the commit carries `.gitignore` when it changed, plus each config
 file's removal that Step 2 staged, and nothing else (**Phase 6 — the commit's trailing pathspec**).
-Keep this rule inline rather than linking to `core`'s **Staging**: `init` also ships in `planner`,
-which has no `core` (**Phase 6 — why the pathspec rule is restated in `init`, not linked**).
+Keep this rule inline rather than linking to `core`'s **Staging**: `init` runs before the calling
+skill's own `core` step, so the rule lives in this file (**Phase 6 — why the pathspec rule is restated in
+`init`, not linked**).
 
 Then confirm the commit carries exactly `{changed paths}`:
 

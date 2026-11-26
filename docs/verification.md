@@ -191,6 +191,22 @@ if [ -d docs/plans ]; then
         END { if (open) print "PACK FENCE UNCLOSED " file }' "$f"
     done
 fi
+
+# every numbered Load the {name} skill step in a skill names a skill its own plugin ships
+jq -r '.plugins[].name' .claude-plugin/marketplace.json | while read -r p; do
+    shipped=$(jq -r --arg p "$p" '.plugins[] | select(.name == $p) | (.skills // [])[]' \
+                .claude-plugin/marketplace.json)
+    printf '%s\n' "$shipped" | grep . | while read -r path; do
+        # a missing SKILL.md is check 2's report (BAD SKILL), not this one's
+        [ -f "$path/SKILL.md" ] || continue
+        s=${path##*/}
+        sed -n 's/^[0-9][0-9]*\. Load the `\([a-z-]*\)` skill.*/\1/p' "$path/SKILL.md" \
+          | while read -r l; do
+              printf '%s\n' "$shipped" | sed 's|.*/||' | grep -qxF "$l" \
+                || echo "BOOTSTRAP GAP $p/$s loads $l"
+            done
+      done
+  done
 ```
 
 Silence from all of them means everything registered resolves, nothing is duplicated, the phase
@@ -213,6 +229,7 @@ See **Path resolution** in `CLAUDE.md` for the contract the first three checks e
 | 12 | `review-pr` declares itself read-only and grants no unrestricted tool | `REVIEW NOT READ-ONLY`, `REVIEW MAY WRITE` |
 | 13 | Every `skills/` directory has a matching, non-dangling `.agents/skills/` symlink | `AGENTS SKILL MISSING`, `AGENTS SKILL NOT SYMLINK`, `AGENTS SKILL DANGLING` |
 | 14 | Every folder directly under `docs/plans/` has a `README.md`, and every opening fence in `docs/plans/**/*.md`, at any indentation, is exactly three backticks tagged `bash`, `sh`, `mermaid` or `text`, not on a `>` or list-marker line, with no fence inside it and a closing fence of its own | `PACK NO README {dir}`, `PACK FENCE FORM {file}:{line}`, `PACK CODE FENCE {file}:{line}`, `PACK FENCE NESTED {file}:{line}`, `PACK FENCE UNCLOSED {file}` |
+| 15 | Every line of a shipped skill's `SKILL.md` that starts `N. Load the \`{name}\` skill`, under `## Bootstrap` or not, names a skill the same plugin ships | `BOOTSTRAP GAP {plugin}/{skill} loads {name}` |
 
 A few mechanics worth knowing before editing this block:
 

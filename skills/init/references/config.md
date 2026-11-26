@@ -347,9 +347,8 @@ Before v2.0.0 this file was named `.hivrr.json`. `init` is the only skill that k
 and it migrates the file without asking, in any mode. Every other skill reads `.agent-plugins.json`
 only, and resolves a repo that still holds just `.hivrr.json` as if it had no config. So the
 migration has to happen before any reader runs, which it does: `init` is the first bootstrap step
-of every skill that loads it. A skill that loads only `core` (`spec`, `slice`, `cold-read`,
-`brainstorm`, `audit`) and runs first in an unmigrated repo uses defaults until an `init`-loading
-skill runs there.
+of every skill that loads it, and every skill that reads config loads `init` first — or, like
+`wave`, runs only under one that does.
 
 **Phase 3, Step 1** runs before the existence test:
 

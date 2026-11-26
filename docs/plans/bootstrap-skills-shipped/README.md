@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | published |
+| **Status** | done |
 | **Type** | Bug |
 | **Size** | S — 1 slice |
 | **Modifiers** | none |
@@ -350,8 +350,14 @@ folder and the repository.
 
 ## Retro
 
-_Written by the final slice. Guidance: compare what the cold read predicted with what really
-diverged, using the deviations in every progress file._
+Slice 1 shipped with three deviations, none touching a contract (`progress/slice-01.md`). No stop
+condition triggered: the comparison printed exactly the six predicted gaps before any edit, and
+check 15 printed the same six on the unfixed lists.
 
 | Cold read predicted | What diverged | Slice | Lesson for the next pack |
 |---|---|---|---|
+| PV3: a dry run's revert could touch the real checkout if `cd` failed; fixed by chaining each revert inside `cd … &&` | Nothing: every dry run ran in its scratch worktree and the real tree was never edited | 1 | Keep the `cd … && { …; git checkout -q -- .; }` form for constructed-input dry runs |
+| aQ3 / aC4: `init` loading in `spec`, `slice`, `cold-read` and `brainstorm` seemed to break their "Do not stage or commit" rule | Nothing: the rules stayed unchanged, as C2 says, and no `init` text needed editing (stop condition 4 did not trigger) | 1 | Resolving an apparent rule clash in the pack, before execution, saved a stop |
+| aQ6 to aQ8: defaults for the replacement wording in `config.md`, `git-hygiene.md` and `init/SKILL.md` | Adopted; `config.md` also names `wave` as the config reader that runs only under `work-issue`, which the default ("every skill that reads config loads `init` first") would have made false | 1 | A "every X does Y" default needs the glossary's exceptions checked before it is written into a file |
+| Not predicted | Suggested path step 2 ran the dry runs "after the commit, against `HEAD`", but README rule 7 puts their proofs in that same commit; they ran against a scratch commit of the working diff instead | 1 | Write a size S pack's dry runs against the working tree, or say the progress file may follow in a second commit |
+| Not predicted | `init` Phase 2 gates label bootstrap on the global `repoProvider` only, which here disagreed with `.agent-plugins.json` (recorded as a Discovery) | 1 | Outside this pack's scope; file it as its own issue |
