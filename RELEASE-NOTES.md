@@ -1,5 +1,25 @@
 # Agent Plugins Release Notes
 
+## v2.1.0 (2026-11-26)
+
+### Every skill's bootstrap names a skill its plugin ships
+
+- **`planner` and `auditor` ship `core` (#310, #312).** Six skills (`planning`, `brainstorm`,
+  `spec`, `slice` and `cold-read` in `planner`, and `audit` in `auditor`) loaded `core` in their
+  bootstrap, but only `dev` shipped it. Installed without `dev`, that step named a missing skill and
+  `core`'s quality gates and git-safety rules never loaded. `auditor` now also ships `init` and
+  `session`.
+- **`audit`, `brainstorm`, `spec`, `slice` and `cold-read` load `init`, `session`, then `core`**, as
+  the `dev` workflow skills do. Every skill that reads config now migrates `.hivrr.json` first, so
+  the v2.0.0 advice to run an `init`-loading skill before these five no longer applies. Running
+  `audit` can now make `init`'s one `.gitignore` commit, as every `dev` workflow already can.
+- **New structural check 15.** Every numbered `Load the {name} skill` step in a shipped skill's
+  `SKILL.md` must name a skill the same plugin ships, or the checks report
+  `BOOTSTRAP GAP {plugin}/{skill} loads {name}`.
+
+Update with `/plugin marketplace update agent-plugins`, then reinstall or update `planner` and
+`auditor` to pick up the new skills.
+
 ## v2.0.0 (2026-11-26)
 
 ### The repository moves to `retroboot/agent-plugins`, and the hivrr name is gone
