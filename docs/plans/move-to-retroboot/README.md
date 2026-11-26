@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | executing |
+| **Status** | done |
 | **Type** | Migration |
 | **Size** | M — 6 slices |
 | **Modifiers** | infra, public-api |
@@ -171,8 +171,17 @@ None.
 
 ## Retro
 
-_Written by the final slice. Guidance: compare what the cold read predicted with what really
-diverged, using the deviations in every progress file._
+Written by Slice 6 on 2026-11-26, from `cold-read.md` and the deviations in `progress/slice-01.md`
+to `progress/slice-06.md`. The cold read passed after three rounds and predicted most of what the
+run met. What diverged came from live GitHub behaviour and from the calendar, not from the tree.
 
 | Cold read predicted | What diverged | Slice | Lesson for the next pack |
 |---|---|---|---|
+| The token might not be revocable at its issuer (round 1, PT4), so 1.2 got a deviation path | Nothing: the maintainer revoked it the same day | 1 | A fallback for a human step costs little and was cheap insurance even though it went unused |
+| The Phase 6 pathspec bug (R6, found by the panel) and the kept-file ignore line (round 2, aQ1, S-05.7) | Nothing: the dry runs reproduced R6 on git 2.43.0, and D7 showed S-05.7 holding | 2 | Panel-found behaviour bugs turned into dry-run rows were the most valuable cold-read output |
+| The dry runs would be an agent session following `init` (design §6) | Twenty-five fixtures were run from a shell transcription of the steps, with the Edit-tool swap shown once | 2 | For more than a handful of fixtures, plan the transcription as the fixture method and keep one real-tool run as the proof that the steps say what the transcription does |
+| Slices 2 and 3 both edit `CLAUDE.md` (round 1, aQ11), handled by ordering | The ordering held, but the line citations moved: `CLAUDE.md:215,217` became 221, 223 and the README Setup block moved down 3 lines once earlier slices merged | 3, 5 | Cite by anchor text, not by line number, for any site an earlier slice in the same pack edits |
+| S-06.4 needs the maintainer's checkout (round 1, aQ10; round 2, aQ9) | This session ran in that checkout, so the executor ran the hand replacement with the maintainer's go-ahead | 3 | Say who may run a maintainer-side step when the executor already works in the maintainer's checkout |
+| One-day flow F2, with late transfer acceptance as the only expected slip (round 3, aK6) | Slices 1 to 4 took 2026-11-25, and the baseline was read at 23:44 UTC. The transfer, merge, tag and release all fell on 2026-11-26, and the `v2.0.0` heading, written before the transfer, had to be re-dated | 5 | Start the migration day with the transfer slice, after merging the tree slices on an earlier day, and write a release-entry date only at merge |
+| C8.d sets fork-PR approval before C8.f (round 1, PE1 hardened the C8.d listings) | GitHub returns `422 Fork PR approval is not allowed for private repositories`; the setting was applied straight after the visibility change | 5 | Check visibility-dependent GitHub settings against a private repository during the cold read, not only by reading the docs |
+| ADR-010: remove `bschappaugh-plk` only after a clean scan (round 1, PE2) | The transfer to a personal account had already dropped the collaborator, so the ordered removal was moot | 5 | Probe what a transfer does to collaborators and organization access before writing a removal order around it |
