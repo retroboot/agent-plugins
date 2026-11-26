@@ -35,8 +35,10 @@ Rules that hold in every phase:
 
 ## Bootstrap
 
-Run before Phase 1:
-1. Load the `core` skill — internalizes quality standards and architectural principles
+Run in order before Phase 1:
+1. Load the `init` skill — validates provider config (skips immediately if already configured)
+2. Load the `session` skill — reads config and loads the active provider reference
+3. Load the `core` skill — internalizes quality standards and architectural principles
 
 ---
 

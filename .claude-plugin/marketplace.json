@@ -35,6 +35,9 @@
       "source": "./",
       "strict": true,
       "skills": [
+        "./skills/init",
+        "./skills/session",
+        "./skills/core",
         "./skills/audit",
         "./skills/audit-accessibility",
         "./skills/audit-performance",
@@ -51,6 +54,7 @@
       "skills": [
         "./skills/init",
         "./skills/session",
+        "./skills/core",
         "./skills/brainstorm",
         "./skills/spec",
         "./skills/slice",

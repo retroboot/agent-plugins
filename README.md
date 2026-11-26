@@ -18,7 +18,7 @@ The plugin is split into focused packages:
 | `planner` | Planning and brainstorming — thinking sessions, then plan packs that are specified, sliced, cold-read and published as one issue per slice |
 | `data-platform` | Full data platform skills — the complete stack from ingestion and pipelines to ML, LLMs, dashboards, and database administration |
 
-`init` and `session` are shared setup skills included by `dev` and `planner`. Every command loads them before its main skill.
+`init` and `session` are shared setup skills included by `dev`, `planner` and `auditor`, and `core` is shared by the same three. Every command loads them before its main skill.
 
 ## Skills
 
@@ -43,6 +43,9 @@ The plugin is split into focused packages:
 
 | Skill | Description |
 |-------|-------------|
+| `init` | Shared setup skill — see `dev` |
+| `session` | Shared setup skill — see `dev` |
+| `core` | Shared setup skill — see `dev` |
 | `audit` | Scan codebase for all issue types (dispatches to the sub-skills below) |
 | `audit-security` | Scan codebase for security vulnerabilities |
 | `audit-accessibility` | Scan codebase for accessibility issues |
@@ -55,6 +58,7 @@ The plugin is split into focused packages:
 |-------|-------------|
 | `init` | Shared setup skill — see `dev` |
 | `session` | Shared setup skill — see `dev` |
+| `core` | Shared setup skill — see `dev` |
 | `brainstorm` | Collaborative thinking session on a technical problem, kept as a plan pack README if you choose, so a fresh session can resume it |
 | `spec` | Write a plan pack's PRD, context, decisions and design for its route, each behind a checkpoint |
 | `slice` | Split a specified plan pack into PR-sized slices in `plan.md`, with a traceability table, behind a checkpoint |
