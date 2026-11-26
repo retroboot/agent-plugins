@@ -2,17 +2,21 @@
 
 | | |
 |---|---|
-| **Status** | in-progress |
+| **Status** | done |
 | **Issue** | #301 |
 | **PR** | this PR |
 | **Executor model** | claude-opus-5-5 |
-| **Date** | 2026-11-25 |
+| **Date** | 2026-11-26 |
 
 Baseline: issues 160, prs 144, labels 30, milestones 0, tags 5, releases 2
 
 After: issues 160, prs 144, labels 30, milestones 0, tags 5, releases 2
 
 gitleaks: 8.30.1
+
+Go public: approved by retroboot 2026-11-26
+
+Dates (UTC): transfer 2026-11-26, remote 2026-11-26, merge 2026-11-26
 
 ## Preflight
 
@@ -45,13 +49,26 @@ gitleaks: 8.30.1
 | S-01.4.e2 | run 2 → `INIT: labels ok`, no label creation; then the copy was restored and `cmp` printed nothing |
 | 5.5 | After clean-up, `keys 0`, `hooks 0`, `invitations 0`, `dependabot/secrets 0`, `codespaces/secrets 0`, `actions/runners 0`, `environments 0` (none existed), `runs 0`. All 412 Actions runs were deleted with `gh api -X DELETE repos/retroboot/agent-plugins/actions/runs/{id}` (412 ok, 0 failed). `gh secret delete CLAUDE_CODE_OAUTH_TOKEN` left `gh secret list … --jq length` → 0. Releases `v1.3.1` and `v1.3.0` hold 0 assets each, so there is nothing to read. Fork-PR approval: see Deviations |
 | S-01.5 | collaborators `retroboot` only (`gh api repos/retroboot/agent-plugins/collaborators?affiliation=all`); secrets 0; the S-01.5.e1 listing is re-read after C8.f |
+| 5.4 | the line `Go public: approved by retroboot 2026-11-26` above was written by the maintainer before C8.f; `bschappaugh-plk` was absent after the transfer (Deviations) |
+| S-01.6.e1, 5.3 | `gh repo edit retroboot/agent-plugins --visibility public --accept-visibility-change-consequences` at 2026-11-26T00:36Z, after the clean scan; `gh repo view --json visibility` → `PUBLIC`, before this PR merges |
+| S-01.5.e1 | after C8.f: `gh api repos/retroboot/agent-plugins/collaborators --jq '.[].login'` → `retroboot`; `gh secret list … --jq length` → `0`. Fork-PR approval set with `gh api -X PUT …/fork-pr-contributor-approval -f approval_policy=all_external_contributors` → `all_external_contributors` |
+| S-01.7 (transfer side) | the `Dates (UTC):` line above: transfer, remote and merge on 2026-11-26 |
+| S-02.1, S-02.1.e1, S-02.4 | `jq -r '.name, .owner.name, .metadata.version'` → `agent-plugins`, `retroboot`, `2.0.0`; the description has no `hivrr` (0) |
+| S-02.1.e2 | `diff` of `.plugins` against `749feb9` printed nothing |
+| S-02.3, S-02.3.e1, S-02.3.e2 | `git grep -n -i 'github packages\|manager-plugin\|data-platform-plugin\|hivrr' -- README.md .env.example` printed nothing; README names `retroboot/agent-plugins` (2) and the `@agent-plugins` IDs (5) |
+| S-02.4.e1, S-02.4.e2 | `grep -m1 '^## ' RELEASE-NOTES.md` → `## v2.0.0 (2026-11-26)`; the eight required strings loop printed nothing |
+| 5.2 | the entry holds `` `init`-loading skill first `` (1) |
+| S-02.5, S-02.5.e1 | the bootstrap string → `structural checks pass` |
+| S-07.2, S-07.2.e1, S-07.3, S-07.3.e1 | the fresh-tree grep lists only `./RELEASE-NOTES.md`, `./skills/init/SKILL.md`, `./skills/init/references/config.md`; the `749feb9` diff check printed nothing, exit 1. Both are re-run on `main` after the merge and the results recorded in `progress/slice-06.md` |
+| S-07.2.e2, S-07.3.e2 | the same two commands list the offending path in those states, by their construction |
 | S-01.6 | `git clone --mirror https://github.com/retroboot/agent-plugins` exit 0 (heads, `refs/pull/*` and 5 tags). `gitleaks git agent-plugins-scan.git --log-opts="--all" --redact --verbose` → `468 commits scanned`, `scanned ~6547672 bytes`, `no leaks found`, exit 0; `grep -c 'no leaks found'` → 1. `git rev-list --all --count` → 481; the 13-commit gap is merge and empty commits, which gitleaks does not count |
 
 ## Deviations
 
 | Plan said | Reality | Why | Contract affected |
 |---|---|---|---|
-| Transfer, remote switch and merge on one UTC date | The baseline was read at 23:44 UTC on 2026-11-25, so the transfer falls on the next UTC date at the earliest | Slices 1 to 4 took the day; prd S-01.7.e2 makes a different date a recorded deviation, not a stop | n |
+| Baseline, transfer, remote switch and merge on one UTC date | The baseline was read at 23:44 UTC on 2026-11-25; the transfer, the remote switch and the merge all fall on 2026-11-26, so S-01.7's three dates agree. The transfer date is inferred: the maintainer made the transfer between 23:44Z on the 25th and 00:12:59Z on the 26th, when the repository was first seen at `retroboot`, and gave no exact time | Slices 1 to 4 took the 25th | n |
+| The `v2.0.0` heading carries the transfer date | `## v2.0.0 (2026-11-25)` was written before the transfer, and is corrected to `2026-11-26` before the merge | the date was not known until the transfer | n |
 | C8.d: set fork-PR workflow approval before C8.f | `gh api repos/retroboot/agent-plugins/actions/permissions/fork-pr-contributor-approval` → `422 Fork PR approval is not allowed for private repositories` | GitHub offers the setting on public repositories only, so it is set straight after the visibility change and before the merge | n |
 | C8.f first step: `gh api -X DELETE …/collaborators/bschappaugh-plk` after a clean scan | `bschappaugh-plk` was already absent after the transfer: `gh api repos/retroboot/agent-plugins/collaborators/bschappaugh-plk` → 404, and `?affiliation=all` lists only `retroboot`, with 0 invitations | The access did not survive the transfer to a personal account. The user lost access before the scan rather than after it, which ADR-010 allowed only after a clean scan. The scan was clean, so nothing was exposed either way | n |
 

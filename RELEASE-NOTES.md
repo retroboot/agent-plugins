@@ -1,6 +1,6 @@
 # Agent Plugins Release Notes
 
-## v2.0.0 (2026-11-25)
+## v2.0.0 (2026-11-26)
 
 ### The repository moves to `retroboot/agent-plugins`, and the hivrr name is gone
 
