@@ -135,7 +135,7 @@ Full data platform — data science, engineering, analysis, AI engineering, Snow
 
 ## Shared setup skills
 
-`init` and `session` are included by `dev`, `planner` and `auditor`, and every command loads them before its main skill.
+`init` and `session` are included by `dev`, `planner` and `auditor`, and `core` is shared by the same three. Every command loads them before its main skill.
 
 - **`init`** — seven ordered phases: provider config, repo labels, `.agent-plugins.json` scaffold, verify-command detection, project board ID resolution, keeping `.agent-plugins.json` out of git, and orphan-worktree reporting. The phases run **in order, every time**; a phase with nothing to do reports and continues rather than ending the skill. Keep the count and the list here matching the `## Phase` headings in `skills/init/SKILL.md` and the `init` row in `README.md`. A count that reads low tells an agent the run is over before it is — which is exactly what happened, when that skill said `five` against seven headings. **The seventh structural check holds `skills/init/SKILL.md`'s own count** against its own headings, and **the tenth holds the count in this sentence** against those same headings, so a low count can no longer ship from either file. Neither reads the *list*: comparing prose names against heading titles needs a normalization nobody would trust, so keep the list here matching `skills/init/SKILL.md` by hand. The `init` row in `README.md` enumerates the same phases and states no count deliberately — it has no bare number to drift, so do not add one for symmetry with this line.
 - **`session`** — reads config and loads the active provider reference for the session.

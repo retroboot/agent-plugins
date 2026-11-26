@@ -97,6 +97,12 @@ All were run on the finished tree on 2026-11-25.
   `gitlab` while `.agent-plugins.json` says `"provider": "github"`, so a literal reading skips label
   bootstrap for a GitHub repo. This run resolved the provider per key, as `session` does, and
   bootstrapped. Worth an issue: Phase 2 should name the resolved repo provider.
+- Review round 1 on the PR (3 deferred, 0 blocking or required) found that "`init` runs before any
+  `core` load" is false in composed runs (`ship-issue` loads `core`, then `work-issue` runs `init`);
+  the reason now says the calling skill's own `core` step. It also found `CLAUDE.md:138` not naming
+  `core` beside `README.md:21`; both now do. Its third finding, that `audit` now loads `session` but
+  its Phase 7 still names `gh issue create` directly (`skills/audit/SKILL.md:124,134`), predates
+  this slice and is outside its files: left for a follow-up issue.
 - After the move to `retroboot`, global `providerConfig.bootstrappedRepos` still listed
   `hivrr/agent-plugins` and not `retroboot/agent-plugins`, so `init` re-ran the (idempotent) label
   bootstrap here. Every label already existed.
