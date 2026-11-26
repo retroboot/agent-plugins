@@ -1,11 +1,11 @@
 {
-  "name": "hivrr-agent-plugins",
+  "name": "agent-plugins",
   "owner": {
-    "name": "hivrr"
+    "name": "retroboot"
   },
   "metadata": {
-    "description": "Hivrr Agent Plugin \u2014 Skills and commands for implementation, brainstorming, planning, and code review",
-    "version": "1.6.0"
+    "description": "Agent Plugins \u2014 Skills and commands for implementation, brainstorming, planning, and code review",
+    "version": "2.0.0"
   },
   "plugins": [
     {
